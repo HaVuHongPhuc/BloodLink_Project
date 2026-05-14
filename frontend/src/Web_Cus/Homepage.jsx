@@ -5,6 +5,7 @@ const Homepage = () => {
     return (
         <Layout>
             {/* Html/css ở đây kèm với thuật toán, hàm, biến đã tạo trước đó */}
+            <div> Hi</div>
         </Layout>
     );
 };

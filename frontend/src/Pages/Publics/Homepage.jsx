@@ -5,7 +5,11 @@ const Homepage = () => {
     return (
         <Layout>
             {/* Html/css ở đây kèm với thuật toán, hàm, biến đã tạo trước đó */}
-            <div> Hi</div>
+            <div>
+                <div>
+                    <img src="C:\Users\havuh\OneDrive\Desktop\BloodLink_Project\frontend\src\Pages\HinhAnh,icons\poster_hienmau_homepage.jpg" alt="Description" />
+                </div>
+            </div>
         </Layout>
     );
 };

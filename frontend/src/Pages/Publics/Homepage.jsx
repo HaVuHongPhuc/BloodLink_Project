@@ -1,4 +1,4 @@
-import Layout from "./Layout";
+import Layout from "../Layout";
 const Homepage = () => {
     //Tạo các biến để lưu trữ dữ liệu và các thuật toán, hàm ở đâu ở đây
 

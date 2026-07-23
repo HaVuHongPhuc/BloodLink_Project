@@ -1,5 +1,5 @@
-import Homepage from './Web_Cus/Homepage';
-import Test from './Web_Cus/test';
+import Homepage from './Pages/Publics/Homepage';
+import Test from './Pages/test';
 import './App.css';
 
 function App() {

@@ -107,13 +107,13 @@ const HospitalPage = ({ emergencyList = [], setEmergencyList }) => {
 
     const now = new Date();
 
-// Định dạng ngày thành DD/MM/YYYY 
+    // Định dạng ngày thành DD/MM/YYYY 
     const ngay = String(now.getDate()).padStart(2, '0');
     const thang = String(now.getMonth() + 1).padStart(2, '0');
     const nam = now.getFullYear();
     const formattedDate = `${ngay}/${thang}/${nam}`;
 
-// Định dạng giờ thành HH:MM 
+    // Định dạng giờ thành HH:MM 
     const gio = String(now.getHours()).padStart(2, '0');
     const phut = String(now.getMinutes()).padStart(2, '0');
     const formattedTime = `${gio}:${phut}`;

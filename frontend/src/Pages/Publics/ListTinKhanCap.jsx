@@ -17,13 +17,13 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
   const [activeBloodFilter, setActiveBloodFilter] = useState("");
 
   // =========================================================
-  // EFFECT: TỰ ĐỘNG ẨN THÔNG BÁO SAU 3 GIÂY
+  // EFFECT: TỰ ĐỘNG ẨN THÔNG BÁO SAU 2 GIÂY
   // =========================================================
   useEffect(() => {
     if (systemMessage.text) {
       const timer = setTimeout(() => {
         setSystemMessage({ type: "", text: "" });
-      }, 3000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [systemMessage]);

@@ -105,16 +105,29 @@ const HospitalPage = ({ emergencyList = [], setEmergencyList }) => {
       return;
     }
 
+    const now = new Date();
+
+// Định dạng ngày thành DD/MM/YYYY 
+    const ngay = String(now.getDate()).padStart(2, '0');
+    const thang = String(now.getMonth() + 1).padStart(2, '0');
+    const nam = now.getFullYear();
+    const formattedDate = `${ngay}/${thang}/${nam}`;
+
+// Định dạng giờ thành HH:MM 
+    const gio = String(now.getHours()).padStart(2, '0');
+    const phut = String(now.getMinutes()).padStart(2, '0');
+    const formattedTime = `${gio}:${phut}`;
+
     const newPost = {
       id: "TKC" + Date.now().toString().slice(-3),
       maTin: "TKC" + Date.now().toString().slice(-3),
       maBV: "BVCR",
       ...formData,
       soLuong: Number(formData.soLuong) + " đơn vị",
-      ngayDang: "24/07/2026",
-      gioDang: "10:30",
+      ngayDang: formattedDate, // Lấy ngày thực tế
+      gioDang: formattedTime, // Lấy giờ thực tế
       slDaNhan: "0 đơn vị"
-    };
+};
 
     setEmergencyList([newPost, ...emergencyList]);
     setSystemMessage({ type: "success", text: "Đăng tin khẩn cấp thành công" });
@@ -338,7 +351,14 @@ const HospitalPage = ({ emergencyList = [], setEmergencyList }) => {
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Nhóm máu:</label>
                   <select value={formData.nhomMau} onChange={(e) => setFormData({...formData, nhomMau: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] bg-white text-gray-900">
-                    <option value="O+">O+</option><option value="O-">O-</option><option value="A+">A+</option><option value="A-">A-</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
                   </select>
                 </div>
                 <div>
@@ -388,7 +408,14 @@ const HospitalPage = ({ emergencyList = [], setEmergencyList }) => {
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Nhóm máu tuyển:</label>
                   <select value={formData.nhomMau} onChange={(e) => setFormData({...formData, nhomMau: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] bg-white text-gray-900">
-                    <option value="O+">O+</option><option value="O-">O-</option><option value="A+">A+</option><option value="A-">A-</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
                   </select>
                 </div>
                 <div>

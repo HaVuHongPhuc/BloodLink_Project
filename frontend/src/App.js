@@ -12,26 +12,25 @@ function App() {
   let PageComponent;
 
   if (currentPath.toLowerCase() === '/cus_profile') {
-    PageComponent = <CusProfile />;
+    PageComponent = <CusProfile/>;
   } 
   else if (currentPath.toLowerCase() === '/hospital') {
     PageComponent = (
       <HospitalPage 
         emergencyList={emergencyList} 
-        setEmergencyList={setEmergencyList} 
-      />
+        setEmergencyList={setEmergencyList}/>
     );
   } 
   else if (currentPath.toLowerCase() === '/hospitals') {
     
-    PageComponent = <HospitalList />;
+    PageComponent = <HospitalList/>;
   } 
   else if (currentPath.toLowerCase() === '/listtinkhancap') {
     
-    PageComponent = <ListTinKhanCap emergencyList={emergencyList} />;
+    PageComponent = <ListTinKhanCap emergencyList={emergencyList}/>;
   } 
   else {
-    PageComponent = <Homepage />; // Mặc định là trang chủ 
+    PageComponent = <Homepage/>; // Mặc định là trang chủ 
   }
 
   return PageComponent;

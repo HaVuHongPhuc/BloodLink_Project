@@ -18,9 +18,7 @@ const HospitalList = () => {
   const [systemMessage, setSystemMessage] = useState({ type: "", text: "" });
   const [inputSearch, setInputSearch] = useState("");
 
-  // =========================================================
   // EFFECT: TỰ ĐỘNG ẨN THÔNG BÁO SAU 2 GIÂY
-  // =========================================================
   useEffect(() => {
     if (systemMessage.text) {
       const timer = setTimeout(() => {
@@ -30,9 +28,7 @@ const HospitalList = () => {
     }
   }, [systemMessage]);
 
-  // =========================================================
   // LOAD DANH SÁCH BAN ĐẦU THEO BR14
-  // =========================================================
   useEffect(() => {
     setSystemMessage({ type: "", text: "" });
 
@@ -54,9 +50,7 @@ const HospitalList = () => {
     setFilteredHospitals(operatingHospitals);
   }, []);
 
-  // =========================================================
   // XỬ LÝ USECASE UC11: TRA CỨU BỆNH VIỆN
-  // =========================================================
   const handleExecuteSearch = (e) => {
     e.preventDefault();
     setSystemMessage({ type: "", text: "" });
@@ -104,8 +98,8 @@ const HospitalList = () => {
         )}
 
         <div className="bg-white p-[16px] rounded-[8px] shadow-sm border border-gray-200 mb-[20px] flex items-center justify-start gap-[12px]">
-          <form onSubmit={handleExecuteSearch} className="flex items-center gap-[8px] w-full sm:max-w-[450px]">
-            <div className="relative w-full">
+          <form onSubmit={handleExecuteSearch} className="flex flex-row items-center gap-[8px] w-full max-w-[550px]">
+            <div className="relative flex-1">
               <span className="absolute inset-y-0 left-0 flex items-center pl-[12px] text-gray-400">
                 <FontAwesomeIcon icon={faSearch} />
               </span>
@@ -117,7 +111,13 @@ const HospitalList = () => {
                 className="w-full border border-gray-300 rounded-[6px] py-[8px] pl-[36px] pr-[12px] text-[14px] text-gray-950 focus:outline-none focus:border-black"
               />
             </div>
-            <button type="submit" className="px-[20px] py-[8px] bg-gray-950 text-white font-bold rounded-[6px] text-[14px] hover:bg-gray-800 transition shadow-sm uppercase tracking-wide">Tra cứu</button>
+    
+            <button 
+              type="submit" 
+              className="whitespace-nowrap px-[20px] py-[8px] bg-gray-950 text-white font-bold rounded-[6px] text-[14px] hover:bg-gray-800 transition shadow-sm uppercase tracking-wide"
+            >
+              Tra cứu
+            </button>
           </form>
           {inputSearch && (
             <button type="button" onClick={handleResetSearch} className="text-[13px] font-medium text-gray-500 hover:text-gray-900 underline">Xem tất cả</button>
@@ -129,6 +129,7 @@ const HospitalList = () => {
             <thead>
               <tr className="bg-gray-100 text-gray-800 uppercase font-bold text-[13px] border-b border-gray-300">
                 <th className="px-[16px] py-[14px] border-r border-gray-300 text-center w-[60px]">STT</th>
+                <th className="px-[16px] py-[14px] border-r border-gray-300">Mã bệnh viện</th>
                 <th className="px-[16px] py-[14px] border-r border-gray-300">Tên bệnh viện</th>
                 <th className="px-[16px] py-[14px] border-r border-gray-300">Địa chỉ bệnh viện</th>
                 <th className="px-[16px] py-[14px] border-r border-gray-300">Tên người liên hệ</th>
@@ -141,6 +142,8 @@ const HospitalList = () => {
               {filteredHospitals.map((row, index) => (
                 <tr key={row.maBV} className="hover:bg-gray-50 transition-colors">
                   <td className="px-[16px] py-[14px] border-r border-gray-200 text-center font-medium">{index + 1}</td>
+                  {/* ĐÃ SỬA: Thêm chính xác cột Mã bệnh viện vào đây */}
+                  <td className="px-[16px] py-[14px] border-r border-gray-200 font-bold text-gray-950">{row.maBV}</td>
                   <td className="px-[16px] py-[14px] border-r border-gray-200 font-semibold text-red-600">{row.tenBV}</td>
                   <td className="px-[16px] py-[14px] border-r border-gray-200 max-w-[320px] truncate" title={row.diaChi}>{row.diaChi}</td>
                   <td className="px-[16px] py-[14px] border-r border-gray-200">{row.nguoiLienHe}</td>

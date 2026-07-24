@@ -16,9 +16,7 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
   const [activeSearch, setActiveSearch] = useState("");
   const [activeBloodFilter, setActiveBloodFilter] = useState("");
 
-  // =========================================================
   // EFFECT: TỰ ĐỘNG ẨN THÔNG BÁO SAU 2 GIÂY
-  // =========================================================
   useEffect(() => {
     if (systemMessage.text) {
       const timer = setTimeout(() => {
@@ -28,9 +26,7 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
     }
   }, [systemMessage]);
 
-  // =========================================================
   // XỬ LÝ SẮP XẾP DANH SÁCH THEO THỜI GIAN MỚI NHẤT
-  // =========================================================
   useEffect(() => {
     setSystemMessage({ type: "", text: "" });
 
@@ -56,9 +52,7 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
     setDisplayList(sortedList);
   }, [emergencyList]);
 
-  // =========================================================
   // LOGIC LỌC DỮ LIỆU
-  // =========================================================
   const filteredData = displayList.filter(item => {
     const matchesSearch = activeSearch 
       ? item.tenBV.toLowerCase().includes(activeSearch.toLowerCase()) || item.maTin.toLowerCase().includes(activeSearch.toLowerCase())
@@ -141,7 +135,6 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
               <span className="text-[14px] font-medium text-gray-600 whitespace-nowrap">
                 <FontAwesomeIcon icon={faFilter} className="mr-[4px]" /> Nhóm máu:
               </span>
-              {/* Ô SELECT ĐÃ CẬP NHẬT ĐẦY ĐỦ 8 NHÓM MÁU Y TẾ */}
               <select 
                 value={inputBloodFilter}
                 onChange={(e) => setInputBloodFilter(e.target.value)}

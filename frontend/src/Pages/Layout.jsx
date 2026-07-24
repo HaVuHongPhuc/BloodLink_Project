@@ -221,7 +221,7 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
 
       {/* TÊN TÁC GIẢ BÊN DƯỚI*/}
       <div className="w-full bg-red-900 py-[12px] text-center text-white font-bold text-[15px] tracking-wide">
-        Hà Vũ Hồng Phúc - Lư Tùng Quy - Trương Gia Tân
+        Hà Vũ Hồng Phúc - Lu Tùng Quy - Trương Gia Tân
       </div>
       </footer>
     </div>

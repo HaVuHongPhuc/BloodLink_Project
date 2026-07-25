@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+// Note: Kết nối MongoDB bằng Mongoose, sử dụng MONGO_URI từ file .env.
+>>>>>>> c68c433 (sửa lại code)
 const mongoose = require('mongoose');
 
 const connectDB = async () => {

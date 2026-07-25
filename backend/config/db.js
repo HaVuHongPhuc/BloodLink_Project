@@ -1,4 +1,3 @@
-// Note: Kết nối MongoDB bằng Mongoose, sử dụng MONGO_URI từ file .env.
 const mongoose = require('mongoose');
 
 const connectDB = async () => {

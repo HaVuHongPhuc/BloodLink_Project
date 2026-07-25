@@ -48,6 +48,9 @@ function App() {
     PageComponent = HospitalPage; 
     pageProps = { emergencyList, setEmergencyList }; 
   }
+  else if (currentPath.toLowerCase() === '/admin' || currentPath.toLowerCase() === '/admindashboard') {
+    PageComponent = AdminDashboard;
+  }
   else {
     PageComponent = Homepage; // Mặc định là trang chủ
   }

@@ -1,8 +1,11 @@
-// Note: API /api/blood - các endpoint hiến, nhận, tồn kho và thống kê máu.
 const express = require('express');
-const controller = require('../controllers/bloodController');
 const router = express.Router();
+const { registerDonate, registerReceive } = require('../controllers/bloodController');
 
-router.use(controller.notImplemented);
+// Route Đăng ký hiến máu
+router.post('/register-donate', registerDonate);
+
+// Route Đăng ký nhận máu
+router.post('/register-receive', registerReceive);
 
 module.exports = router;

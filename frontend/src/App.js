@@ -5,6 +5,8 @@ import Cus_Login from './Pages/Publics/Cus_Login';
 import Cus_Register from './Pages/Publics/Cus_Register';
 //customer
 import Cus_Profile from './Pages/Customer/Cus_Profile';
+import RegisterDonate from './Pages/Customer/RegisterDonate';
+import RegisterReceive from './Pages/Customer/RegisterReceive';
 //bệnh viện
 import Hospital_Login from './Pages/Hospital/Hospital_Login';
 import Hospital_Register from './Pages/Hospital/Hospital_Register';
@@ -58,6 +60,12 @@ function App() {
   }
   else if (currentPath === '/search-donor' || currentPath === '/searchdonor') {
     PageComponent = SearchDonorMatch;
+  }
+    else if (currentPath === 'register-donate' || currentPath === '/registerdonate') {
+    PageComponent = RegisterDonate;
+  }
+  else if (currentPath === 'register-receive' || currentPath === '/registerreceive') {
+    PageComponent = RegisterReceive;
   }
   else {
     PageComponent = Homepage; // Mặc định là trang chủ

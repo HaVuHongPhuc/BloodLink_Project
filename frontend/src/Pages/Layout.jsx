@@ -52,12 +52,12 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
                     onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}
                     className="px-[12px] py-[8px] text-gray-300 hover:bg-gray-800 hover:text-white rounded-[6px]"
                   >
-                    Đăng ký dịch vụ ▾
+                    Đăng ký dịch vụ
                   </button>
                   {isCategoryMenuOpen && (
                     <div className="absolute left-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                      <a href="/register-donate" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký hiến máu</a>
-                      <a href="/register-receive" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký nhận máu</a>
+                      <a href="../RegisterDonate" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký hiến máu</a>
+                      <a href="../RegisterReceive" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký nhận máu</a>
                     </div>
                   )}
                 </div>
@@ -122,8 +122,8 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
           <a href="/homepage" className="block text-white font-medium">Trang chủ</a>
           <a href="/ListTinKhancap" className="block hover:text-white">Tin khẩn cấp</a>
           <a href="/hospitals" className="block hover:text-white">Danh sách bệnh viện</a>
-          <a href="/register-donate" className="block hover:text-white">Đăng ký hiến máu</a>
-          <a href="/register-receive" className="block hover:text-white">Đăng ký nhận máu</a>
+          <a href="../register-donate" className="block hover:text-white">Đăng ký hiến máu</a>
+          <a href="../RegisterReceive" className="block hover:text-white">Đăng ký nhận máu</a>
         </div>
       )}
 

@@ -4,11 +4,13 @@ import posterhienmau from "../HinhAnh,icons/poster_hienmau_hospitalpage.jpg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
   faBullhorn, 
-  faExclamationTriangle, faCheckCircle, faClock 
+  faExclamationTriangle, 
+  faCheckCircle, 
+  faClock 
 } from "@fortawesome/free-solid-svg-icons";
 
 const HospitalPage = () => {
-  // State tự quản lý danh sách tin khẩn cấp nội bộ
+  // State tự quản lý danh sách tin khẩn cấp
   const [listData, setListData] = useState([]);
 
   // STATES QUẢN LÝ POPUP MODAL 
@@ -31,27 +33,27 @@ const HospitalPage = () => {
     mucDich: ""
   });
 
-
-// Hàm tự động tạo Mã bệnh viện 
-const generateMaBV = (tenBV) => {
-  if (!tenBV) return "BV001";
-  
-  const cleanStr = tenBV
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d").replace(/Đ/g, "D");
+  // Hàm tự động tạo Mã bệnh viện 
+  const generateMaBV = (tenBV) => {
+    if (!tenBV) return "BV001";
     
-  const words = cleanStr.trim().split(/\s+/);
-  const initials = words.map(word => {
-    if (/^\d+$/.test(word)) {
-      return word; 
-    }
-    return word[0]; 
-  }).join('').toUpperCase();
-  return initials.length <= 10 ? initials : initials.slice(0, 10);
+    const cleanStr = tenBV
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d").replace(/Đ/g, "D");
+      
+    const words = cleanStr.trim().split(/\s+/);
+    const initials = words.map(word => {
+      if (/^\d+$/.test(word)) {
+        return word; 
+      }
+      return word[0]; 
+    }).join('').toUpperCase();
+
+    return initials.length <= 10 ? initials : initials.slice(0, 10);
   };
   
-  // Định dạng ngày tháng
+  // Định dạng ngày tháng DD/MM/YYYY
   const formatDate = (dateVal) => {
     if (!dateVal) return "";
     if (typeof dateVal === "string" && dateVal.includes("/")) return dateVal;
@@ -64,21 +66,40 @@ const generateMaBV = (tenBV) => {
   };
 
   // TẢI BẢN GHI TỪ BACKEND MONGODB 
-  useEffect(() => {
-    const fetchUrgentNews = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/urgent-news");
-        if (response.ok) {
-          const data = await response.json();
-          const activeNews = data.filter(
-            (item) => (item.TrangThai || item.trangThai || "Đang hiển thị") === "Đang hiển thị"
-          );
-          setListData(activeNews);
-        }
-      } catch (error) {
-        console.error("Lỗi kết nối API:", error);
+  const fetchUrgentNews = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/urgent-news");
+      if (response.ok) {
+        const data = await response.json();
+        const now = new Date();
+
+        // Lọc lấy các tin thỏa mãn: Đang hiển thị, chưa đủ số lượng, chưa quá 3 ngày
+        const activeNews = data.filter((item) => {
+          const isStatusActive = (item.TrangThai || item.trangThai || "Đang hiển thị") === "Đang hiển thị";
+          const soLuongCan = Number(item.SoLuong !== undefined ? item.SoLuong : item.soLuong || 0);
+          const soLuongDaNhan = Number(item.SoLuongDaNhan !== undefined ? item.SoLuongDaNhan : item.slDaNhan || 0);
+          const isFullyReceived = soLuongDaNhan >= soLuongCan && soLuongCan > 0;
+
+          let isExpired3Days = false;
+          const dateDang = item.NgayDang || item.ngayDang;
+          if (dateDang) {
+            const d = new Date(dateDang);
+            const diffTime = Math.abs(now - d);
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            if (diffDays >= 3) isExpired3Days = true;
+          }
+
+          return isStatusActive && !isFullyReceived && !isExpired3Days;
+        });
+
+        setListData(activeNews);
       }
-    };
+    } catch (error) {
+      console.error("Lỗi kết nối API:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchUrgentNews();
   }, []);
 
@@ -157,7 +178,7 @@ const generateMaBV = (tenBV) => {
       if (response.ok) {
         const savedPost = resData.data || resData;
         setListData([savedPost, ...listData]);
-        setSystemMessage({ type: "success", text: resData.message || "MS11 Đăng tin khẩn cấp thành công" });
+        setSystemMessage({ type: "success", text: resData.message || "Đăng tin khẩn cấp thành công" });
         setIsCreateModalOpen(false);
       } else {
         setSystemMessage({ type: "error", text: resData.message || "Đăng tin thất bại" });
@@ -201,7 +222,7 @@ const generateMaBV = (tenBV) => {
       !formData.mucDich.trim() || formData.mucDich.length > 200 ||
       Number(formData.soLuong) <= 0
     ) {
-      setSystemMessage({ type: "error", text: "MS02 Vui lòng nhập đúng trường dữ liệu" });
+      setSystemMessage({ type: "error", text: "Vui lòng nhập đúng trường dữ liệu" });
       return;
     }
 
@@ -236,9 +257,16 @@ const generateMaBV = (tenBV) => {
 
       if (response.ok) {
         const updatedItem = resData.data || resData;
-        setListData((prev) =>
-          prev.map((item) => (item._id === selectedNewsId ? updatedItem : item))
-        );
+
+        // Nếu tin sau khi sửa chuyển sang "Đã ẩn" (do đã đủ máu), xóa khỏi UI
+        if (updatedItem.TrangThai === "Đã ẩn") {
+          setListData((prev) => prev.filter((item) => item._id !== selectedNewsId));
+        } else {
+          setListData((prev) =>
+            prev.map((item) => (item._id === selectedNewsId ? updatedItem : item))
+          );
+        }
+
         setSystemMessage({ type: "success", text: resData.message || "Cập nhật tin khẩn cấp thành công" });
         setIsEditModalOpen(false);
       } else {
@@ -380,7 +408,6 @@ const generateMaBV = (tenBV) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-[16px]">
           <div className="bg-white rounded-[16px] w-full max-w-[600px] p-[32px] shadow-2xl overflow-y-auto max-h-[90vh] border border-gray-300">
             <div className="text-center border-b border-gray-200 pb-[16px] mb-[20px]">
-              <span className="text-[12px] font-bold text-gray-400 block tracking-widest mb-[2px]"></span>
               <h2 className="text-[22px] font-bold text-gray-900 uppercase">Đăng tin khẩn cấp</h2>
             </div>
             <form onSubmit={handleCreatePost} className="space-y-[16px]">

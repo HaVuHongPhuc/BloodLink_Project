@@ -13,15 +13,6 @@ const Cus_Register = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const getUsers = () => {
-    const stored = localStorage.getItem("users");
-    return stored ? JSON.parse(stored) : [];
-  };
-
-  const saveUsers = (users) => {
-    localStorage.setItem("users", JSON.stringify(users));
-  };
-
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (password) =>
     password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
@@ -34,7 +25,7 @@ const Cus_Register = () => {
     setSuccessMessage("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password, confirmPassword } = formData;
     const newErrors = {};
@@ -62,24 +53,35 @@ const Cus_Register = () => {
       return;
     }
 
-    const users = getUsers();
-    // MS25: tài khoản đã tồn tại
-    if (users.some((u) => u.email === email)) {
-      setErrorMessage("Tài khoản đã tồn tại");
-      return;
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/dang-ky-khach-hang", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Email: email.trim(),
+          MatKhau: password,
+          XacNhanMatKhau: confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data.message || "Đăng ký thất bại");
+        return;
+      }
+
+      setSuccessMessage(data.message || "Đăng ký tài khoản thành công");
+      setErrorMessage("");
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
+    } catch (error) {
+      setErrorMessage("Không thể kết nối tới máy chủ. Hãy kiểm tra backend.");
     }
-
-    // MS01: đăng ký thành công
-    const newUser = { email, password, role: "customer" };
-    users.push(newUser);
-    saveUsers(users);
-
-    setSuccessMessage("Đăng ký tài khoản thành công");
-    setErrorMessage("");
-
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 1500);
   };
 
   return (

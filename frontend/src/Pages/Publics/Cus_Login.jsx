@@ -9,12 +9,6 @@ const Cus_Login = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Lấy danh sách users từ localStorage (giả lập DB)
-  const getUsers = () => {
-    const stored = localStorage.getItem("users");
-    return stored ? JSON.parse(stored) : [];
-  };
-
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleChange = (e) => {
@@ -25,7 +19,7 @@ const Cus_Login = () => {
     setSuccessMessage("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
     const newErrors = {};
@@ -41,30 +35,37 @@ const Cus_Login = () => {
       return;
     }
 
-    const users = getUsers();
-    const user = users.find((u) => u.email === email);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/dang-nhap-khach-hang", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Email: email.trim(),
+          MatKhau: password,
+        }),
+      });
 
-    // MS19: không tìm thấy tài khoản
-    if (!user) {
-      setErrorMessage("Không tìm thấy tài khoản, vui lòng đăng nhập bằng tài khoản khác");
-      return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data.message || "Đăng nhập thất bại");
+        return;
+      }
+
+      setSuccessMessage(data.message || "Đăng nhập thành công");
+      setErrorMessage("");
+      localStorage.setItem("userToken", data.token);
+      localStorage.setItem("userRole", data.user?.role || "customer");
+      localStorage.setItem("userEmail", data.user?.email || email);
+
+      setTimeout(() => {
+        window.location.href = "/homepage";
+      }, 1500);
+    } catch (error) {
+      setErrorMessage("Không thể kết nối tới máy chủ. Hãy kiểm tra backend.");
     }
-
-    // MS07: sai mật khẩu
-    if (user.password !== password) {
-      setErrorMessage("Mật khẩu không đúng, Vui lòng thử lại");
-      return;
-    }
-
-    // MS05: đăng nhập thành công
-    setSuccessMessage("Đăng nhập thành công");
-    setErrorMessage("");
-    localStorage.setItem("userToken", "fake-jwt-token");
-    localStorage.setItem("userRole", user.role || "customer");
-
-    setTimeout(() => {
-      window.location.href = "/homepage";
-    }, 1500);
   };
 
   return (

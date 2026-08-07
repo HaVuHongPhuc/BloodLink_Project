@@ -90,7 +90,7 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
                   </button>
                   {isProfileMenuOpen && (
                     <div className="absolute right-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                      <a href="/profile" className="block px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</a>
+                      <a href="./Cus_Profile" className="block px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</a>
                       <button
                         onClick={() => { localStorage.removeItem('userToken'); window.location.reload(); }}
                         className="block w-full text-left px-[16px] py-[8px] text-red-600 hover:bg-gray-100"

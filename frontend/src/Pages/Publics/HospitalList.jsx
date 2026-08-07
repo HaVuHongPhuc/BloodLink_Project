@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import Layout from '../Layout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faHospital, faExclamationTriangle, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faSearch, 
+  faHospital, 
+  faExclamationTriangle, 
+  faCheckCircle, 
+  faTimesCircle 
+} from '@fortawesome/free-solid-svg-icons';
 
 const HospitalList = () => {
   // STATES QUẢN LÝ 
@@ -167,6 +173,9 @@ const HospitalList = () => {
                 const sdt = row.SoDienThoaiLienHe || row.sdt;
                 const email = row.Email || row.email;
                 const trangThai = row.TrangThai || row.trangThai || "Đang hợp tác";
+                const isInactive = 
+                  trangThai.toLowerCase().includes("ngừng") || 
+                  trangThai.toLowerCase().includes("ngung");
 
                 return (
                   <tr key={row._id || maBV} className="hover:bg-gray-50 transition-colors">
@@ -178,8 +187,12 @@ const HospitalList = () => {
                     <td className="px-[16px] py-[14px] border-r border-gray-200 font-medium text-gray-900">{sdt}</td>
                     <td className="px-[16px] py-[14px] border-r border-gray-200">{email}</td>
                     <td className="px-[16px] py-[14px] text-center">
-                      <span className="inline-flex items-center gap-[4px] font-bold px-[10px] py-[3px] rounded text-[12px] bg-emerald-50 text-emerald-700 border border-emerald-200 capitalize">
-                        <FontAwesomeIcon icon={faCheckCircle} className="text-[11px]" />
+                      <span className={`inline-flex items-center gap-[4px] font-bold px-[10px] py-[3px] rounded text-[12px] border capitalize ${
+                        isInactive 
+                          ? "bg-red-50 text-red-700 border-red-200" 
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      }`}>
+                        <FontAwesomeIcon icon={isInactive ? faTimesCircle : faCheckCircle} className="text-[11px]" />
                         {trangThai}
                       </span>
                     </td>

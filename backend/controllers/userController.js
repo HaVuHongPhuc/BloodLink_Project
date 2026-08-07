@@ -1,8 +1,9 @@
+// chứa các hàm quản lý thông tin người dùng và tìm kiếm
 const TaiKhoan = require('../models/TaiKhoan');
 const bcrypt = require('bcryptjs');
 
-// UC09: Tìm kiếm người hiến máu phù hợp
-exports.timNguoiHienMauPhuHop = async (req, res) => {
+// UC09: tìm kiếm người hiến máu phù hợp
+const timNguoiHienMauPhuHop = async (req, res) => {
   try {
     const { nhomMau, location } = req.query;
     
@@ -40,29 +41,40 @@ exports.timNguoiHienMauPhuHop = async (req, res) => {
   }
 };
 
-// UC10: Cập nhật hồ sơ cá nhân
-exports.capNhatHoSoCaNhan = async (req, res) => {
+// UC10: cập nhật hồ sơ cá nhân
+const capNhatHoSoCaNhan = async (req, res) => {
   try {
-    const { maTaiKhoan, ...updateData } = req.body;
+    // lấy mã tài khoản từ token xác thực hoặc từ body
+    const maTaiKhoan = req.user?.maTaiKhoan || req.body.maTaiKhoan;
     
     const khachHang = await TaiKhoan.findOne({ MaTaiKhoan: maTaiKhoan });
     if (!khachHang) {
       return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
     }
     
-    delete updateData.MatKhau;
-    delete updateData.VaiTro;
-    delete updateData.MaTaiKhoan;
-    delete updateData.Email;
+    // hỗ trợ cả tên trường tiếng việt và tiếng anh từ frontend
+    const updateData = {
+      HoTen: req.body.HoTen !== undefined ? req.body.HoTen : req.body.fullName,
+      SoDienThoai: req.body.SoDienThoai !== undefined ? req.body.SoDienThoai : req.body.phone,
+      DiaChi: req.body.DiaChi !== undefined ? req.body.DiaChi : req.body.address,
+      NhomMau: req.body.NhomMau !== undefined ? req.body.NhomMau : req.body.bloodType,
+      GioiTinh: req.body.GioiTinh !== undefined ? req.body.GioiTinh : req.body.gender,
+      NgaySinh: req.body.NgaySinh !== undefined ? req.body.NgaySinh : req.body.dob,
+      SoCCCD: req.body.SoCCCD !== undefined ? req.body.SoCCCD : req.body.cccd
+    };
+
+    // loại bỏ các trường undefined
+    Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
     
     const updated = await TaiKhoan.findOneAndUpdate(
       { MaTaiKhoan: maTaiKhoan },
       { $set: updateData },
       { new: true, runValidators: true }
-    );
+    ).select('-MatKhau');
     
     res.json({
       message: 'MS20: Cập nhật thành công',
+      data: updated,
       user: updated
     });
   } catch (error) {
@@ -70,26 +82,28 @@ exports.capNhatHoSoCaNhan = async (req, res) => {
   }
 };
 
-// Lấy thông tin hồ sơ cá nhân
-exports.getHoSoCaNhan = async (req, res) => {
+// lấy thông tin hồ sơ cá nhân
+const getHoSoCaNhan = async (req, res) => {
   try {
-    const { maTaiKhoan } = req.params;
+    // lấy mã tài khoản từ params hoặc từ token xác thực
+    const maTaiKhoan = req.params.maTaiKhoan || req.user?.maTaiKhoan;
     const khachHang = await TaiKhoan.findOne({ MaTaiKhoan: maTaiKhoan }).select('-MatKhau');
     if (!khachHang) {
       return res.status(404).json({ message: 'Không tìm thấy hồ sơ' });
     }
-    res.json(khachHang);
+    res.json({ success: true, data: khachHang, ...khachHang.toObject() });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
 };
 
-// Đổi mật khẩu
-exports.doiMatKhau = async (req, res) => {
+// đổi mật khẩu
+const doiMatKhau = async (req, res) => {
   try {
-    const { maTaiKhoan, matKhauCu, matKhauMoi } = req.body;
+    const maTaiKhoan = req.user?.maTaiKhoan || req.body.maTaiKhoan;
+    const { matKhauCu, matKhauMoi } = req.body;
     
-    const khachHang = await TaiKhoan.findOne({ MaTaiKhoan: maTaiKhoan });
+    const khachHang = await TaiKhoan.findOne({ MaTaiKhoan: maTaiKhoan }).select('+MatKhau');
     if (!khachHang) {
       return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
     }
@@ -111,4 +125,13 @@ exports.doiMatKhau = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
+};
+
+module.exports = {
+  timNguoiHienMauPhuHop,
+  capNhatHoSoCaNhan,
+  getHoSoCaNhan,
+  doiMatKhau,
+  getProfile: getHoSoCaNhan,
+  updateProfile: capNhatHoSoCaNhan
 };

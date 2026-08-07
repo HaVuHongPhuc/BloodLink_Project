@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '../../index.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDroplet, faBullhorn } from '@fortawesome/free-solid-svg-icons';
@@ -7,8 +7,19 @@ import footerImgNew from '../HinhAnh,icons/footer.png';
 const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreateModal }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
+
+  useEffect(() => {
+    setCurrentUrl(window.location.pathname.toLowerCase());
+  }, []);
 
   const isLoggedIn = !!localStorage.getItem('userToken');
+
+  // Hàm điều hướng trực tiếp bằng URL thuần
+  const handleNavigate = (path, e) => {
+    if (e) e.preventDefault();
+    window.location.href = path;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -19,6 +30,7 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
             
             {/* Nút Hamburger (Mobile) */}
             <button
+              type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden p-[8px] text-gray-400 hover:text-white"
             >
@@ -29,15 +41,37 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
 
             {/* KHỐI TRÁI: Logo & Navigation */}
             <div className="flex items-center space-x-[8px] flex-shrink-0">
-              <a href="/hospital" className="flex items-center gap-[8px] font-bold text-[20px] text-red-600 mr-[16px]">
+              <button 
+                type="button" 
+                onClick={(e) => handleNavigate('/hospital', e)} 
+                className="flex items-center gap-[8px] font-bold text-[20px] text-red-600 mr-[16px]"
+              >
                 <FontAwesomeIcon icon={faDroplet} className="text-red-600" />
                 <span>BloodLink</span>
-              </a>
+              </button>
 
               <div className="hidden lg:flex space-x-[4px] text-[14px] font-medium">
-                <a href="/hospital" className="bg-gray-900 px-[12px] py-[8px] rounded-[6px]">Trang chủ</a>
-                <a href="/ListTinKhancap" className="px-[12px] py-[8px] text-gray-300 hover:bg-gray-800 hover:text-white rounded-[6px]">Tin khẩn cấp</a>
-                <a href="/hospitals" className="px-[12px] py-[8px] text-gray-300 hover:bg-gray-800 hover:text-white rounded-[6px]">Danh sách bệnh viện</a>
+                <button 
+                  type="button"
+                  onClick={(e) => handleNavigate('/hospital', e)} 
+                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/hospital' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                >
+                  Trang chủ
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => handleNavigate('/listtinkhancap', e)} 
+                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/listtinkhancap' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                >
+                  Tin khẩn cấp
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => handleNavigate('/hospitals', e)} 
+                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/hospitals' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                >
+                  Danh sách bệnh viện
+                </button>
               </div>
             </div>
 
@@ -58,10 +92,17 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
               </div>
             </div>
 
+            {/* KHỐI PHẢI: NÚT ĐĂNG TIN KHẨN CẤP & ĐĂNG NHẬP */}
             <div className="flex items-center space-x-[12px] flex-shrink-0">
               <button 
-                onClick={onOpenCreateModal}
-                className="hidden sm:flex items-center gap-[6px] bg-red-600 hover:bg-red-700 text-white font-bold py-[8px] px-[14px] rounded-[6px] text-[13px] transition shadow-sm uppercase whitespace-nowrap"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (typeof onOpenCreateModal === 'function') {
+                    onOpenCreateModal();
+                  }
+                }}
+                className="hidden sm:flex items-center gap-[6px] bg-red-600 hover:bg-red-700 text-white font-bold py-[8px] px-[14px] rounded-[6px] text-[13px] transition shadow-sm uppercase whitespace-nowrap cursor-pointer"
               >
                 <FontAwesomeIcon icon={faBullhorn} />
                 Đăng tin khẩn cấp
@@ -69,13 +110,18 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
 
               {isLoggedIn ? (
                 <div className="relative">
-                  <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex rounded-full bg-red-600">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
+                    className="flex rounded-full bg-red-600"
+                  >
                     <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="User profile" className="w-[32px] h-[32px] rounded-full" />
                   </button>
                   {isProfileMenuOpen && (
                     <div className="absolute right-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                      <a href="/profile" className="block px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</a>
+                      <button type="button" onClick={(e) => handleNavigate('/profile', e)} className="block w-full text-left px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</button>
                       <button
+                        type="button"
                         onClick={() => { localStorage.removeItem('userToken'); window.location.reload(); }}
                         className="block w-full text-left px-[16px] py-[8px] text-red-600 hover:bg-gray-100"
                       >
@@ -86,12 +132,12 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
                 </div>
               ) : (
                 <>
-                  <a href="/login" className="px-[12px] py-[6px] text-[13px] font-medium text-white bg-gray-900 rounded-[6px] hover:bg-gray-800 transition border border-gray-700">
+                  <button type="button" onClick={(e) => handleNavigate('/login', e)} className="px-[12px] py-[6px] text-[13px] font-medium text-white bg-gray-900 rounded-[6px] hover:bg-gray-800 transition border border-gray-700">
                     Đăng nhập
-                  </a>
-                  <a href="/partner-login" className="px-[12px] py-[6px] text-[13px] font-medium text-white bg-red-600 rounded-[6px] hover:bg-red-700 transition shadow-sm">
+                  </button>
+                  <button type="button" onClick={(e) => handleNavigate('/partner-login', e)} className="px-[12px] py-[6px] text-[13px] font-medium text-white bg-red-600 rounded-[6px] hover:bg-red-700 transition shadow-sm">
                     Đăng nhập bệnh viện
-                  </a>
+                  </button>
                 </>
               )}
             </div>
@@ -100,17 +146,21 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
         </nav>
       </header>
 
-      {/* MENU MOBILE CHO BỆNH VIỆN */}
+      {/* MENU MOBILE */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-gray-900 px-[16px] py-[12px] space-y-[8px] text-[14px] text-gray-300">
-          <a href="/hospital" className="block text-white font-medium">Trang chủ</a>
-          <a href="/ListTinKhancap" className="block hover:text-white">Tin khẩn cấp</a>
-          <a href="/hospitals" className="block hover:text-white">Danh sách bệnh viện</a>
+          <button type="button" onClick={(e) => handleNavigate('/hospital', e)} className="block w-full text-left text-white font-medium">Trang chủ</button>
+          <button type="button" onClick={(e) => handleNavigate('/listtinkhancap', e)} className="block w-full text-left hover:text-white">Tin khẩn cấp</button>
+          <button type="button" onClick={(e) => handleNavigate('/hospitals', e)} className="block w-full text-left hover:text-white">Danh sách bệnh viện</button>
           <button 
-            onClick={onOpenCreateModal}
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              if (typeof onOpenCreateModal === 'function') onOpenCreateModal();
+            }}
             className="w-full text-left text-red-500 font-bold pt-[4px]"
           >
-            + Đăng tin khẩn cấp
+            Đăng tin khẩn cấp
           </button>
         </div>
       )}
@@ -126,18 +176,18 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
           <div className="w-[175px] h-[140px] flex flex-col justify-between flex-shrink-0">
             <h3 className="text-[20px] font-bold text-white uppercase tracking-wider">REGISTER</h3>
             <ul className="space-y-[10px] text-[14px] text-gray-300">
-              <li><a href="/register-donate" className="hover:text-red-500 transition-colors">Donor Signup</a></li>
-              <li><a href="/partner-login" className="hover:text-red-500 transition-colors">Hospital Signup</a></li>
-              <li><a href="/register-receive" className="hover:text-red-500 transition-colors">Blood Recipient Signup</a></li>
+              <li><button type="button" onClick={(e) => handleNavigate('/register-donate', e)} className="hover:text-red-500 transition-colors text-left">Donor Signup</button></li>
+              <li><button type="button" onClick={(e) => handleNavigate('/partner-login', e)} className="hover:text-red-500 transition-colors text-left">Hospital Signup</button></li>
+              <li><button type="button" onClick={(e) => handleNavigate('/register-receive', e)} className="hover:text-red-500 transition-colors text-left">Blood Recipient Signup</button></li>
             </ul>
           </div>
 
           <div className="w-[128px] h-[140px] flex flex-col justify-between flex-shrink-0">
             <h3 className="text-[20px] font-bold text-white uppercase tracking-wider">COMPANY</h3>
             <ul className="space-y-[10px] text-[14px] text-gray-300">
-              <li><a href="/about" className="hover:text-red-500 transition-colors">About Us</a></li>
-              <li><a href="/contact" className="hover:text-red-500 transition-colors">Contact Us</a></li>
-              <li><a href="/terms" className="hover:text-red-500 transition-colors">Term of Services</a></li>
+              <li><button type="button" onClick={(e) => handleNavigate('/about', e)} className="hover:text-red-500 transition-colors text-left">About Us</button></li>
+              <li><button type="button" onClick={(e) => handleNavigate('/contact', e)} className="hover:text-red-500 transition-colors text-left">Contact Us</button></li>
+              <li><button type="button" onClick={(e) => handleNavigate('/terms', e)} className="hover:text-red-500 transition-colors text-left">Term of Services</button></li>
             </ul>
           </div>
 

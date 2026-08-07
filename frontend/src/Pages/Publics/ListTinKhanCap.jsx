@@ -3,20 +3,33 @@ import Layout from '../Layout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter, faBullhorn, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 
-const ListTinKhanCap = ({ emergencyList = [] }) => {
-  // --- STATES QUẢN LÝ DỮ LIỆU HỆ THỐNG ---
+const ListTinKhanCap = () => {
+  // STATES QUẢN LÝ DỮ LIỆU HỆ THỐNG 
   const [displayList, setDisplayList] = useState([]);
   const [systemMessage, setSystemMessage] = useState({ type: "", text: "" });
+  const [loading, setLoading] = useState(true);
 
-  // --- STATES INPUT TẠM THỜI ---
+  // STATES INPUT TẠM THỜI 
   const [inputSearch, setInputSearch] = useState("");
   const [inputBloodFilter, setInputBloodFilter] = useState("");
 
-  // --- STATES ĐÃ KÍCH HOẠT THEO NÚT ---
+  // STATES ĐÃ KÍCH HOẠT THEO NÚT 
   const [activeSearch, setActiveSearch] = useState("");
   const [activeBloodFilter, setActiveBloodFilter] = useState("");
 
-  // EFFECT: TỰ ĐỘNG ẨN THÔNG BÁO SAU 2 GIÂY
+  // HÀM CHUYỂN ĐỔI NGÀY ĐĂNG SANG DẠNG DD/MM/YYYY
+  const formatDate = (dateVal) => {
+    if (!dateVal) return "";
+    if (typeof dateVal === "string" && dateVal.includes("/")) return dateVal;
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return dateVal;
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // TỰ ĐỘNG ẨN THÔNG BÁO SAU 2 GIÂY
   useEffect(() => {
     if (systemMessage.text) {
       const timer = setTimeout(() => {
@@ -26,46 +39,66 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
     }
   }, [systemMessage]);
 
-  // XỬ LÝ SẮP XẾP DANH SÁCH THEO THỜI GIAN MỚI NHẤT
+  // TẢI BẢN GHI TỪ MONGODB API 
   useEffect(() => {
-    setSystemMessage({ type: "", text: "" });
+    const fetchUrgentNews = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/urgent-news");
+        if (response.ok) {
+          const data = await response.json();
 
-    if (!emergencyList || emergencyList.length === 0) {
-      setSystemMessage({
-        type: "error",
-        text: "Không có tin khẩn cấp nào"
-      });
-      setDisplayList([]);
-      return;
-    }
+          // Chỉ lấy những tin có TrangThai === "Đang hiển thị"
+          const activeNews = data.filter(
+            (item) => (item.TrangThai || item.trangThai || "Đang hiển thị") === "Đang hiển thị"
+          );
 
-    const sortedList = [...emergencyList].sort((a, b) => {
-      const [dayA, monthA, yearA] = (a.ngayDang || "24/07/2026").split("/");
-      const [dayB, monthB, yearB] = (b.ngayDang || "24/07/2026").split("/");
-      
-      const timeA = new Date(`${yearA}-${monthA}-${dayA}T${a.gioDang || "00:00"}`);
-      const timeB = new Date(`${yearB}-${monthB}-${dayB}T${b.gioDang || "00:00"}`);
-      
-      return timeB - timeA;
-    });
+          if (activeNews.length === 0) {
+            setSystemMessage({ type: "error", text: "Không có tin khẩn cấp nào đang hiển thị" });
+            setDisplayList([]);
+            return;
+          }
 
-    setDisplayList(sortedList);
-  }, [emergencyList]);
+          // Sắp xếp theo thời gian mới nhất
+          const sortedList = [...activeNews].sort((a, b) => {
+            const timeA = new Date(a.createdAt || a.NgayDang || a.ngayDang);
+            const timeB = new Date(b.createdAt || b.NgayDang || b.ngayDang);
+            return timeB - timeA;
+          });
 
-  // LOGIC LỌC DỮ LIỆU
+          setDisplayList(sortedList);
+        } else {
+          setSystemMessage({ type: "error", text: "Không thể lấy dữ liệu từ máy chủ Backend" });
+        }
+      } catch (error) {
+        console.error("Lỗi khi kết nối API lấy danh sách tin khẩn cấp:", error);
+        setSystemMessage({ type: "error", text: "Lỗi kết nối máy chủ Backend" });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUrgentNews();
+  }, []);
+
+  // LOGIC LỌC DỮ LIỆU (TÌM KIẾM & NHÓM MÁU)
   const filteredData = displayList.filter(item => {
+    const maTin = item.MaTin || item.maTin || "";
+    const tenBV = item.TenBenhVien || item.tenBV || "";
+    const nhomMau = item.NhomMau || item.nhomMau || "";
+
     const matchesSearch = activeSearch 
-      ? item.tenBV.toLowerCase().includes(activeSearch.toLowerCase()) || item.maTin.toLowerCase().includes(activeSearch.toLowerCase())
+      ? tenBV.toLowerCase().includes(activeSearch.toLowerCase()) || 
+        maTin.toLowerCase().includes(activeSearch.toLowerCase())
       : true;
 
     const matchesBlood = activeBloodFilter 
-      ? item.nhomMau === activeBloodFilter 
+      ? nhomMau === activeBloodFilter 
       : true;
 
     return matchesSearch && matchesBlood;
   });
 
-  // Kiểm tra lỗi hiển thị sau khi áp dụng bộ lọc
+  // Kiểm tra thông báo sau khi lọc
   useEffect(() => {
     if (displayList.length > 0) {
       if (activeSearch && filteredData.length === 0) {
@@ -94,6 +127,14 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
     setActiveBloodFilter("");
     setSystemMessage({ type: "", text: "" });
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="text-center mt-10 text-gray-600 font-medium">Đang tải danh sách tin khẩn cấp từ Database...</div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -178,24 +219,38 @@ const ListTinKhanCap = ({ emergencyList = [] }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-gray-700">
-              {filteredData.map((row, index) => (
-                <tr key={row.id || row.maTin} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 text-center font-medium">{index + 1}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 font-bold text-red-600">{row.maTin}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200">{row.maBV || "N/A"}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 font-semibold text-gray-900">{row.tenBV}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200">{row.sdt}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200">{row.email}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">
-                    <span className="bg-red-100 text-red-700 px-[8px] py-[2px] rounded font-bold">{row.nhomMau}</span>
-                  </td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{row.soLuong}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 max-w-[180px] truncate" title={row.mucDich}>{row.mucDich}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{row.ngayDang || "24/07/2026"}</td>
-                  <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{row.gioDang || "00:00"}</td>
-                  <td className="px-[12px] py-[12px] text-center bg-red-50 text-red-800 font-bold">{row.slDaNhan || "0 đơn vị"}</td>
-                </tr>
-              ))}
+              {filteredData.map((row, index) => {
+                const maTin = row.MaTin || row.maTin;
+                const maBV = row.MaBenhVien || row.maBV || "N/A";
+                const tenBV = row.TenBenhVien || row.tenBV;
+                const sdt = row.SoDienThoaiBenhVien || row.sdt;
+                const email = row.Email || row.email;
+                const nhomMau = row.NhomMau || row.nhomMau;
+                const soLuong = row.SoLuong !== undefined ? row.SoLuong : row.soLuong;
+                const mucDich = row.MucDich || row.mucDich;
+                const ngayDang = formatDate(row.NgayDang || row.ngayDang);
+                const gioDang = row.GioDang || row.gioDang || "00:00";
+                const slDaNhan = row.SoLuongDaNhan !== undefined ? row.SoLuongDaNhan : (row.slDaNhan || 0);
+
+                return (
+                  <tr key={row._id || maTin} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 text-center font-medium">{index + 1}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 font-bold text-red-600">{maTin}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200">{maBV}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 font-semibold text-gray-900">{tenBV}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200">{sdt}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200">{email}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">
+                      <span className="bg-red-100 text-red-700 px-[8px] py-[2px] rounded font-bold">{nhomMau}</span>
+                    </td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{soLuong} đơn vị</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 max-w-[180px] truncate" title={mucDich}>{mucDich}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{ngayDang}</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{gioDang}</td>
+                    <td className="px-[12px] py-[12px] text-center bg-red-50 text-red-800 font-bold">{slDaNhan} đơn vị</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

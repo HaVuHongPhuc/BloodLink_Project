@@ -1,8 +1,24 @@
 // Note: API /api/admin - các endpoint dành cho quản trị hệ thống.
 const express = require('express');
-const controller = require('../controllers/adminController');
 const router = express.Router();
+const {
+  xacThucDoiTac,
+  danhSachChoXacThuc,
+  traCuuNguoiHienMau,
+  traCuuNguoiNhanMau
+} = require('../controllers/adminController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.use(controller.notImplemented);
+// UC06: Xác thực tài khoản đối tác (chỉ admin)
+router.put('/xac-thuc-doi-tac', authMiddleware, xacThucDoiTac);
+
+// Danh sách chờ xác thực (BM02) - (chỉ admin)
+router.get('/danh-sach-cho-xac-thuc', authMiddleware, danhSachChoXacThuc);
+
+// UC07: Tra cứu người hiến máu (chỉ admin)
+router.get('/tra-cuu-nguoi-hien', authMiddleware, traCuuNguoiHienMau);
+
+// UC08: Tra cứu người nhận máu (chỉ admin)
+router.get('/tra-cuu-nguoi-nhan', authMiddleware, traCuuNguoiNhanMau);
 
 module.exports = router;

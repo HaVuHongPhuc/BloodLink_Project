@@ -4,7 +4,6 @@ const HospitalList = require("../models/HospitalList");
 exports.getAll = async (req, res) => {
   try {
     const data = await HospitalList.find();
-    console.log(">>> DỮ LIỆU BỆNH VIỆN TỪ MONGODB:", data);
     res.status(200).json(data);
   } catch (err) {
     console.error("Lỗi getAll:", err.message);

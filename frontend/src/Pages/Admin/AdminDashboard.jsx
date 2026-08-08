@@ -3,30 +3,38 @@ import Layout from "../Layout";
 import VerifyPartner from "./VerifyPartner";
 import SearchDonor from "./SearchDonor";
 import SearchRecipient from "./SearchRecipient";
-import ManageHospitals from "./ManageHospitals"; 
+import ManageHospitals from "./ManageHospitals";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("verify");
-  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
+    const token = localStorage.getItem("userToken");
     const role = localStorage.getItem("userRole");
-    if (role !== "admin") {
-      window.location.href = "/homepage";
+
+    // Nếu không có token hoặc role không phải quản trị hệ thống → chuyển về login
+    if (!token || role !== "quan tri he thong") {
+      window.location.href = "/login";
       return;
     }
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const found = users.find((u) => u.email === email);
-    setUser(found);
+    setLoading(false);
   }, []);
 
-  if (!user) return <Layout><div>Loading...</div></Layout>;
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <p className="text-gray-500">Đang tải...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="min-h-[80vh] py-[40px] px-[16px]">
-        <div className="max-w-[1300px] mx-auto"> 
+        <div className="max-w-[1300px] mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Quản trị hệ thống</h1>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex flex-wrap border-b border-gray-200 mb-6 gap-2">
@@ -40,7 +48,7 @@ const AdminDashboard = () => {
               >
                 Xác thực đối tác (BM02)
               </button>
-              
+
               <button
                 className={`py-3 px-6 font-medium text-sm ${
                   activeTab === "manageHospitals"
@@ -73,10 +81,10 @@ const AdminDashboard = () => {
                 Tra cứu người nhận (BM12)
               </button>
             </div>
-            
+
             {/* Render các view tương ứng với Tab */}
             {activeTab === "verify" && <VerifyPartner />}
-            {activeTab === "manageHospitals" && <ManageHospitals />} 
+            {activeTab === "manageHospitals" && <ManageHospitals />}
             {activeTab === "searchDonor" && <SearchDonor />}
             {activeTab === "searchRecipient" && <SearchRecipient />}
           </div>

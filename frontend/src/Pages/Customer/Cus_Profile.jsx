@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Layout from "../Layout";
 import ChangePassword from "./ChangePassword";
+import NotificationList from "./NotificationList";
 
 const Cus_Profile = () => {
   const [user, setUser] = useState(null);
@@ -21,7 +22,6 @@ const Cus_Profile = () => {
   const [orders, setOrders] = useState([]);
   const [orderMessage, setOrderMessage] = useState("");
 
-  // BỔ SUNG: State quản lý Modal xác nhận hủy đơn
   const [cancelModal, setCancelModal] = useState({ open: false, orderId: null });
 
   const getMaxDob = () => {
@@ -101,7 +101,6 @@ const Cus_Profile = () => {
     }
   }, [activeTab]);
 
-  // BỔ SUNG: Mở và đóng Modal xác nhận
   const openCancelModal = (orderId) => {
     setCancelModal({ open: true, orderId });
   };
@@ -110,7 +109,6 @@ const Cus_Profile = () => {
     setCancelModal({ open: false, orderId: null });
   };
 
-  // BỔ SUNG: Xử lý hủy đơn sau khi người dùng chọn 'Xác nhận' trên Modal
   const handleConfirmCancelOrder = async () => {
     const orderId = cancelModal.orderId;
     closeCancelModal();
@@ -226,7 +224,6 @@ const Cus_Profile = () => {
 
   return (
     <Layout>
-      {/* BỔ SUNG: Khung Modal xác nhận hiển thị ở giữa màn hình */}
       {cancelModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-[384px] p-6 rounded-2xl bg-white text-center shadow-2xl flex flex-col justify-between border border-gray-200">
@@ -290,6 +287,16 @@ const Cus_Profile = () => {
               }`}
             >
               Xem đơn đăng ký
+            </button>
+            <button
+              onClick={() => setActiveTab("notifications")}
+              className={`w-full text-left py-2 px-4 text-sm font-medium transition ${
+                activeTab === "notifications"
+                  ? "bg-white text-black font-bold border-l-4 border-black shadow-sm"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Thông báo
             </button>
           </div>
 
@@ -564,7 +571,6 @@ const Cus_Profile = () => {
                               </td>
                               <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
                                 {isCancelable ? (
-                                  /* SỬA: Gọi openCancelModal để bật Modal giữa màn hình */
                                   <button
                                     onClick={() => openCancelModal(order._id)}
                                     className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition shadow-sm"
@@ -582,6 +588,13 @@ const Cus_Profile = () => {
                     </table>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === "notifications" && (
+              <div>
+                <h2 className="text-xl font-bold mb-4">Thông báo</h2>
+                <NotificationList maTaiKhoan={user?.MaTaiKhoan} />
               </div>
             )}
           </div>

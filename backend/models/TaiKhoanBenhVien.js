@@ -17,6 +17,8 @@ const TaiKhoanBenhVienSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true,
     match: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ']
   },
   MatKhau: {
@@ -60,7 +62,7 @@ const TaiKhoanBenhVienSchema = new mongoose.Schema({
   collection: 'TaiKhoanBenhVien'
 });
 
-TaiKhoanBenhVienSchema.pre('save', function(next) {
+TaiKhoanBenhVienSchema.pre('save', function() {
   if (!this.MaBenhVien) {
     this.MaBenhVien = 'BV' + String(Date.now()).slice(-9);
   }
@@ -70,7 +72,6 @@ TaiKhoanBenhVienSchema.pre('save', function(next) {
   if (!this.NgayThamGia && this.TrangThai === 'hoat dong') {
     this.NgayThamGia = new Date();
   }
-  next();
 });
 
 module.exports = mongoose.model('TaiKhoanBenhVien', TaiKhoanBenhVienSchema);

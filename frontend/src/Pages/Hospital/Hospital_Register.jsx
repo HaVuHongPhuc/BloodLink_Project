@@ -1,37 +1,27 @@
 import { useState } from "react";
 import Layout from "../Layout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope, faLock, faHospital } from "@fortawesome/free-solid-svg-icons";
+import { 
+  faHospital, faUser, faMapMarkerAlt, faBuilding, 
+  faPhone, faEnvelope, faLock, faNotesMedical, faUserPlus 
+} from "@fortawesome/free-solid-svg-icons";
 
 const Hospital_Register = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    hospitalName: "",
-    representative: "",
-    address: "",
-    taxCode: "",
-    phone: "",
-    note: "",
+    TenBenhVien: "",
+    NguoiDaiDien: "",
+    DiaChiBenhVien: "",
+    MaSoThue: "",
+    SoDienThoaiBenhVien: "",
+    Email: "",
+    MatKhau: "",
+    XacNhanMatKhau: "",
+    GhiChu: "",
   });
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  const getUsers = () => {
-    const stored = localStorage.getItem("users");
-    return stored ? JSON.parse(stored) : [];
-  };
-
-  const saveUsers = (users) => {
-    localStorage.setItem("users", JSON.stringify(users));
-  };
-
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePassword = (password) =>
-    password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
-  const validatePhone = (phone) => /^[0-9]{10,11}$/.test(phone);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,68 +31,112 @@ const Hospital_Register = () => {
     setSuccessMessage("");
   };
 
-  const handleSubmit = (e) => {
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone) => /^0[0-9]{9,10}$/.test(phone);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const { email, password, confirmPassword, hospitalName, representative, address, taxCode, phone, note } = formData;
+    const {
+      TenBenhVien,
+      NguoiDaiDien,
+      DiaChiBenhVien,
+      MaSoThue,
+      SoDienThoaiBenhVien,
+      Email,
+      MatKhau,
+      XacNhanMatKhau,
+      GhiChu,
+    } = formData;
+
     const newErrors = {};
 
-    if (!email) newErrors.email = "Vui lòng nhập email";
-    else if (!validateEmail(email)) newErrors.email = "MS06: Vui lòng kiểm tra lại định dạng email";
-
-    if (!password) newErrors.password = "Vui lòng nhập mật khẩu";
-    else if (!validatePassword(password)) newErrors.password = "MS02: Vui lòng nhập đúng trường dữ liệu";
-
-    if (!confirmPassword) newErrors.confirmPassword = "Vui lòng xác nhận mật khẩu";
-    else if (password && confirmPassword !== password) newErrors.confirmPassword = "MS42: Mật khẩu xác nhận không đúng";
-
-    if (!hospitalName) newErrors.hospitalName = "Vui lòng nhập tên bệnh viện";
-    if (!phone) newErrors.phone = "Vui lòng nhập số điện thoại";
-    else if (!validatePhone(phone)) newErrors.phone = "Số điện thoại không hợp lệ (10-11 chữ số)";
+    // Kiểm tra các trường bắt buộc
+    if (!TenBenhVien) newErrors.TenBenhVien = "Vui lòng nhập tên bệnh viện";
+    if (!NguoiDaiDien) newErrors.NguoiDaiDien = "Vui lòng nhập người đại diện";
+    if (!DiaChiBenhVien) newErrors.DiaChiBenhVien = "Vui lòng nhập địa chỉ bệnh viện";
+    if (!MaSoThue) newErrors.MaSoThue = "Vui lòng nhập mã số thuế";
+    if (!SoDienThoaiBenhVien) {
+      newErrors.SoDienThoaiBenhVien = "Vui lòng nhập số điện thoại";
+    } else if (!validatePhone(SoDienThoaiBenhVien)) {
+      newErrors.SoDienThoaiBenhVien = "Số điện thoại không hợp lệ (10-11 số, bắt đầu 0)";
+    }
+    if (!Email) {
+      newErrors.Email = "Vui lòng nhập email";
+    } else if (!validateEmail(Email)) {
+      newErrors.Email = "MS06: Vui lòng kiểm tra lại định dạng email";
+    }
+    if (!MatKhau) {
+      newErrors.MatKhau = "Vui lòng nhập mật khẩu";
+    } else if (MatKhau.length < 6) {
+      newErrors.MatKhau = "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+    if (!XacNhanMatKhau) {
+      newErrors.XacNhanMatKhau = "Vui lòng xác nhận mật khẩu";
+    } else if (MatKhau && XacNhanMatKhau !== MatKhau) {
+      newErrors.XacNhanMatKhau = "MS42: Mật khẩu xác nhận không đúng";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    const users = getUsers();
-    if (users.some((u) => u.email === email)) {
-      setErrorMessage("MS25: Tài khoản đã tồn tại");
-      return;
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/dang-ky-doi-tac", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          TenBenhVien,
+          NguoiDaiDien,
+          DiaChiBenhVien,
+          MaSoThue,
+          SoDienThoaiBenhVien,
+          Email,
+          MatKhau,
+          GhiChu: GhiChu || "",
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setSuccessMessage(data.message || "MS01: Đăng ký tài khoản thành công");
+        setErrorMessage("");
+        // Xóa form
+        setFormData({
+          TenBenhVien: "",
+          NguoiDaiDien: "",
+          DiaChiBenhVien: "",
+          MaSoThue: "",
+          SoDienThoaiBenhVien: "",
+          Email: "",
+          MatKhau: "",
+          XacNhanMatKhau: "",
+          GhiChu: "",
+        });
+        setTimeout(() => window.location.href = "/partner-login", 2000);
+      } else {
+        setErrorMessage(data.message || "Đăng ký thất bại");
+        setSuccessMessage("");
+      }
+    } catch (error) {
+      setErrorMessage("Lỗi kết nối server");
+      setSuccessMessage("");
+    } finally {
+      setLoading(false);
     }
-
-    const newPartner = {
-      email,
-      password,
-      role: "hospital",
-      status: "pending",
-      hospitalName,
-      representative,
-      address,
-      taxCode,
-      phone,
-      note,
-      createdAt: new Date().toISOString(),
-    };
-    users.push(newPartner);
-    saveUsers(users);
-
-    setSuccessMessage("MS01: Đăng ký tài khoản thành công! Vui lòng chờ xác thực.");
-    setErrorMessage("");
-
-    setTimeout(() => {
-      window.location.href = "/partner-login";
-    }, 2000);
   };
 
   return (
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center py-[40px] px-[16px] bg-gray-50">
-        <div className="w-full max-w-[520px] bg-white rounded-[16px] shadow-lg p-[40px]">
+        <div className="w-full max-w-[600px] bg-white rounded-[16px] shadow-lg p-[40px]">
           <div className="text-center mb-[32px]">
             <div className="w-[60px] h-[60px] bg-red-600 rounded-full flex items-center justify-center mx-auto mb-[16px]">
-              <FontAwesomeIcon icon={faHospital} className="text-white text-[28px]" />
+              <FontAwesomeIcon icon={faUserPlus} className="text-white text-[28px]" />
             </div>
             <h1 className="text-[28px] font-bold text-gray-900">Đăng Ký Đối Tác</h1>
+            <p className="text-gray-500 text-[14px] mt-[8px]">BM01: Phiếu đăng ký tài khoản đối tác</p>
           </div>
 
           {successMessage && (
@@ -117,6 +151,122 @@ const Hospital_Register = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-[16px]">
+            {/* Tên bệnh viện */}
+            <div>
+              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
+                Tên bệnh viện <span className="text-red-600">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
+                  <FontAwesomeIcon icon={faHospital} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="TenBenhVien"
+                  value={formData.TenBenhVien}
+                  onChange={handleChange}
+                  placeholder="Bệnh viện Đa khoa Trung ương"
+                  className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
+                    errors.TenBenhVien ? "border-red-500" : "border-gray-300"
+                  } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
+                />
+              </div>
+              {errors.TenBenhVien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.TenBenhVien}</p>}
+            </div>
+
+            {/* Người đại diện */}
+            <div>
+              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
+                Người đại diện <span className="text-red-600">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
+                  <FontAwesomeIcon icon={faUser} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="NguoiDaiDien"
+                  value={formData.NguoiDaiDien}
+                  onChange={handleChange}
+                  placeholder="PGS.TS Nguyễn Văn A"
+                  className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
+                    errors.NguoiDaiDien ? "border-red-500" : "border-gray-300"
+                  } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
+                />
+              </div>
+              {errors.NguoiDaiDien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.NguoiDaiDien}</p>}
+            </div>
+
+            {/* Địa chỉ bệnh viện */}
+            <div>
+              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
+                Địa chỉ bệnh viện <span className="text-red-600">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
+                  <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="DiaChiBenhVien"
+                  value={formData.DiaChiBenhVien}
+                  onChange={handleChange}
+                  placeholder="1 Đường Trung Ương, Hà Nội"
+                  className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
+                    errors.DiaChiBenhVien ? "border-red-500" : "border-gray-300"
+                  } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
+                />
+              </div>
+              {errors.DiaChiBenhVien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.DiaChiBenhVien}</p>}
+            </div>
+
+            {/* Mã số thuế */}
+            <div>
+              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
+                Mã số thuế <span className="text-red-600">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
+                  <FontAwesomeIcon icon={faBuilding} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="MaSoThue"
+                  value={formData.MaSoThue}
+                  onChange={handleChange}
+                  placeholder="0101234567"
+                  className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
+                    errors.MaSoThue ? "border-red-500" : "border-gray-300"
+                  } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
+                />
+              </div>
+              {errors.MaSoThue && <p className="text-red-500 text-[13px] mt-[6px]">{errors.MaSoThue}</p>}
+            </div>
+
+            {/* Số điện thoại bệnh viện */}
+            <div>
+              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
+                Số điện thoại bệnh viện <span className="text-red-600">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
+                  <FontAwesomeIcon icon={faPhone} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="SoDienThoaiBenhVien"
+                  value={formData.SoDienThoaiBenhVien}
+                  onChange={handleChange}
+                  placeholder="02412345678"
+                  className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
+                    errors.SoDienThoaiBenhVien ? "border-red-500" : "border-gray-300"
+                  } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
+                />
+              </div>
+              {errors.SoDienThoaiBenhVien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.SoDienThoaiBenhVien}</p>}
+            </div>
+
+            {/* Email */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Email <span className="text-red-600">*</span>
@@ -127,18 +277,19 @@ const Hospital_Register = () => {
                 </div>
                 <input
                   type="email"
-                  name="email"
-                  value={formData.email}
+                  name="Email"
+                  value={formData.Email}
                   onChange={handleChange}
-                  placeholder="hospital@example.com"
+                  placeholder="benhvien@example.com"
                   className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
-                    errors.email ? "border-red-500" : "border-gray-300"
+                    errors.Email ? "border-red-500" : "border-gray-300"
                   } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
                 />
               </div>
-              {errors.email && <p className="text-red-500 text-[13px] mt-[6px]">{errors.email}</p>}
+              {errors.Email && <p className="text-red-500 text-[13px] mt-[6px]">{errors.Email}</p>}
             </div>
 
+            {/* Mật khẩu */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Mật khẩu <span className="text-red-600">*</span>
@@ -149,19 +300,19 @@ const Hospital_Register = () => {
                 </div>
                 <input
                   type="password"
-                  name="password"
-                  value={formData.password}
+                  name="MatKhau"
+                  value={formData.MatKhau}
                   onChange={handleChange}
                   placeholder="••••••••"
                   className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
-                    errors.password ? "border-red-500" : "border-gray-300"
+                    errors.MatKhau ? "border-red-500" : "border-gray-300"
                   } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
                 />
               </div>
-              {errors.password && <p className="text-red-500 text-[13px] mt-[6px]">{errors.password}</p>}
-              <p className="text-gray-400 text-[12px] mt-[4px]">Ít nhất 8 ký tự, bao gồm chữ và số</p>
+              {errors.MatKhau && <p className="text-red-500 text-[13px] mt-[6px]">{errors.MatKhau}</p>}
             </div>
 
+            {/* Xác nhận mật khẩu */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Xác nhận mật khẩu <span className="text-red-600">*</span>
@@ -172,118 +323,46 @@ const Hospital_Register = () => {
                 </div>
                 <input
                   type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
+                  name="XacNhanMatKhau"
+                  value={formData.XacNhanMatKhau}
                   onChange={handleChange}
                   placeholder="••••••••"
                   className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
-                    errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                    errors.XacNhanMatKhau ? "border-red-500" : "border-gray-300"
                   } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
                 />
               </div>
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-[13px] mt-[6px]">{errors.confirmPassword}</p>
-              )}
+              {errors.XacNhanMatKhau && <p className="text-red-500 text-[13px] mt-[6px]">{errors.XacNhanMatKhau}</p>}
             </div>
 
-            <div>
-              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
-                Tên bệnh viện <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                name="hospitalName"
-                value={formData.hospitalName}
-                onChange={handleChange}
-                placeholder="Bệnh viện Chợ Rẫy"
-                className={`w-full px-[14px] py-[12px] border ${
-                  errors.hospitalName ? "border-red-500" : "border-gray-300"
-                } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
-              />
-              {errors.hospitalName && <p className="text-red-500 text-[13px] mt-[6px]">{errors.hospitalName}</p>}
-            </div>
-
-            <div>
-              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
-                Người đại diện
-              </label>
-              <input
-                type="text"
-                name="representative"
-                value={formData.representative}
-                onChange={handleChange}
-                placeholder="Nguyễn Văn A"
-                className="w-full px-[14px] py-[12px] border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
-                Địa chỉ bệnh viện <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="201B Nguyễn Chí Thanh, Q.5, TP.HCM"
-                className={`w-full px-[14px] py-[12px] border ${
-                  errors.address ? "border-red-500" : "border-gray-300"
-                } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
-              />
-              {errors.address && <p className="text-red-500 text-[13px] mt-[6px]">{errors.address}</p>}
-            </div>
-
-            <div>
-              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
-                Mã số thuế
-              </label>
-              <input
-                type="text"
-                name="taxCode"
-                value={formData.taxCode}
-                onChange={handleChange}
-                placeholder="0123456789"
-                className="w-full px-[14px] py-[12px] border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
-                Số điện thoại <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="0901234567"
-                className={`w-full px-[14px] py-[12px] border ${
-                  errors.phone ? "border-red-500" : "border-gray-300"
-                } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
-              />
-              {errors.phone && <p className="text-red-500 text-[13px] mt-[6px]">{errors.phone}</p>}
-            </div>
-
+            {/* Ghi chú */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Ghi chú
               </label>
-              <textarea
-                name="note"
-                value={formData.note}
-                onChange={handleChange}
-                placeholder="Thông tin thêm..."
-                className="w-full px-[14px] py-[12px] border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
-                rows="2"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
+                  <FontAwesomeIcon icon={faNotesMedical} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="GhiChu"
+                  value={formData.GhiChu}
+                  onChange={handleChange}
+                  placeholder="Thông tin thêm..."
+                  className="w-full pl-[40px] pr-[14px] py-[12px] border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-[14px] rounded-[8px] transition shadow-md"
+              disabled={loading}
+              className={`w-full bg-red-600 hover:bg-red-700 text-white font-bold py-[14px] rounded-[8px] transition shadow-md ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Đăng Ký Đối Tác
+              {loading ? "Đang xử lý..." : "Đăng Ký Đối Tác"}
             </button>
           </form>
 

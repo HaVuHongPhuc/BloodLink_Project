@@ -155,3 +155,58 @@ exports.traCuuNguoiNhanMau = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
 };
+// Lấy danh sách bệnh viện hợp tác
+exports.getHospitals = async (req, res) => {
+  try {
+    const hospitals = await BenhVienHopTac.find().sort({ TenBenhVien: 1 });
+    res.json(hospitals);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+// Cập nhật bệnh viện hợp tác
+exports.updateHospital = async (req, res) => {
+  try {
+    const { maBenhVien } = req.params;
+    const updateData = req.body;
+    
+    const updated = await BenhVienHopTac.findOneAndUpdate(
+      { MaBenhVien: maBenhVien },
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updated) {
+      return res.status(404).json({ message: 'Không tìm thấy bệnh viện' });
+    }
+    
+    res.json({ message: 'MS10: Cập nhật thành công', data: updated });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+// Xóa bệnh viện hợp tác (chỉ khi ngừng hoạt động)
+exports.deleteHospital = async (req, res) => {
+  try {
+    const { maBenhVien } = req.params;
+    
+    const hospital = await BenhVienHopTac.findOne({ MaBenhVien: maBenhVien });
+    if (!hospital) {
+      return res.status(404).json({ message: 'Không tìm thấy bệnh viện' });
+    }
+    
+    if (hospital.TrangThai === 'đang hợp tác') {
+      return res.status(400).json({ message: 'MS46: Bệnh viện vẫn đang hoạt động, không thể xóa' });
+    }
+    
+    await BenhVienHopTac.findOneAndDelete({ MaBenhVien: maBenhVien });
+    res.json({ message: 'MS45: Xóa tài khoản bệnh viện hợp tác thành công' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};

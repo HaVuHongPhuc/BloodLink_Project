@@ -5,7 +5,10 @@ const {
   xacThucDoiTac,
   danhSachChoXacThuc,
   traCuuNguoiHienMau,
-  traCuuNguoiNhanMau
+  traCuuNguoiNhanMau,
+  getHospitals,
+  updateHospital,
+  deleteHospital
 } = require('../controllers/adminController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
@@ -20,5 +23,7 @@ router.get('/tra-cuu-nguoi-hien', authMiddleware, traCuuNguoiHienMau);
 
 // UC08: Tra cứu người nhận máu (chỉ admin)
 router.get('/tra-cuu-nguoi-nhan', authMiddleware, traCuuNguoiNhanMau);
-
+router.get('/hospitals', authMiddleware, getHospitals);
+router.put('/hospitals/:maBenhVien', authMiddleware, updateHospital);
+router.delete('/hospitals/:maBenhVien', authMiddleware, deleteHospital);
 module.exports = router;

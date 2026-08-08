@@ -15,7 +15,7 @@ const urgentNewsRoutes = require('./routes/urgentNewsRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const hospitalListRoutes = require("./routes/hospitalListRoutes");
-
+const thongBaoRoutes = require('./routes/thongBaoRoutes');
 const app = express();
 
 // Middleware
@@ -35,6 +35,7 @@ app.use('/api/blood', bloodRoutes);
 app.use('/api/urgent-news', urgentNewsRoutes);
 app.use("/api/hospitals",hospitalListRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/thong-bao', thongBaoRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;

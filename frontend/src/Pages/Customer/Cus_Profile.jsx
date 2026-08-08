@@ -4,7 +4,6 @@ import ChangePassword from "./ChangePassword";
 
 const Cus_Profile = () => {
   const [user, setUser] = useState(null);
-  // quản lý tab đang được chọn: 'profile', 'password', hoặc 'orders'
   const [activeTab, setActiveTab] = useState("profile");
   const [profile, setProfile] = useState({
     fullName: "",
@@ -20,16 +19,17 @@ const Cus_Profile = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orders, setOrders] = useState([]);
-  const [orderMessage, setOrderMessage] = useState(""); // lưu thông báo sau khi hủy đơn
+  const [orderMessage, setOrderMessage] = useState("");
 
-  // tính ngày tối đa được chọn cho ngày sinh (đảm bảo khách hàng từ 10 tuổi trở lên)
+  // BỔ SUNG: State quản lý Modal xác nhận hủy đơn
+  const [cancelModal, setCancelModal] = useState({ open: false, orderId: null });
+
   const getMaxDob = () => {
     const today = new Date();
     today.setFullYear(today.getFullYear() - 10);
     return today.toISOString().split("T")[0];
   };
 
-  // 1. truy vấn thông tin hồ sơ từ mongodb khi tải trang
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     if (!token) {
@@ -67,7 +67,6 @@ const Cus_Profile = () => {
       });
   }, []);
 
-  // hàm tải lại danh sách đơn đăng ký
   const fetchMyOrders = () => {
     const token = localStorage.getItem("userToken");
     if (!token) return;
@@ -102,11 +101,22 @@ const Cus_Profile = () => {
     }
   }, [activeTab]);
 
-  // hàm xử lý hủy đơn đăng ký
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn đăng ký này?")) return;
+  // BỔ SUNG: Mở và đóng Modal xác nhận
+  const openCancelModal = (orderId) => {
+    setCancelModal({ open: true, orderId });
+  };
+
+  const closeCancelModal = () => {
+    setCancelModal({ open: false, orderId: null });
+  };
+
+  // BỔ SUNG: Xử lý hủy đơn sau khi người dùng chọn 'Xác nhận' trên Modal
+  const handleConfirmCancelOrder = async () => {
+    const orderId = cancelModal.orderId;
+    closeCancelModal();
 
     const token = localStorage.getItem("userToken");
+    if (!token) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/blood/cancel-order/${orderId}`, {
@@ -117,16 +127,22 @@ const Cus_Profile = () => {
         },
       });
 
-      const result = await response.json();
+      let result = {};
+      try {
+        result = await response.json();
+      } catch {
+        result = {};
+      }
 
-      if (response.ok) {
+      if (response.ok && result.success) {
         setOrderMessage("Đã hủy đơn đăng ký");
-        fetchMyOrders(); // tải lại danh sách đơn sau khi hủy
+        fetchMyOrders();
         setTimeout(() => setOrderMessage(""), 3000);
       } else {
         alert(result.message || "Không thể hủy đơn đăng ký");
       }
     } catch (error) {
+      console.error("Cancel order error:", error);
       alert("Lỗi kết nối máy chủ");
     }
   };
@@ -138,17 +154,14 @@ const Cus_Profile = () => {
     setSuccessMessage("");
   };
 
-  // gửi dữ liệu cập nhật về mongodb thông qua backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
-    // ràng buộc số điện thoại từ 10 đến 15 số
     if (profile.phone && !profile.phone.match(/^[0-9]{10,15}$/)) {
       newErrors.phone = "Số điện thoại phải từ 10 đến 15 chữ số";
     }
 
-    // kiểm tra ràng buộc từ 10 tuổi trở lên
     if (profile.dob) {
       const selectedDob = new Date(profile.dob);
       const minAgeDate = new Date();
@@ -197,7 +210,6 @@ const Cus_Profile = () => {
     }
   };
 
-  // định dạng ngày giờ hiển thị
   const formatDate = (dateString) => {
     if (!dateString) return "Chưa có dữ liệu";
     const date = new Date(dateString);
@@ -214,11 +226,40 @@ const Cus_Profile = () => {
 
   return (
     <Layout>
+      {/* BỔ SUNG: Khung Modal xác nhận hiển thị ở giữa màn hình */}
+      {cancelModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-[384px] p-6 rounded-2xl bg-white text-center shadow-2xl flex flex-col justify-between border border-gray-200">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 font-bold text-xl">
+              !
+            </div>
+            <p className="my-4 text-base font-semibold text-slate-800">
+              Bạn có chắc chắn muốn hủy đơn đăng ký này?
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={closeCancelModal}
+                className="rounded-md px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 transition"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancelOrder}
+                className="rounded-md px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Thông tin tài khoản</h1>
 
         <div className="flex flex-col md:flex-row gap-6">
-          {/* thanh lựa chọn bên tay trái */}
           <div className="w-full md:w-64 bg-gray-50 p-2 rounded-lg h-fit space-y-1 border border-gray-200">
             <button
               onClick={() => setActiveTab("profile")}
@@ -252,11 +293,9 @@ const Cus_Profile = () => {
             </button>
           </div>
 
-          {/* nội dung hiển thị bên tay phải */}
           <div className="flex-1 bg-white shadow rounded-lg p-6 border border-gray-100 space-y-8">
             {activeTab === "profile" && (
               <div>
-                {/* phần 1: tổng quan hệ thống (chỉ xem) */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 border-gray-200">
                     <div>
@@ -273,7 +312,6 @@ const Cus_Profile = () => {
                     </div>
                   </div>
 
-                  {/* thống kê lượt hiến và nhận máu */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center pt-1">
                     <div className="bg-white p-3 rounded border border-gray-200 shadow-sm">
                       <span className="text-xs text-gray-500 block">Lượt hiến máu</span>
@@ -298,7 +336,6 @@ const Cus_Profile = () => {
                   </div>
                 </div>
 
-                {/* phần 2: thông tin cá nhân có thể cập nhật */}
                 <h2 className="text-xl font-bold mb-4">Hồ sơ cá nhân</h2>
 
                 {successMessage && (
@@ -483,7 +520,6 @@ const Cus_Profile = () => {
                       </thead>
                       <tbody>
                         {orders.map((order, index) => {
-                          // định dạng hiển thị tên trạng thái
                           const formatTrangThai = (status) => {
                             switch (status) {
                               case 'Cho_Duyet':
@@ -528,8 +564,9 @@ const Cus_Profile = () => {
                               </td>
                               <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
                                 {isCancelable ? (
+                                  /* SỬA: Gọi openCancelModal để bật Modal giữa màn hình */
                                   <button
-                                    onClick={() => handleCancelOrder(order._id)}
+                                    onClick={() => openCancelModal(order._id)}
                                     className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition shadow-sm"
                                   >
                                     Hủy đơn

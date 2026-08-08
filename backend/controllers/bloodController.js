@@ -55,14 +55,13 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-// Hủy đơn đăng ký của khách hàng
+// BỔ SUNG: Hủy đơn đăng ký của khách hàng
 exports.cancelOrder = async (req, res) => {
   try {
     const { id } = req.params;
     const tokenMaTaiKhoan = req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
     const email = req.user?.Email || req.user?.email;
 
-    // Tìm đơn đăng ký khớp với ID đơn và thuộc sở hữu của tài khoản đang đăng nhập
     const don = await DonDangKy.findOne({
       _id: id,
       $or: [
@@ -75,7 +74,6 @@ exports.cancelOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy đơn đăng ký' });
     }
 
-    // Chỉ cho phép hủy khi đơn ở trạng thái chờ duyệt hoặc chờ xử lý
     if (don.TrangThai !== 'Cho_Duyet' && don.TrangThai !== 'Cho_Xu_Ly') {
       return res.status(400).json({ success: false, message: 'Đơn đăng ký không thể hủy ở trạng thái hiện tại' });
     }
@@ -85,7 +83,7 @@ exports.cancelOrder = async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Đã hủy đơn đăng ký thành công'
+      message: 'Đã hủy đơn đăng ký'
     });
   } catch (error) {
     console.error('Lỗi khi hủy đơn đăng ký:', error);

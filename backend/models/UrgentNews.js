@@ -45,7 +45,6 @@ const UrgentNewsSchema = new mongoose.Schema(
     SoLuong: { 
       type: Number,
       required: true,
-      maxlength: 3
     },
 
     MucDich: { 
@@ -68,7 +67,6 @@ const UrgentNewsSchema = new mongoose.Schema(
         type: Number,
         required: true,
         default: 0,
-        maxlength: 3
     },
     
     TrangThai: { 

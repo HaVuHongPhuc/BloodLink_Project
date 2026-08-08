@@ -6,12 +6,22 @@ import {
   faBullhorn, 
   faExclamationTriangle, 
   faCheckCircle, 
-  faClock 
+  faClock,
+  faLock,
+  faSearch,
+  faFilter
 } from "@fortawesome/free-solid-svg-icons";
 
 const HospitalPage = () => {
-  // State tự quản lý danh sách tin khẩn cấp
+  // State quản lý đăng nhập
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // State quản lý danh sách tin khẩn cấp
   const [listData, setListData] = useState([]);
+
+  // STATES QUẢN LÝ TÌM KIẾM & LỌC (MỚI BỔ SUNG)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBloodType, setSelectedBloodType] = useState("ALL");
 
   // STATES QUẢN LÝ POPUP MODAL 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -23,7 +33,7 @@ const HospitalPage = () => {
   const [newsToDelete, setNewsToDelete] = useState(null);
   const [systemMessage, setSystemMessage] = useState({ type: "", text: "" });
 
-  // State Form lưu trữ dữ liệu theo cấu trúc biểu mẫu (BM05) 
+  // State Form (BM05) 
   const [formData, setFormData] = useState({
     tenBV: "",
     sdt: "",
@@ -33,39 +43,39 @@ const HospitalPage = () => {
     mucDich: ""
   });
 
-  // Hàm tự động tạo Mã bệnh viện 
+  // KIỂM TRA ĐĂNG NHẬP 
+  useEffect(() => {
+    const token = localStorage.getItem("hospitalToken") || localStorage.getItem("userToken");
+    if (!token) {
+      setIsAuthenticated(false);
+    } else {
+      setIsAuthenticated(true);
+      fetchUrgentNews();
+    }
+  }, []);
+
+  // Hàm tự động tạo Mã bệnh viện
   const generateMaBV = (tenBV) => {
     if (!tenBV) return "BV001";
-    
     const cleanStr = tenBV
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/đ/g, "d").replace(/Đ/g, "D");
-      
     const words = cleanStr.trim().split(/\s+/);
-    const initials = words.map(word => {
-      if (/^\d+$/.test(word)) {
-        return word; 
-      }
-      return word[0]; 
-    }).join('').toUpperCase();
-
+    const initials = words.map(word => /^\d+$/.test(word) ? word : word[0]).join('').toUpperCase();
     return initials.length <= 10 ? initials : initials.slice(0, 10);
   };
   
-  // Định dạng ngày tháng DD/MM/YYYY
+  // Định dạng ngày tháng
   const formatDate = (dateVal) => {
     if (!dateVal) return "";
     if (typeof dateVal === "string" && dateVal.includes("/")) return dateVal;
     const d = new Date(dateVal);
     if (isNaN(d.getTime())) return dateVal;
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
   };
 
-  // TẢI BẢN GHI TỪ BACKEND MONGODB 
+  // TẢI DỮ LIỆU TIN KHẨN CẤP TỪ MONGODB API
   const fetchUrgentNews = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/urgent-news");
@@ -80,16 +90,14 @@ const HospitalPage = () => {
           const soLuongDaNhan = Number(item.SoLuongDaNhan !== undefined ? item.SoLuongDaNhan : item.slDaNhan || 0);
           const isFullyReceived = soLuongDaNhan >= soLuongCan && soLuongCan > 0;
 
-          let isExpired3Days = false;
+          let isExpired = false;
           const dateDang = item.NgayDang || item.ngayDang;
           if (dateDang) {
-            const d = new Date(dateDang);
-            const diffTime = Math.abs(now - d);
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            if (diffDays >= 3) isExpired3Days = true;
+            const diffDays = Math.abs(now - new Date(dateDang)) / (1000 * 60 * 60 * 24);
+            if (diffDays >= 3) isExpired = true;
           }
 
-          return isStatusActive && !isFullyReceived && !isExpired3Days;
+          return isStatusActive && !isFullyReceived && !isExpired;
         });
 
         setListData(activeNews);
@@ -99,85 +107,82 @@ const HospitalPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUrgentNews();
-  }, []);
+  // LOGIC TÌM KIẾM VÀ LỌC DỮ LIỆU
+  const filteredListData = listData.filter((item) => {
+    const tenBVStr = (item.TenBenhVien || item.tenBV || "").toLowerCase();
+    const mucDichStr = (item.MucDich || item.mucDich || "").toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+
+    // 1. Kiểm tra từ khóa tìm kiếm (theo tên BV hoặc Mục đích)
+    const matchesSearch = tenBVStr.includes(searchLower) || mucDichStr.includes(searchLower);
+
+    // 2. Kiểm tra nhóm máu lọc
+    const nhomMauStr = item.NhomMau || item.nhomMau || "";
+    const matchesBlood = selectedBloodType === "ALL" || nhomMauStr === selectedBloodType;
+
+    return matchesSearch && matchesBlood;
+  });
 
   // Tự động ẩn thông báo sau 2 giây
   useEffect(() => {
     if (systemMessage.text) {
-      const timer = setTimeout(() => {
-        setSystemMessage({ type: "", text: "" });
-      }, 2000); 
+      const timer = setTimeout(() => setSystemMessage({ type: "", text: "" }), 2000); 
       return () => clearTimeout(timer);
     }
   }, [systemMessage]);
 
-  // MỞ MODAL ĐĂNG TIN KHẨN CẤP
+  // MỞ MODAL ĐĂNG TIN
   const handleOpenCreateModal = () => {
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập tài khoản Bệnh viện để thực hiện chức năng này!");
+      window.location.href = "/partner-login";
+      return;
+    }
     setSystemMessage({ type: "", text: "" });
-    setFormData({
-      tenBV: "",
-      sdt: "",
-      email: "",
-      nhomMau: "A+",
-      soLuong: "",
-      mucDich: ""
-    });
+    setFormData({ tenBV: "", sdt: "", email: "", nhomMau: "A+", soLuong: "", mucDich: "" });
     setIsCreateModalOpen(true);
   };
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
-    setSystemMessage({ type: "", text: "" });
+    if (!isAuthenticated) return;
 
+    setSystemMessage({ type: "", text: "" });
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (
-      !formData.tenBV.trim() || formData.tenBV.length > 50 ||
-      !formData.mucDich.trim() || formData.mucDich.length > 200 ||
-      Number(formData.soLuong) <= 0
-    ) {
-      setSystemMessage({ 
-        type: "error", 
-        text: "Vui lòng nhập đúng trường dữ liệu (Tên bệnh viện ≤ 50 ký tự, Mục đích ≤ 200 ký tự)" 
-      });
+    if (!formData.tenBV.trim() || formData.tenBV.length > 50 || !formData.mucDich.trim() || formData.mucDich.length > 200 || Number(formData.soLuong) <= 0) {
+      setSystemMessage({ type: "error", text: "Vui lòng nhập đúng trường dữ liệu" });
       return;
     }
 
     if (formData.sdt.length < 10 || formData.sdt.length > 11) {
-      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải có độ dài từ 10 đến 11 chữ số" });
+      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải từ 10 đến 11 chữ số" });
       return;
     }
 
     if (!emailRegex.test(formData.email.trim())) {
-      setSystemMessage({ type: "error", text: "Địa chỉ Email không hợp lệ (Ví dụ: hospital@domain.com)" });
+      setSystemMessage({ type: "error", text: "Địa chỉ Email không hợp lệ" });
       return;
     }
 
     try {
-      const dynamicMaBV = generateMaBV(formData.tenBV);
-      const bodyPayload = {
-        MaBenhVien: dynamicMaBV,
-        TenBenhVien: formData.tenBV.trim(),
-        SoDienThoaiBenhVien: formData.sdt,
-        Email: formData.email.trim(),
-        NhomMau: formData.nhomMau || "A+",
-        SoLuong: Number(formData.soLuong),
-        MucDich: formData.mucDich.trim()
-      };
-
       const response = await fetch("http://localhost:5000/api/urgent-news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyPayload),
+        body: JSON.stringify({
+          MaBenhVien: generateMaBV(formData.tenBV),
+          TenBenhVien: formData.tenBV.trim(),
+          SoDienThoaiBenhVien: formData.sdt,
+          Email: formData.email.trim(),
+          NhomMau: formData.nhomMau || "A+",
+          SoLuong: Number(formData.soLuong),
+          MucDich: formData.mucDich.trim()
+        }),
       });
 
       const resData = await response.json();
-
       if (response.ok) {
-        const savedPost = resData.data || resData;
-        setListData([savedPost, ...listData]);
+        setListData([resData.data || resData, ...listData]);
         setSystemMessage({ type: "success", text: resData.message || "Đăng tin khẩn cấp thành công" });
         setIsCreateModalOpen(false);
       } else {
@@ -188,15 +193,16 @@ const HospitalPage = () => {
     }
   };
 
-  // MỞ MODAL CẬP NHẬT TIN KHẨN CẤP
+  // MỞ MODAL CẬP NHẬT TIN
   const handleOpenEditModal = (item, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập tài khoản Bệnh viện!");
+      window.location.href = "/partner-login";
+      return;
     }
     setSystemMessage({ type: "", text: "" });
     setSelectedNewsId(item._id);
-
     const exactAmount = String(item.SoLuong !== undefined ? item.SoLuong : item.soLuong || "").replace(/[^0-9]/g, "");
 
     setFormData({
@@ -213,21 +219,18 @@ const HospitalPage = () => {
 
   const handleUpdatePost = async (e) => {
     e.preventDefault();
-    setSystemMessage({ type: "", text: "" });
+    if (!isAuthenticated) return;
 
+    setSystemMessage({ type: "", text: "" });
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (
-      !formData.tenBV.trim() || formData.tenBV.length > 50 ||
-      !formData.mucDich.trim() || formData.mucDich.length > 200 ||
-      Number(formData.soLuong) <= 0
-    ) {
+    if (!formData.tenBV.trim() || formData.tenBV.length > 50 || !formData.mucDich.trim() || formData.mucDich.length > 200 || Number(formData.soLuong) <= 0) {
       setSystemMessage({ type: "error", text: "Vui lòng nhập đúng trường dữ liệu" });
       return;
     }
 
     if (formData.sdt.length < 10 || formData.sdt.length > 11) {
-      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải có độ dài từ 10 đến 11 chữ số" });
+      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải từ 10 đến 11 chữ số" });
       return;
     }
 
@@ -237,36 +240,28 @@ const HospitalPage = () => {
     }
 
     try {
-      const bodyPayload = {
-        TenBenhVien: formData.tenBV.trim(),
-        SoDienThoaiBenhVien: formData.sdt,
-        Email: formData.email.trim(),
-        NhomMau: formData.nhomMau,
-        SoLuong: Number(formData.soLuong),
-        MucDich: formData.mucDich.trim(),
-        TrangThai: "Đang hiển thị"
-      };
-
       const response = await fetch(`http://localhost:5000/api/urgent-news/${selectedNewsId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyPayload),
+        body: JSON.stringify({
+          TenBenhVien: formData.tenBV.trim(),
+          SoDienThoaiBenhVien: formData.sdt,
+          Email: formData.email.trim(),
+          NhomMau: formData.nhomMau,
+          SoLuong: Number(formData.soLuong),
+          MucDich: formData.mucDich.trim(),
+          TrangThai: "Đang hiển thị"
+        }),
       });
 
       const resData = await response.json();
-
       if (response.ok) {
         const updatedItem = resData.data || resData;
-
-        // Nếu tin sau khi sửa chuyển sang "Đã ẩn" (do đã đủ máu), xóa khỏi UI
         if (updatedItem.TrangThai === "Đã ẩn") {
           setListData((prev) => prev.filter((item) => item._id !== selectedNewsId));
         } else {
-          setListData((prev) =>
-            prev.map((item) => (item._id === selectedNewsId ? updatedItem : item))
-          );
+          setListData((prev) => prev.map((item) => (item._id === selectedNewsId ? updatedItem : item)));
         }
-
         setSystemMessage({ type: "success", text: resData.message || "Cập nhật tin khẩn cấp thành công" });
         setIsEditModalOpen(false);
       } else {
@@ -277,11 +272,13 @@ const HospitalPage = () => {
     }
   };
 
-  // MỞ MODAL XÓA TIN KHẨN CẤP
+  // MỞ MODAL XÓA TIN
   const handleTriggerDelete = (item, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập tài khoản Bệnh viện!");
+      window.location.href = "/partner-login";
+      return;
     }
     setSystemMessage({ type: "", text: "" });
     setNewsToDelete(item);
@@ -289,7 +286,7 @@ const HospitalPage = () => {
   };
 
   const handleConfirmDelete = async () => {
-    if (!newsToDelete) return;
+    if (!newsToDelete || !isAuthenticated) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/urgent-news/${newsToDelete._id}`, {
@@ -297,7 +294,6 @@ const HospitalPage = () => {
       });
 
       const resData = await response.json();
-
       if (response.ok) {
         setListData((prev) => prev.filter((el) => el._id !== newsToDelete._id));
         setSystemMessage({ type: "success", text: resData.message || "Xóa tin khẩn cấp thành công" });
@@ -313,13 +309,36 @@ const HospitalPage = () => {
     }
   };
 
+  // NẾU CHƯA ĐĂNG NHẬP: HIỂN THỊ MÀN HÌNH YÊU CẦU ĐĂNG NHẬP 
+  if (!isAuthenticated) {
+    return (
+      <HospitalLayout onOpenCreateModal={handleOpenCreateModal}>
+        <div className="flex flex-col items-center justify-center my-[80px] p-[32px] bg-white rounded-[16px] shadow border border-gray-200 max-w-[600px] mx-auto text-center">
+          <div className="w-[80px] h-[80px] rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-[20px]">
+            <FontAwesomeIcon icon={faLock} className="text-[36px]" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 uppercase mb-[10px]">YÊU CẦU ĐĂNG NHẬP BỆNH VIỆN</h2>
+          <p className="text-gray-600 mb-[24px] text-[15px]">
+            Bạn chưa đăng nhập tài khoản Bệnh viện. Vui lòng đăng nhập để truy cập trang bệnh viện và đăng/chỉnh sửa tin khẩn cấp.
+          </p>
+          <button
+            onClick={() => window.location.href = "/partner-login"}
+            className="px-[24px] py-[12px] bg-red-600 hover:bg-red-700 text-white font-bold rounded-[8px] uppercase tracking-wide transition shadow cursor-pointer"
+          >
+            ĐĂNG NHẬP NGAY
+          </button>
+        </div>
+      </HospitalLayout>
+    );
+  }
+
   return (
     <HospitalLayout onOpenCreateModal={handleOpenCreateModal}>
       {/* Banner đầu trang */}
       <div className="w-full flex justify-center mb-[40px]">
         <img 
           src={posterhienmau} 
-          alt="Description"   
+          alt="Poster"   
           className="w-full h-[450px] object-fill rounded-lg shadow"
         />
       </div>
@@ -335,75 +354,136 @@ const HospitalPage = () => {
       )}
 
       {/* Tiêu đề */}
-      <div className="flex justify-between items-center mt-[32px] mb-[32px] max-w-[1600px] mx-auto">
+      <div className="flex justify-between items-center mt-[32px] mb-[24px] max-w-[1600px] mx-auto">
         <h1 className="text-3xl font-bold text-gray-950 uppercase flex items-center gap-[12px]">
           <FontAwesomeIcon icon={faBullhorn} className="text-red-600" />
           Tin Khẩn Cấp 
         </h1>
       </div>
 
-      {/* Grid Danh sách tin khẩn cấp */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] max-w-[1600px] mx-auto">
-        {listData.map((item) => {
-          const maTinStr = item.MaTin || item.maTin;
-          const tenBVStr = item.TenBenhVien || item.tenBV;
-          const nhomMauStr = item.NhomMau || item.nhomMau;
-          const soLuongNum = item.SoLuong !== undefined ? item.SoLuong : (parseInt(item.soLuong) || 0);
-          const slDaNhanNum = item.SoLuongDaNhan !== undefined ? item.SoLuongDaNhan : (parseInt(item.slDaNhan) || 0);
-          const mucDichStr = item.MucDich || item.mucDich;
-          const ngayDangStr = formatDate(item.NgayDang || item.ngayDang);
-          const gioDangStr = item.GioDang || item.gioDang || "00:00";
+      {/* THANH TÌM KIẾM VÀ LỌC THÔNG TIN */}
+      <div className="bg-white p-[20px] rounded-[12px] border border-gray-200 shadow-sm mb-[28px] max-w-[1600px] mx-auto flex flex-col md:flex-row gap-[16px] items-center justify-between">
+        
+        {/* 1. Ô tìm kiếm từ khóa */}
+        <div className="relative w-full md:w-1/2">
+          <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none text-gray-400">
+            <FontAwesomeIcon icon={faSearch} />
+          </div>
+          <input
+            type="text"
+            placeholder="Tìm theo tên bệnh viện hoặc mục đích..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-[40px] pr-[16px] py-[10px] border border-gray-300 rounded-[8px] text-[14px] focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-gray-50 text-gray-900"
+          />
+        </div>
 
-          const isFullyReceived = slDaNhanNum >= soLuongNum && soLuongNum > 0;
+        {/* 2. Lọc theo nhóm máu & Nút Reset */}
+        <div className="flex items-center gap-[12px] w-full md:w-auto justify-end">
+          <div className="flex items-center gap-[8px]">
+            <FontAwesomeIcon icon={faFilter} className="text-gray-500 text-[14px]" />
+            <span className="text-[14px] font-bold text-gray-700">Nhóm máu:</span>
+            <select
+              value={selectedBloodType}
+              onChange={(e) => setSelectedBloodType(e.target.value)}
+              className="border border-gray-300 rounded-[8px] px-[12px] py-[10px] text-[14px] bg-white text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+            >
+              <option value="ALL">Tất cả nhóm máu</option>
+              <option value="A+">Nhóm A+</option>
+              <option value="A-">Nhóm A-</option>
+              <option value="B+">Nhóm B+</option>
+              <option value="B-">Nhóm B-</option>
+              <option value="AB+">Nhóm AB+</option>
+              <option value="AB-">Nhóm AB-</option>
+              <option value="O+">Nhóm O+</option>
+              <option value="O-">Nhóm O-</option>
+            </select>
+          </div>
 
-          return (
-            <div key={item._id} className="bg-white rounded-[12px] border border-gray-200 p-[24px] shadow-sm flex flex-col justify-between hover:shadow-md transition h-[320px] overflow-hidden">
-              <div>
-                <div className="flex justify-between items-start border-b border-gray-100 pb-[12px] mb-[16px]">
-                  <div className="max-w-[75%] break-words">
-                    <span className="text-[12px] font-bold text-gray-400 block">{maTinStr}</span>
-                    <h3 className="text-[17px] font-bold text-gray-900 uppercase line-clamp-2">{tenBVStr}</h3>
-                  </div>
-                  <div className="flex flex-col items-end gap-[4px] flex-shrink-0">
-                    <span className="bg-red-100 text-red-700 font-bold px-[10px] py-[4px] rounded-[6px] text-[14px]">{nhomMauStr}</span>
-                    {isFullyReceived && (
-                      <span className="text-[11px] bg-emerald-100 text-emerald-800 px-[6px] py-[2px] rounded font-bold">Đạt số lượng</span>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-[6px] text-[14px] text-gray-600 break-words">
-                  <p><span className="font-semibold text-gray-800">Cần:</span> {soLuongNum} đơn vị</p>
-                  <p><span className="font-semibold text-gray-800">Đã nhận:</span> {slDaNhanNum} đơn vị</p>
-                  <p className="line-clamp-2"><span className="font-semibold text-gray-800">Mục đích:</span> {mucDichStr}</p>
-                  <p className="flex items-center gap-[4px] text-[12px] text-gray-400 pt-[4px]">
-                    <FontAwesomeIcon icon={faClock} /> Ngày đăng: {ngayDangStr} | {gioDangStr}
-                  </p>
-                </div>
-              </div>
-
-              {/* Nút tác vụ Cập nhật & Xóa */}
-              <div className="grid grid-cols-2 gap-[12px] pt-[12px] border-t border-gray-100">
-                <button 
-                  type="button"
-                  onClick={(e) => handleOpenEditModal(item, e)}
-                  className="flex items-center justify-center gap-[6px] text-gray-700 border border-gray-300 hover:bg-gray-50 font-bold py-[8px] rounded-[6px] text-[13px] transition cursor-pointer"
-                >
-                  CẬP NHẬT
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => handleTriggerDelete(item, e)}
-                  className="flex items-center justify-center gap-[6px] text-red-600 border border-red-200 hover:bg-red-50 font-bold py-[8px] rounded-[6px] text-[13px] transition cursor-pointer"
-                >
-                  XÓA TIN
-                </button>
-              </div>
-            </div>
-          );
-        })}
+          {(searchTerm || selectedBloodType !== "ALL") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedBloodType("ALL");
+              }}
+              className="text-[13px] text-red-600 hover:text-red-800 font-bold underline px-[8px] cursor-pointer"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* MODAL: BM05 PHIẾU ĐĂNG TIN KHẨN CẤP */}
+      {/* Grid Danh sách tin khẩn cấp) */}
+      {filteredListData.length === 0 ? (
+        <div className="bg-white rounded-[12px] border border-dashed border-gray-300 p-[48px] text-center max-w-[1600px] mx-auto my-[20px]">
+          <p className="text-gray-500 font-bold text-[16px]">
+            Không tìm thấy tin khẩn cấp nào phù hợp với bộ lọc của bạn.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] max-w-[1600px] mx-auto">
+          {filteredListData.map((item) => {
+            const maTinStr = item.MaTin || item.maTin;
+            const tenBVStr = item.TenBenhVien || item.tenBV;
+            const nhomMauStr = item.NhomMau || item.nhomMau;
+            const soLuongNum = item.SoLuong !== undefined ? item.SoLuong : (parseInt(item.soLuong) || 0);
+            const slDaNhanNum = item.SoLuongDaNhan !== undefined ? item.SoLuongDaNhan : (parseInt(item.slDaNhan) || 0);
+            const mucDichStr = item.MucDich || item.mucDich;
+            const ngayDangStr = formatDate(item.NgayDang || item.ngayDang);
+            const gioDangStr = item.GioDang || item.gioDang || "00:00";
+            const isFullyReceived = slDaNhanNum >= soLuongNum && soLuongNum > 0;
+
+            return (
+              <div key={item._id} className="bg-white rounded-[12px] border border-gray-200 p-[24px] shadow-sm flex flex-col justify-between hover:shadow-md transition h-[320px] overflow-hidden">
+                <div>
+                  <div className="flex justify-between items-start border-b border-gray-100 pb-[12px] mb-[16px]">
+                    <div className="max-w-[75%] break-words">
+                      <span className="text-[12px] font-bold text-gray-400 block">{maTinStr}</span>
+                      <h3 className="text-[17px] font-bold text-gray-900 uppercase line-clamp-2">{tenBVStr}</h3>
+                    </div>
+                    <div className="flex flex-col items-end gap-[4px] flex-shrink-0">
+                      <span className="bg-red-100 text-red-700 font-bold px-[10px] py-[4px] rounded-[6px] text-[14px]">{nhomMauStr}</span>
+                      {isFullyReceived && (
+                        <span className="text-[11px] bg-emerald-100 text-emerald-800 px-[6px] py-[2px] rounded font-bold">Đạt số lượng</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-[6px] text-[14px] text-gray-600 break-words">
+                    <p><span className="font-semibold text-gray-800">Cần:</span> {soLuongNum} đơn vị</p>
+                    <p><span className="font-semibold text-gray-800">Đã nhận:</span> {slDaNhanNum} đơn vị</p>
+                    <p className="line-clamp-2"><span className="font-semibold text-gray-800">Mục đích:</span> {mucDichStr}</p>
+                    <p className="flex items-center gap-[4px] text-[12px] text-gray-400 pt-[4px]">
+                      <FontAwesomeIcon icon={faClock} /> Ngày đăng: {ngayDangStr} | {gioDangStr}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Nút tác vụ Cập nhật & Xóa */}
+                <div className="grid grid-cols-2 gap-[12px] pt-[12px] border-t border-gray-100">
+                  <button 
+                    type="button"
+                    onClick={(e) => handleOpenEditModal(item, e)}
+                    className="flex items-center justify-center gap-[6px] text-gray-700 border border-gray-300 hover:bg-gray-50 font-bold py-[8px] rounded-[6px] text-[13px] transition cursor-pointer"
+                  >
+                    CẬP NHẬT
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={(e) => handleTriggerDelete(item, e)}
+                    className="flex items-center justify-center gap-[6px] text-red-600 border border-red-200 hover:bg-red-50 font-bold py-[8px] rounded-[6px] text-[13px] transition cursor-pointer"
+                  >
+                    XÓA TIN
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* MODAL: BM05 ĐĂNG TIN */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-[16px]">
           <div className="bg-white rounded-[16px] w-full max-w-[600px] p-[32px] shadow-2xl overflow-y-auto max-h-[90vh] border border-gray-300">
@@ -418,17 +498,7 @@ const HospitalPage = () => {
               <div className="grid grid-cols-2 gap-[16px]">
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Số điện thoại bệnh viện:</label>
-                  <input 
-                    type="text" 
-                    maxLength={11} 
-                    value={formData.sdt} 
-                    onChange={(e) => {
-                      const numericValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData({...formData, sdt: numericValue});
-                    }} 
-                    className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" 
-                    placeholder="Từ 10 đến 11 chữ số..."
-                  />
+                  <input type="text" maxLength={11} value={formData.sdt} onChange={(e) => setFormData({...formData, sdt: e.target.value.replace(/[^0-9]/g, "")})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" placeholder="Từ 10 đến 11 chữ số..." />
                 </div>
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Email:</label>
@@ -456,7 +526,7 @@ const HospitalPage = () => {
               </div>
               <div>
                 <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Mục đích:</label>
-                <textarea rows="3" maxLength={200} value={formData.mucDich} onChange={(e) => setFormData({...formData, mucDich: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" placeholder="Lý do hoặc tình trạng khẩn cấp của bệnh nhân (≤ 200 ký tự)..."></textarea>
+                <textarea rows="3" maxLength={200} value={formData.mucDich} onChange={(e) => setFormData({...formData, mucDich: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" placeholder="Lý do khẩn cấp (≤ 200 ký tự)..."></textarea>
               </div>
               <div className="flex justify-end gap-[12px] pt-[16px] border-t border-gray-100">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-[18px] py-[10px] rounded-[8px] border border-gray-300 hover:bg-gray-50 text-[14px] font-medium cursor-pointer">HỦY BỎ</button>
@@ -467,7 +537,7 @@ const HospitalPage = () => {
         </div>
       )}
 
-      {/* MODAL: BM06 PHIẾU CHỈNH SỬA / CẬP NHẬT TIN KHẨN CẤP */}
+      {/* MODAL: BM06 CẬP NHẬT TIN */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-[16px]">
           <div className="bg-white rounded-[16px] w-full max-w-[600px] p-[32px] shadow-2xl overflow-y-auto max-h-[90vh] border border-gray-300">
@@ -483,16 +553,7 @@ const HospitalPage = () => {
               <div className="grid grid-cols-2 gap-[16px]">
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Số điện thoại bệnh viện:</label>
-                  <input 
-                    type="text" 
-                    maxLength={11} 
-                    value={formData.sdt} 
-                    onChange={(e) => {
-                      const numericValue = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData({...formData, sdt: numericValue});
-                    }} 
-                    className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" 
-                  />
+                  <input type="text" maxLength={11} value={formData.sdt} onChange={(e) => setFormData({...formData, sdt: e.target.value.replace(/[^0-9]/g, "")})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Email:</label>
@@ -531,7 +592,7 @@ const HospitalPage = () => {
         </div>
       )}
 
-      {/* MODAL: HỘP THOẠI XÁC NHẬN XOÁ DỮ LIỆU */}
+      {/* MODAL: XÁC NHẬN XOÁ */}
       {isConfirmDeleteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-[16px]">
           <div className="bg-white rounded-[12px] w-full max-w-[450px] p-[28px] shadow-2xl text-center border border-gray-100">

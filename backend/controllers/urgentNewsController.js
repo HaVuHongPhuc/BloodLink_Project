@@ -1,7 +1,7 @@
 // Note: UC05 - UC10 - đăng, sửa, xóa và lọc tin khẩn cấp.
 const UrgentNews = require("../models/UrgentNews");
 
-// GET: Lấy danh sách tin khẩn cấp (Tự động ẩn tin đạt đủ máu hoặc đã đăng đủ 3 ngày)
+// 1. GET: Lấy danh sách tin khẩn cấp (Tự động ẩn tin đạt đủ máu hoặc đã đăng đủ 3 ngày)
 exports.getAll = async (req, res) => {
   try {
     const today = new Date();
@@ -34,12 +34,14 @@ exports.getAll = async (req, res) => {
   }
 };
 
-// GET ID: Lấy 1 tin khẩn cấp theo ID
+// 2. GET ID: Lấy 1 tin khẩn cấp theo ID 
 exports.getOne = async (req, res) => {
   try {
     const data = await UrgentNews.findById(req.params.id);
     if (!data) {
-      return res.status(404).json({ message: "Không tìm thấy tin khẩn cấp" });
+      return res.status(404).json({
+        message: "Không tìm thấy tin khẩn cấp"
+      });
     }
     res.status(200).json(data);
   } catch (err) {
@@ -47,7 +49,7 @@ exports.getOne = async (req, res) => {
   }
 };
 
-// POST: Đăng tin khẩn cấp (UC17 / UC14)
+// 3. POST: Đăng tin khẩn cấp (UC17 / UC14)
 exports.createUrgentNews = async (req, res) => {
   try {
     const {
@@ -134,7 +136,7 @@ exports.createUrgentNews = async (req, res) => {
   }
 };
 
-// PUT: Cập nhật tin khẩn cấp
+// 4. PUT: Cập nhật tin khẩn cấp
 exports.updateNews = async (req, res) => {
   try {
     const news = await UrgentNews.findById(req.params.id);
@@ -203,7 +205,7 @@ exports.updateNews = async (req, res) => {
   }
 };
 
-// DELETE: Xóa (ẩn) tin khẩn cấp
+// 5. DELETE: Xóa (ẩn) tin khẩn cấp
 exports.deleteNews = async (req, res) => {
   try {
     const news = await UrgentNews.findById(req.params.id);

@@ -10,10 +10,6 @@ const Cus_Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validateIdentifier = (value) => {
-    if (!value) return false;
-    return validateEmail(value) || /^[A-Za-z0-9_-]+$/.test(value.trim());
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,7 +25,7 @@ const Cus_Login = () => {
     const newErrors = {};
 
     if (!identifier) newErrors.identifier = "Vui lòng nhập email hoặc mã tài khoản";
-    else if (!validateIdentifier(identifier)) newErrors.identifier = "Vui lòng nhập đúng email hoặc mã tài khoản";
+    else if (!validateEmail(identifier)) newErrors.identifier = "Vui lòng nhập đúng email hoặc mã tài khoản";
 
     if (!password) newErrors.password = "Vui lòng nhập mật khẩu";
 
@@ -59,21 +55,29 @@ const Cus_Login = () => {
 
       setSuccessMessage(data.message || "Đăng nhập thành công");
       setErrorMessage("");
+      
+      // 🟢 LƯU TOKEN VÀ ROLE
       localStorage.setItem("userToken", data.token);
       localStorage.setItem("userRole", data.user?.role || "customer");
       localStorage.setItem("userEmail", data.user?.email || identifier);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      console.log("✅ Đăng nhập thành công, role:", data.user?.role);
 
       setTimeout(() => {
         const role = data.user?.role || "customer";
         if (role === "quan tri he thong") {
+          console.log("🔀 Chuyển đến /admin");
           window.location.href = "/admin";
         } else {
+          console.log("🔀 Chuyển đến /homepage");
           window.location.href = "/homepage";
         }
       }, 1500);
 
     } catch (error) {
       setErrorMessage("Không thể kết nối tới máy chủ. Hãy kiểm tra backend.");
+      console.error("Login error:", error);
     }
   };
 

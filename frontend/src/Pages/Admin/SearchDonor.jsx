@@ -1,50 +1,61 @@
 // frontend/src/pages/Admin/SearchDonor.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faSync } from "@fortawesome/free-solid-svg-icons";
 
 const SearchDonor = () => {
   const [keyword, setKeyword] = useState("");
   const [results, setResults] = useState([]);
+  const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const token = localStorage.getItem("userToken");
 
-  const handleSearch = async () => {
+  const fetchAllDonors = async () => {
     try {
       setLoading(true);
       setMessage("");
-      const res = await fetch(
-        `http://localhost:5000/api/admin/tra-cuu-nguoi-hien?keyword=${encodeURIComponent(keyword)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch(`http://localhost:5000/api/admin/tra-cuu-nguoi-hien`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (res.ok) {
+        setAllData(data);
         setResults(data);
         if (data.length === 0) {
           setMessage("MS10: Không tìm thấy kết quả phù hợp");
         }
       } else {
+        setAllData([]);
         setResults([]);
         setMessage(data.message || "Lỗi tra cứu");
       }
     } catch (error) {
-      console.error("Lỗi search:", error);
       setMessage("Lỗi kết nối server");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
+  useEffect(() => {
+    fetchAllDonors();
+  }, []);
+
+  const handleSearch = () => {
+    if (!keyword.trim()) {
+      setResults(allData);
+      setMessage(allData.length === 0 ? "MS10: Không tìm thấy kết quả phù hợp" : "");
+      return;
     }
+    const filtered = allData.filter(
+      (d) =>
+        (d.HoTen || "").toLowerCase().includes(keyword.toLowerCase()) ||
+        (d.Email || "").toLowerCase().includes(keyword.toLowerCase()) ||
+        (d.SoDienThoai || "").includes(keyword)
+    );
+    setResults(filtered);
+    setMessage(filtered.length === 0 ? "MS10: Không tìm thấy kết quả phù hợp" : "");
   };
 
   return (
@@ -58,7 +69,7 @@ const SearchDonor = () => {
           className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <button
           onClick={handleSearch}

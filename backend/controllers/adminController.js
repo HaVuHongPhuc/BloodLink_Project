@@ -156,9 +156,10 @@ exports.traCuuNguoiNhanMau = async (req, res) => {
   }
 };
 // Lấy danh sách bệnh viện hợp tác
-exports.getHospitals = async (req, res) => {
+exports.getAllHospitals = async (req, res) => {
   try {
-    const hospitals = await BenhVienHopTac.find().sort({ TenBenhVien: 1 });
+    const hospitals = await TaiKhoanBenhVien.find()
+      .select('MaBenhVien MaTaiKhoanBenhVien TenBenhVien DiaChiBenhVien NguoiDaiDien SoDienThoaiBenhVien Email TrangThai');
     res.json(hospitals);
   } catch (error) {
     console.error(error);

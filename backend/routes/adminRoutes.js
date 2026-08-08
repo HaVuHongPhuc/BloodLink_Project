@@ -26,4 +26,5 @@ router.get('/tra-cuu-nguoi-nhan', authMiddleware, traCuuNguoiNhanMau);
 router.get('/hospitals', authMiddleware, getHospitals);
 router.put('/hospitals/:maBenhVien', authMiddleware, updateHospital);
 router.delete('/hospitals/:maBenhVien', authMiddleware, deleteHospital);
+router.get('/all-hospitals', authMiddleware, getAllHospitals);
 module.exports = router;

@@ -1,3 +1,4 @@
+// frontend/src/pages/Hospital/Hospital_Login.jsx
 import { useState } from "react";
 import Layout from "../Layout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -25,16 +26,10 @@ const Hospital_Login = () => {
     const { email, password } = formData;
     const newErrors = {};
 
-    // MS06: Sai định dạng email
-    if (!email) {
-      newErrors.email = "Vui lòng nhập email";
-    } else if (!validateEmail(email)) {
-      newErrors.email = "MS06: Vui lòng kiểm tra lại định dạng email";
-    }
+    if (!email) newErrors.email = "Vui lòng nhập email";
+    else if (!validateEmail(email)) newErrors.email = "MS06: Vui lòng kiểm tra lại định dạng email";
 
-    if (!password) {
-      newErrors.password = "Vui lòng nhập mật khẩu";
-    }
+    if (!password) newErrors.password = "Vui lòng nhập mật khẩu";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -46,26 +41,28 @@ const Hospital_Login = () => {
       const response = await fetch("http://localhost:5000/api/auth/dang-nhap-doi-tac", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Email: email.trim().toLowerCase(), MatKhau: password }),
+        body: JSON.stringify({ Email: email.trim(), MatKhau: password }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        setSuccessMessage(data.message || "MS05: Đăng nhập thành công");
-        setErrorMessage("");
-        localStorage.setItem("userToken", data.token);
-        localStorage.setItem("userRole", data.user.role);
-        localStorage.setItem("userEmail", data.user.email);
-        localStorage.setItem("maBenhVien", data.user.maBenhVien);
-        localStorage.setItem("hospitalName", data.user.tenBenhVien);
-        setTimeout(() => {
-          window.location.href = "/hospital-dashboard";
-        }, 1500);
-      } else {
+      if (!response.ok) {
         setErrorMessage(data.message || "Đăng nhập thất bại");
-        setSuccessMessage("");
+        return;
       }
+
+      setSuccessMessage(data.message || "MS05: Đăng nhập thành công");
+      setErrorMessage("");
+      localStorage.setItem("userToken", data.token);
+      localStorage.setItem("userRole", data.user?.role || "hospital");
+      localStorage.setItem("userEmail", data.user?.email || email);
+      localStorage.setItem("maBenhVien", data.user?.maBenhVien || "");
+      localStorage.setItem("hospitalName", data.user?.tenBenhVien || "Bệnh viện");
+
+      setTimeout(() => {
+        window.location.href = "/hospital-dashboard";
+      }, 1500);
+
     } catch (error) {
       setErrorMessage("Lỗi kết nối server");
     } finally {

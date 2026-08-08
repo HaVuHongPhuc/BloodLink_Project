@@ -14,26 +14,100 @@ const jwt = require('jsonwebtoken');
 // UC01: Đăng ký tài khoản đối tác
 exports.dangKyDoiTac = async (req, res) => {
   try {
-    const { Email, MatKhau, ...rest } = req.body;
-    
-    const existing = await YeuCauDangKyDoiTac.findOne({ Email });
-    if (existing) {
+    console.log('[dangKyDoiTac] req.body =', req.body);
+
+    const {
+      TenBenhVien,
+      NguoiDaiDien,
+      DiaChiBenhVien,
+      MaSoThue,
+      SoDienThoaiBenhVien,
+      Email,
+      GhiChu = ''
+    } = req.body || {};
+
+    const normalizedEmail = Email?.trim().toLowerCase();
+    const normalizedPhone = SoDienThoaiBenhVien?.trim();
+    const normalizedTax = MaSoThue?.trim();
+    const hospitalName = TenBenhVien?.trim();
+    const representative = NguoiDaiDien?.trim();
+    const hospitalAddress = DiaChiBenhVien?.trim();
+    const note = GhiChu?.trim();
+
+    const missingFields = [];
+    if (!hospitalName) missingFields.push('TenBenhVien');
+    if (!representative) missingFields.push('NguoiDaiDien');
+    if (!hospitalAddress) missingFields.push('DiaChiBenhVien');
+    if (!normalizedTax) missingFields.push('MaSoThue');
+    if (!normalizedPhone) missingFields.push('SoDienThoaiBenhVien');
+    if (!normalizedEmail) missingFields.push('Email');
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: 'MS02: Vui lòng nhập đầy đủ thông tin đăng ký đối tác',
+        missingFields
+      });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({
+        message: 'MS06: Vui lòng kiểm tra lại định dạng email',
+        invalidField: 'Email'
+      });
+    }
+
+    if (!/^0[0-9]{9,10}$/.test(normalizedPhone)) {
+      return res.status(400).json({
+        message: 'MS06: Vui lòng kiểm tra lại định dạng số điện thoại',
+        invalidField: 'SoDienThoaiBenhVien'
+      });
+    }
+
+    const existingEmail = await YeuCauDangKyDoiTac.findOne({ Email: normalizedEmail });
+    if (existingEmail) {
       return res.status(400).json({ message: 'MS25: Tài khoản đã tồn tại' });
     }
-    
+
+    const existingTax = await YeuCauDangKyDoiTac.findOne({ MaSoThue: normalizedTax });
+    if (existingTax) {
+      return res.status(400).json({ message: 'MS25: Mã số thuế đã tồn tại' });
+    }
+
+    const tempPassword = Math.random().toString(36).slice(-8);
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(MatKhau, salt);
-    
+    const hashedPassword = await bcrypt.hash(tempPassword, salt);
+
     const yeuCau = new YeuCauDangKyDoiTac({
-      ...rest,
-      Email,
+      TenBenhVien: hospitalName,
+      NguoiDaiDien: representative,
+      DiaChiBenhVien: hospitalAddress,
+      MaSoThue: normalizedTax,
+      SoDienThoaiBenhVien: normalizedPhone,
+      Email: normalizedEmail,
+      GhiChu: note,
       MatKhau: hashedPassword,
       TrangThai: 'cho xac thuc'
     });
-    
+
     await yeuCau.save();
     res.status(201).json({ message: 'MS01: Đăng ký tài khoản thành công' });
   } catch (error) {
+    console.error('Error dangKyDoiTac:', error);
+    if (error.code === 11000) {
+      const key = Object.keys(error.keyValue || {})[0];
+      if (key === 'Email') {
+        return res.status(400).json({ message: 'MS25: Tài khoản đã tồn tại', error: error.message });
+      }
+      if (key === 'MaSoThue') {
+        return res.status(400).json({ message: 'MS25: Mã số thuế đã tồn tại', error: error.message });
+      }
+    }
+
+    if (error.name === 'ValidationError') {
+      const validationMessages = Object.values(error.errors || {}).map((err) => err.message).join('; ');
+      return res.status(400).json({ message: 'MS02: Vui lòng nhập đúng trường dữ liệu', error: validationMessages || error.message });
+    }
+
     res.status(400).json({ message: 'MS02: Vui lòng nhập đúng trường dữ liệu', error: error.message });
   }
 };
@@ -47,7 +121,8 @@ exports.dangNhapDoiTac = async (req, res) => {
       return res.status(400).json({ message: 'MS06: Vui lòng kiểm tra lại định dạng email' });
     }
     
-    const benhVien = await TaiKhoanBenhVien.findOne({ Email }).select('+MatKhau');
+    const normalizedEmail = Email.trim().toLowerCase();
+    const benhVien = await TaiKhoanBenhVien.findOne({ Email: normalizedEmail }).select('+MatKhau');
     if (!benhVien) {
       return res.status(401).json({ message: 'MS08: Vui lòng đăng nhập bằng tài khoản đối tác' });
     }

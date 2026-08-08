@@ -33,6 +33,8 @@ const YeuCauDangKyDoiTacSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true,
     match: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ']
   },
   MatKhau: {
@@ -54,11 +56,10 @@ const YeuCauDangKyDoiTacSchema = new mongoose.Schema({
   collection: 'YeuCauDangKyDoiTac'
 });
 
-YeuCauDangKyDoiTacSchema.pre('save', function(next) {
+YeuCauDangKyDoiTacSchema.pre('save', function() {
   if (!this.MaDangKy) {
     this.MaDangKy = 'DK' + String(Date.now()).slice(-9);
   }
-  next();
 });
 
 module.exports = mongoose.model('YeuCauDangKyDoiTac', YeuCauDangKyDoiTacSchema);

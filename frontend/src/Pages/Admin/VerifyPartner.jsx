@@ -7,7 +7,9 @@ const VerifyPartner = () => {
   const [pendingList, setPendingList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [passwordInfo, setPasswordInfo] = useState("");
   const [messageType, setMessageType] = useState("success"); // success | error
+  const [messageVisible, setMessageVisible] = useState(false);
 
   const token = localStorage.getItem("userToken");
 
@@ -49,7 +51,9 @@ const VerifyPartner = () => {
       });
       const data = await res.json();
       setMessage(data.message || (action === "duyet" ? "MS03: Đã tạo tài khoản" : "MS04: Đã từ chối yêu cầu"));
+      setPasswordInfo(data.matKhauTamThoi ? `Mật khẩu tạm thời: ${data.matKhauTamThoi}` : "");
       setMessageType(res.ok ? "success" : "error");
+      setMessageVisible(true);
       if (res.ok) {
         // Cập nhật lại danh sách
         await fetchPendingList();
@@ -70,8 +74,7 @@ const VerifyPartner = () => {
   // Tự động ẩn thông báo sau 3 giây
   useEffect(() => {
     if (message) {
-      const timer = setTimeout(() => setMessage(""), 3000);
-      return () => clearTimeout(timer);
+      setMessageVisible(true);
     }
   }, [message]);
 
@@ -89,7 +92,7 @@ const VerifyPartner = () => {
         </button>
       </div>
 
-      {message && (
+      {messageVisible && (
         <div
           className={`px-4 py-2 rounded mb-4 ${
             messageType === "success"
@@ -97,7 +100,18 @@ const VerifyPartner = () => {
               : "bg-red-100 text-red-700 border border-red-200"
           }`}
         >
-          {message}
+          <div className="flex justify-between items-start gap-4">
+            <div>
+              <div>{message}</div>
+              {passwordInfo && <div className="mt-2 font-medium">{passwordInfo}</div>}
+            </div>
+            <button
+              onClick={() => setMessageVisible(false)}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              Đóng
+            </button>
+          </div>
         </div>
       )}
 

@@ -15,24 +15,46 @@ const Hospital_Profile = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const found = users.find((u) => u.email === email && u.role === "hospital");
-    if (found) {
-      setUser(found);
-      setProfile({
-        hospitalName: found.hospitalName || "",
-        representative: found.representative || "",
-        address: found.address || "",
-        taxCode: found.taxCode || "",
-        phone: found.phone || "",
-        note: found.note || "",
-      });
-    } else {
+    const token = localStorage.getItem("userToken");
+    const role = localStorage.getItem("userRole");
+
+    if (!token || role !== "hospital") {
       window.location.href = "/partner-login";
+      return;
     }
+
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/hospital/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          window.location.href = "/partner-login";
+          return;
+        }
+        setUser(data);
+        setProfile({
+          hospitalName: data.TenBenhVien || "",
+          representative: data.NguoiDaiDien || "",
+          address: data.DiaChiBenhVien || "",
+          taxCode: data.MaSoThue || "",
+          phone: data.SoDienThoaiBenhVien || "",
+          note: data.GhiChu || "",
+        });
+      } catch (error) {
+        window.location.href = "/partner-login";
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, []);
 
   const handleChange = (e) => {

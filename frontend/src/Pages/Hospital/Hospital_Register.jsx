@@ -1,9 +1,15 @@
 import { useState } from "react";
 import Layout from "../Layout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faHospital, faUser, faMapMarkerAlt, faBuilding, 
-  faPhone, faEnvelope, faLock, faNotesMedical, faUserPlus 
+import {
+  faHospital,
+  faUser,
+  faMapMarkerAlt,
+  faBuilding,
+  faPhone,
+  faEnvelope,
+  faNotesMedical,
+  faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
 
 const Hospital_Register = () => {
@@ -14,8 +20,6 @@ const Hospital_Register = () => {
     MaSoThue: "",
     SoDienThoaiBenhVien: "",
     Email: "",
-    MatKhau: "",
-    XacNhanMatKhau: "",
     GhiChu: "",
   });
   const [errors, setErrors] = useState({});
@@ -43,14 +47,11 @@ const Hospital_Register = () => {
       MaSoThue,
       SoDienThoaiBenhVien,
       Email,
-      MatKhau,
-      XacNhanMatKhau,
       GhiChu,
     } = formData;
 
     const newErrors = {};
 
-    // Kiểm tra các trường bắt buộc
     if (!TenBenhVien) newErrors.TenBenhVien = "Vui lòng nhập tên bệnh viện";
     if (!NguoiDaiDien) newErrors.NguoiDaiDien = "Vui lòng nhập người đại diện";
     if (!DiaChiBenhVien) newErrors.DiaChiBenhVien = "Vui lòng nhập địa chỉ bệnh viện";
@@ -65,16 +66,6 @@ const Hospital_Register = () => {
     } else if (!validateEmail(Email)) {
       newErrors.Email = "MS06: Vui lòng kiểm tra lại định dạng email";
     }
-    if (!MatKhau) {
-      newErrors.MatKhau = "Vui lòng nhập mật khẩu";
-    } else if (MatKhau.length < 6) {
-      newErrors.MatKhau = "Mật khẩu phải có ít nhất 6 ký tự";
-    }
-    if (!XacNhanMatKhau) {
-      newErrors.XacNhanMatKhau = "Vui lòng xác nhận mật khẩu";
-    } else if (MatKhau && XacNhanMatKhau !== MatKhau) {
-      newErrors.XacNhanMatKhau = "MS42: Mật khẩu xác nhận không đúng";
-    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -87,14 +78,13 @@ const Hospital_Register = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          TenBenhVien,
-          NguoiDaiDien,
-          DiaChiBenhVien,
-          MaSoThue,
-          SoDienThoaiBenhVien,
-          Email,
-          MatKhau,
-          GhiChu: GhiChu || "",
+          TenBenhVien: TenBenhVien.trim(),
+          NguoiDaiDien: NguoiDaiDien.trim(),
+          DiaChiBenhVien: DiaChiBenhVien.trim(),
+          MaSoThue: MaSoThue.trim(),
+          SoDienThoaiBenhVien: SoDienThoaiBenhVien.trim(),
+          Email: Email.trim().toLowerCase(),
+          GhiChu: GhiChu.trim(),
         }),
       });
 
@@ -102,7 +92,6 @@ const Hospital_Register = () => {
       if (response.ok) {
         setSuccessMessage(data.message || "MS01: Đăng ký tài khoản thành công");
         setErrorMessage("");
-        // Xóa form
         setFormData({
           TenBenhVien: "",
           NguoiDaiDien: "",
@@ -110,8 +99,6 @@ const Hospital_Register = () => {
           MaSoThue: "",
           SoDienThoaiBenhVien: "",
           Email: "",
-          MatKhau: "",
-          XacNhanMatKhau: "",
           GhiChu: "",
         });
         setTimeout(() => window.location.href = "/partner-login", 2000);
@@ -151,7 +138,6 @@ const Hospital_Register = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-[16px]">
-            {/* Tên bệnh viện */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Tên bệnh viện <span className="text-red-600">*</span>
@@ -174,7 +160,6 @@ const Hospital_Register = () => {
               {errors.TenBenhVien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.TenBenhVien}</p>}
             </div>
 
-            {/* Người đại diện */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Người đại diện <span className="text-red-600">*</span>
@@ -197,7 +182,6 @@ const Hospital_Register = () => {
               {errors.NguoiDaiDien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.NguoiDaiDien}</p>}
             </div>
 
-            {/* Địa chỉ bệnh viện */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Địa chỉ bệnh viện <span className="text-red-600">*</span>
@@ -220,7 +204,6 @@ const Hospital_Register = () => {
               {errors.DiaChiBenhVien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.DiaChiBenhVien}</p>}
             </div>
 
-            {/* Mã số thuế */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Mã số thuế <span className="text-red-600">*</span>
@@ -243,7 +226,6 @@ const Hospital_Register = () => {
               {errors.MaSoThue && <p className="text-red-500 text-[13px] mt-[6px]">{errors.MaSoThue}</p>}
             </div>
 
-            {/* Số điện thoại bệnh viện */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Số điện thoại bệnh viện <span className="text-red-600">*</span>
@@ -266,7 +248,6 @@ const Hospital_Register = () => {
               {errors.SoDienThoaiBenhVien && <p className="text-red-500 text-[13px] mt-[6px]">{errors.SoDienThoaiBenhVien}</p>}
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Email <span className="text-red-600">*</span>
@@ -289,53 +270,6 @@ const Hospital_Register = () => {
               {errors.Email && <p className="text-red-500 text-[13px] mt-[6px]">{errors.Email}</p>}
             </div>
 
-            {/* Mật khẩu */}
-            <div>
-              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
-                Mật khẩu <span className="text-red-600">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
-                  <FontAwesomeIcon icon={faLock} className="text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  name="MatKhau"
-                  value={formData.MatKhau}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
-                    errors.MatKhau ? "border-red-500" : "border-gray-300"
-                  } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
-                />
-              </div>
-              {errors.MatKhau && <p className="text-red-500 text-[13px] mt-[6px]">{errors.MatKhau}</p>}
-            </div>
-
-            {/* Xác nhận mật khẩu */}
-            <div>
-              <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
-                Xác nhận mật khẩu <span className="text-red-600">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-[14px] flex items-center pointer-events-none">
-                  <FontAwesomeIcon icon={faLock} className="text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  name="XacNhanMatKhau"
-                  value={formData.XacNhanMatKhau}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
-                    errors.XacNhanMatKhau ? "border-red-500" : "border-gray-300"
-                  } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500`}
-                />
-              </div>
-              {errors.XacNhanMatKhau && <p className="text-red-500 text-[13px] mt-[6px]">{errors.XacNhanMatKhau}</p>}
-            </div>
-
-            {/* Ghi chú */}
             <div>
               <label className="block text-[14px] font-semibold text-gray-700 mb-[6px]">
                 Ghi chú

@@ -46,7 +46,7 @@ const Hospital_Login = () => {
       const response = await fetch("http://localhost:5000/api/auth/dang-nhap-doi-tac", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Email: email, MatKhau: password }),
+        body: JSON.stringify({ Email: email.trim().toLowerCase(), MatKhau: password }),
       });
 
       const data = await response.json();
@@ -58,7 +58,7 @@ const Hospital_Login = () => {
         localStorage.setItem("userRole", data.user.role);
         localStorage.setItem("userEmail", data.user.email);
         localStorage.setItem("maBenhVien", data.user.maBenhVien);
-
+        localStorage.setItem("hospitalName", data.user.tenBenhVien);
         setTimeout(() => {
           window.location.href = "/hospital-dashboard";
         }, 1500);

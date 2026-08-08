@@ -18,7 +18,7 @@ const Homepage = () => {
     return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
   };
 
-  // TẢI DỮ LIỆU TIN KHẨN CẤP THẬT TỪ MONGODB API
+  // TẢI DỮ LIỆU TIN KHẨN CẤP TỪ MONGODB API
   useEffect(() => {
     const fetchUrgentNews = async () => {
       try {

@@ -85,24 +85,7 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
               </div>
             </div>
 
-            {/* KHỐI GIỮA: Ô Tìm Kiếm */}
-            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-full max-w-[300px] lg:max-w-[400px]">
-              <div className="w-full relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-[12px]">
-                  <svg className="h-[16px] w-[16px] text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <input
-                  placeholder="Tìm nhóm máu, bệnh viện..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm?.(e.target.value)}
-                  className="w-full rounded-[6px] py-[8px] pl-[36px] pr-[12px] text-[14px] text-white placeholder:text-gray-600 bg-gray-900 focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:outline-none transition-colors border border-gray-800"
-                />
-              </div>
-            </div>
-
-            {/* KHỐI PHẢI: NÚT ĐĂNG TIN KHẨN CẤP & THÔNG TIN NGƯỜI DÙNG */}
+            {/* KHỐI PHẢI: NÚT ĐĂNG TIN KHẨN CẤP & ĐĂNG NHẬP */}
             <div className="flex items-center space-x-[12px] flex-shrink-0">
               <button 
                 type="button"

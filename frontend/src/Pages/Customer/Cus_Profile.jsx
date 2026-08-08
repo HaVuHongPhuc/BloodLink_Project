@@ -30,6 +30,14 @@ const Cus_Profile = () => {
     return today.toISOString().split("T")[0];
   };
 
+  // tính ngày tối đa được chọn cho ngày sinh (đảm bảo khách hàng từ 10 tuổi trở lên)
+  const getMaxDob = () => {
+    const today = new Date();
+    today.setFullYear(today.getFullYear() - 10);
+    return today.toISOString().split("T")[0];
+  };
+
+  // truy vấn thông tin hồ sơ từ mongodb khi tải trang
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     if (!token) {

@@ -15,10 +15,12 @@ const Cus_Profile = () => {
     address: "",
     cccd: "",
   });
+
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orders, setOrders] = useState([]);
+  const [orderMessage, setOrderMessage] = useState(""); // lưu thông báo sau khi hủy đơn
 
   // tính ngày tối đa được chọn cho ngày sinh (đảm bảo khách hàng từ 10 tuổi trở lên)
   const getMaxDob = () => {
@@ -27,7 +29,7 @@ const Cus_Profile = () => {
     return today.toISOString().split("T")[0];
   };
 
-  // truy vấn thông tin hồ sơ từ mongodb khi tải trang
+  // 1. truy vấn thông tin hồ sơ từ mongodb khi tải trang
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     if (!token) {
@@ -65,14 +67,10 @@ const Cus_Profile = () => {
       });
   }, []);
 
-  useEffect(() => {
-    if (activeTab !== "orders") return;
-
+  // hàm tải lại danh sách đơn đăng ký
+  const fetchMyOrders = () => {
     const token = localStorage.getItem("userToken");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
+    if (!token) return;
 
     setLoadingOrders(true);
     fetch("http://localhost:5000/api/blood/my-orders", {
@@ -96,7 +94,42 @@ const Cus_Profile = () => {
       .finally(() => {
         setLoadingOrders(false);
       });
+  };
+
+  useEffect(() => {
+    if (activeTab === "orders") {
+      fetchMyOrders();
+    }
   }, [activeTab]);
+
+  // hàm xử lý hủy đơn đăng ký
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn đăng ký này?")) return;
+
+    const token = localStorage.getItem("userToken");
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/blood/cancel-order/${orderId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setOrderMessage("Đã hủy đơn đăng ký");
+        fetchMyOrders(); // tải lại danh sách đơn sau khi hủy
+        setTimeout(() => setOrderMessage(""), 3000);
+      } else {
+        alert(result.message || "Không thể hủy đơn đăng ký");
+      }
+    } catch (error) {
+      alert("Lỗi kết nối máy chủ");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -154,7 +187,7 @@ const Cus_Profile = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setSuccessMessage("MS20: Cập nhật thành công");
+        setSuccessMessage("Cập nhật thành công");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         setErrors({ general: result.message || "Cập nhật thất bại" });
@@ -229,7 +262,7 @@ const Cus_Profile = () => {
                     <div>
                       <span className="text-xs text-gray-500 uppercase tracking-wider block">Trạng thái tài khoản</span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300 mt-1">
-                      Đang hoạt động
+                        Đang hoạt động
                       </span>
                     </div>
                     <div>
@@ -276,7 +309,6 @@ const Cus_Profile = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* email cố định không cho phép sửa */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email tài khoản (Cố định)</label>
                     <input
@@ -360,7 +392,6 @@ const Cus_Profile = () => {
                       </select>
                     </div>
 
-                    {/* nhóm máu: chọn hoặc tự điền tối đa 5 ký tự */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm máu (Chọn hoặc tự nhập)</label>
                       <input
@@ -419,76 +450,103 @@ const Cus_Profile = () => {
             )}
 
             {activeTab === "orders" && (
-  <div>
-    <h2 className="text-xl font-bold mb-4">Danh sách đơn đăng ký của khách hàng</h2>
-    
-              {loadingOrders ? (
-                <p className="text-gray-500 text-sm">Đang tải danh sách đơn...</p>
-              ) : orders.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
-                  Chưa có đơn đăng ký nào được ghi nhận.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-300 text-sm text-left">
-                    <thead>
-                      <tr className="bg-gray-100 text-gray-800 font-semibold border-b border-gray-300 whitespace-nowrap">
-                        <th className="border border-gray-300 p-2.5 text-center w-12">STT</th>
-                        <th className="border border-gray-300 p-2.5 text-center">Mã tài khoản</th>
-                        <th className="border border-gray-300 p-2.5 text-center">Mã đơn</th>
-                        <th className="border border-gray-300 p-2.5 text-center">Loại đơn</th>
-                        <th className="border border-gray-300 p-2.5">Họ tên người gửi</th>
-                        <th className="border border-gray-300 p-2.5 text-center">Điện thoại</th>
-                        <th className="border border-gray-300 p-2.5">Email</th>
-                        <th className="border border-gray-300 p-2.5 text-center">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map((order, index) => {
-                        // định dạng hiển thị tên trạng thái rõ nghĩa
-                        const formatTrangThai = (status) => {
-                          switch (status) {
-                            case 'Cho_Duyet':
-                            case 'Cho_Xu_Ly':
-                              return 'Chờ duyệt';
-                            case 'Dat_Y_Te':
-                              return 'Đạt y tế';
-                            case 'Hoan_Thanh':
-                              return 'Hoàn thành';
-                            case 'Tu_Choi':
-                              return 'Từ chối';
-                            default:
-                              return status || 'Chờ duyệt';
-                          }
-                        };
+              <div>
+                <h2 className="text-xl font-bold mb-4">Danh sách đơn đăng ký của khách hàng</h2>
 
-                        return (
-                          <tr key={order._id || index} className="hover:bg-gray-50 border-b border-gray-200">
-                            <td className="border border-gray-300 p-2.5 text-center font-medium whitespace-nowrap">{index + 1}</td>
-                            <td className="border border-gray-300 p-2.5 text-center font-medium whitespace-nowrap">{order.MaTaiKhoan}</td>
-                            <td className="border border-gray-300 p-2.5 text-center font-semibold text-red-600 whitespace-nowrap">{order.MaDon}</td>
-                            <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
-                              <span className={`inline-block px-3 py-1 rounded text-xs font-semibold whitespace-nowrap ${order.LoaiDon === 'Hien' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
-                                {order.LoaiDon === 'Hien' ? 'Hiến máu' : 'Nhận máu'}
-                              </span>
-                            </td>
-                            <td className="border border-gray-300 p-2.5 font-medium whitespace-nowrap">{order.HoTen}</td>
-                            <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">{order.SoDienThoai}</td>
-                            <td className="border border-gray-300 p-2.5 whitespace-nowrap">{order.Email}</td>
-                            <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
-                              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">
-                                {formatTrangThai(order.TrangThai)}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+                {orderMessage && (
+                  <div className="bg-green-100 text-green-700 p-3 rounded mb-4 font-semibold">
+                    {orderMessage}
+                  </div>
+                )}
+
+                {loadingOrders ? (
+                  <p className="text-gray-500 text-sm">Đang tải danh sách đơn...</p>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    Không có đơn đăng ký
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-300 text-sm text-left">
+                      <thead>
+                        <tr className="bg-gray-100 text-gray-800 font-semibold border-b border-gray-300 whitespace-nowrap">
+                          <th className="border border-gray-300 p-2.5 text-center w-12">STT</th>
+                          <th className="border border-gray-300 p-2.5 text-center">Mã tài khoản</th>
+                          <th className="border border-gray-300 p-2.5 text-center">Mã đơn</th>
+                          <th className="border border-gray-300 p-2.5 text-center">Loại đơn</th>
+                          <th className="border border-gray-300 p-2.5">Họ tên người gửi</th>
+                          <th className="border border-gray-300 p-2.5 text-center">Điện thoại</th>
+                          <th className="border border-gray-300 p-2.5">Email</th>
+                          <th className="border border-gray-300 p-2.5 text-center">Trạng thái</th>
+                          <th className="border border-gray-300 p-2.5 text-center">Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.map((order, index) => {
+                          // định dạng hiển thị tên trạng thái
+                          const formatTrangThai = (status) => {
+                            switch (status) {
+                              case 'Cho_Duyet':
+                              case 'Cho_Xu_Ly':
+                                return 'Chờ duyệt';
+                              case 'Dat_Y_Te':
+                                return 'Đạt y tế';
+                              case 'Hoan_Thanh':
+                                return 'Hoàn thành';
+                              case 'Tu_Choi':
+                                return 'Từ chối';
+                              case 'Da_Huy':
+                                return 'Đã hủy';
+                              default:
+                                return status || 'Chờ duyệt';
+                            }
+                          };
+
+                          const isCancelable = order.TrangThai === 'Cho_Duyet' || order.TrangThai === 'Cho_Xu_Ly';
+
+                          return (
+                            <tr key={order._id || index} className="hover:bg-gray-50 border-b border-gray-200">
+                              <td className="border border-gray-300 p-2.5 text-center font-medium whitespace-nowrap">{index + 1}</td>
+                              <td className="border border-gray-300 p-2.5 text-center font-medium whitespace-nowrap">{order.MaTaiKhoan}</td>
+                              <td className="border border-gray-300 p-2.5 text-center font-semibold text-red-600 whitespace-nowrap">{order.MaDon}</td>
+                              <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
+                                <span className={`inline-block px-3 py-1 rounded text-xs font-semibold whitespace-nowrap ${order.LoaiDon === 'Hien' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                                  {order.LoaiDon === 'Hien' ? 'Hiến máu' : 'Nhận máu'}
+                                </span>
+                              </td>
+                              <td className="border border-gray-300 p-2.5 font-medium whitespace-nowrap">{order.HoTen}</td>
+                              <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">{order.SoDienThoai}</td>
+                              <td className="border border-gray-300 p-2.5 whitespace-nowrap">{order.Email}</td>
+                              <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
+                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                                  order.TrangThai === 'Da_Huy'
+                                    ? 'bg-gray-100 text-gray-700 border border-gray-300'
+                                    : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                }`}>
+                                  {formatTrangThai(order.TrangThai)}
+                                </span>
+                              </td>
+                              <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
+                                {isCancelable ? (
+                                  <button
+                                    onClick={() => handleCancelOrder(order._id)}
+                                    className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition shadow-sm"
+                                  >
+                                    Hủy đơn
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-400 text-xs italic">Không thể hủy</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -8,11 +8,7 @@ const Hospital_Login = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  const getUsers = () => {
-    const stored = localStorage.getItem("users");
-    return stored ? JSON.parse(stored) : [];
-  };
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -24,48 +20,57 @@ const Hospital_Login = () => {
     setSuccessMessage("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
     const newErrors = {};
 
-    if (!email) newErrors.email = "Vui lòng nhập email";
-    else if (!validateEmail(email)) newErrors.email = "MS06: Vui lòng kiểm tra lại định dạng email";
+    // MS06: Sai định dạng email
+    if (!email) {
+      newErrors.email = "Vui lòng nhập email";
+    } else if (!validateEmail(email)) {
+      newErrors.email = "MS06: Vui lòng kiểm tra lại định dạng email";
+    }
 
-    if (!password) newErrors.password = "Vui lòng nhập mật khẩu";
+    if (!password) {
+      newErrors.password = "Vui lòng nhập mật khẩu";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    const users = getUsers();
-    const user = users.find((u) => u.email === email && u.role === "hospital");
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/dang-nhap-doi-tac", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Email: email.trim().toLowerCase(), MatKhau: password }),
+      });
 
-    if (!user) {
-      setErrorMessage("MS08: Vui lòng đăng nhập bằng tài khoản đối tác");
-      return;
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccessMessage(data.message || "MS05: Đăng nhập thành công");
+        setErrorMessage("");
+        localStorage.setItem("userToken", data.token);
+        localStorage.setItem("userRole", data.user.role);
+        localStorage.setItem("userEmail", data.user.email);
+        localStorage.setItem("maBenhVien", data.user.maBenhVien);
+        localStorage.setItem("hospitalName", data.user.tenBenhVien);
+        setTimeout(() => {
+          window.location.href = "/hospital-dashboard";
+        }, 1500);
+      } else {
+        setErrorMessage(data.message || "Đăng nhập thất bại");
+        setSuccessMessage("");
+      }
+    } catch (error) {
+      setErrorMessage("Lỗi kết nối server");
+    } finally {
+      setLoading(false);
     }
-
-    if (user.password !== password) {
-      setErrorMessage("MS07: Mật khẩu không đúng, Vui lòng thử lại");
-      return;
-    }
-
-    if (user.status !== "approved") {
-      setErrorMessage("Tài khoản đang chờ xác thực hoặc bị từ chối");
-      return;
-    }
-
-    setSuccessMessage("MS05: Đăng nhập thành công");
-    setErrorMessage("");
-    localStorage.setItem("userToken", "fake-jwt-token");
-    localStorage.setItem("userRole", user.role);
-    localStorage.setItem("userEmail", user.email);
-
-    setTimeout(() => {
-      window.location.href = "/hospital-dashboard";
-    }, 1500);
   };
 
   return (
@@ -77,6 +82,7 @@ const Hospital_Login = () => {
               <FontAwesomeIcon icon={faSignInAlt} className="text-white text-[28px]" />
             </div>
             <h1 className="text-[28px] font-bold text-gray-900">Đăng Nhập Đối Tác</h1>
+            <p className="text-gray-500 text-[14px] mt-[8px]">BM03: Phiếu đăng nhập</p>
           </div>
 
           {successMessage && (
@@ -137,13 +143,16 @@ const Hospital_Login = () => {
 
             <button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-[14px] rounded-[8px] transition shadow-md"
+              disabled={loading}
+              className={`w-full bg-red-600 hover:bg-red-700 text-white font-bold py-[14px] rounded-[8px] transition shadow-md ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Đăng Nhập
+              {loading ? "Đang xử lý..." : "Đăng Nhập"}
             </button>
           </form>
 
-          <div className="mt-[24px] text-center space-y-[12px]">
+          <div className="mt-[24px] text-center">
             <p className="text-gray-600 text-[14px]">
               Chưa có tài khoản?{" "}
               <a href="/partner-register" className="text-red-600 font-semibold hover:underline">

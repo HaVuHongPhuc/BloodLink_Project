@@ -4,12 +4,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignInAlt } from "@fortawesome/free-solid-svg-icons";
 
 const Cus_Login = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validateIdentifier = (value) => {
+    if (!value) return false;
+    return validateEmail(value) || /^[A-Za-z0-9_-]+$/.test(value.trim());
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,12 +25,11 @@ const Cus_Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { email, password } = formData;
+    const { identifier, password } = formData;
     const newErrors = {};
 
-    // MS06: sai định dạng email
-    if (!email) newErrors.email = "Vui lòng nhập email";
-    else if (!validateEmail(email)) newErrors.email = "Vui lòng kiểm tra lại định dạng email";
+    if (!identifier) newErrors.identifier = "Vui lòng nhập email hoặc mã tài khoản";
+    else if (!validateIdentifier(identifier)) newErrors.identifier = "Vui lòng nhập đúng email hoặc mã tài khoản";
 
     if (!password) newErrors.password = "Vui lòng nhập mật khẩu";
 
@@ -42,7 +45,7 @@ const Cus_Login = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          Email: email.trim(),
+          identifier: identifier.trim(),
           MatKhau: password,
         }),
       });
@@ -58,11 +61,17 @@ const Cus_Login = () => {
       setErrorMessage("");
       localStorage.setItem("userToken", data.token);
       localStorage.setItem("userRole", data.user?.role || "customer");
-      localStorage.setItem("userEmail", data.user?.email || email);
+      localStorage.setItem("userEmail", data.user?.email || identifier);
 
       setTimeout(() => {
-        window.location.href = "/homepage";
+        const role = data.user?.role || "customer";
+        if (role === "quan tri he thong") {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/homepage";
+        }
       }, 1500);
+
     } catch (error) {
       setErrorMessage("Không thể kết nối tới máy chủ. Hãy kiểm tra backend.");
     }
@@ -101,17 +110,17 @@ const Cus_Login = () => {
                   <FontAwesomeIcon icon={faEnvelope} className="text-gray-400" />
                 </div>
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  name="identifier"
+                  value={formData.identifier}
                   onChange={handleChange}
-                  placeholder="example@email.com"
+                  placeholder="Email hoặc mã tài khoản"
                   className={`w-full pl-[40px] pr-[14px] py-[12px] border ${
-                    errors.email ? "border-red-500" : "border-gray-300"
+                    errors.identifier ? "border-red-500" : "border-gray-300"
                   } rounded-[8px] focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition`}
                 />
               </div>
-              {errors.email && <p className="text-red-500 text-[13px] mt-[6px]">{errors.email}</p>}
+              {errors.identifier && <p className="text-red-500 text-[13px] mt-[6px]">{errors.identifier}</p>}
             </div>
 
             <div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import '../../index.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDroplet, faBullhorn } from '@fortawesome/free-solid-svg-icons';
+import { faDroplet, faBullhorn, faUser } from '@fortawesome/free-solid-svg-icons';
 import footerImgNew from '../HinhAnh,icons/footer.png';
 
 const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreateModal }) => {
@@ -20,6 +20,9 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
     if (e) e.preventDefault();
     window.location.href = path;
   };
+
+  // Lấy tên bệnh viện từ localStorage nếu có
+  const hospitalName = localStorage.getItem('hospitalName') || 'Bệnh viện';
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -43,7 +46,7 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
             <div className="flex items-center space-x-[8px] flex-shrink-0">
               <button 
                 type="button" 
-                onClick={(e) => handleNavigate('/hospital', e)} 
+                onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
                 className="flex items-center gap-[8px] font-bold text-[20px] text-red-600 mr-[16px]"
               >
                 <FontAwesomeIcon icon={faDroplet} className="text-red-600" />
@@ -53,24 +56,31 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
               <div className="hidden lg:flex space-x-[4px] text-[14px] font-medium">
                 <button 
                   type="button"
-                  onClick={(e) => handleNavigate('/hospital', e)} 
-                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/hospital' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                  onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
+                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/hospital-dashboard' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
                 >
                   Trang chủ
                 </button>
                 <button 
                   type="button"
-                  onClick={(e) => handleNavigate('/listtinkhancap', e)} 
-                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/listtinkhancap' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                  onClick={(e) => handleNavigate('/hospital/emergency', e)} 
+                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl.includes('/hospital/emergency') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
                 >
                   Tin khẩn cấp
                 </button>
                 <button 
                   type="button"
-                  onClick={(e) => handleNavigate('/hospitals', e)} 
-                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/hospitals' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                  onClick={(e) => handleNavigate('/hospital/search-donor', e)} 
+                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl.includes('/hospital/search-donor') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
                 >
-                  Danh sách bệnh viện
+                  Tìm người hiến
+                </button>
+                <button 
+                  type="button"
+                  onClick={(e) => handleNavigate('/hospital/notifications', e)} 
+                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl.includes('/hospital/notifications') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                >
+                  Thông báo
                 </button>
               </div>
             </div>
@@ -96,16 +106,24 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
                   <button 
                     type="button" 
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
-                    className="flex rounded-full bg-red-600"
+                    className="flex items-center gap-2 rounded-full bg-red-600 text-white px-3 py-1 text-sm font-medium hover:bg-red-700 transition"
                   >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="User profile" className="w-[32px] h-[32px] rounded-full" />
+                    <FontAwesomeIcon icon={faUser} />
+                    <span className="hidden sm:inline">{hospitalName}</span>
                   </button>
                   {isProfileMenuOpen && (
                     <div className="absolute right-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                      <button type="button" onClick={(e) => handleNavigate('/profile', e)} className="block w-full text-left px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</button>
+                      <button type="button" onClick={(e) => handleNavigate('/hospital-profile', e)} className="block w-full text-left px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</button>
                       <button
                         type="button"
-                        onClick={() => { localStorage.removeItem('userToken'); window.location.reload(); }}
+                        onClick={() => { 
+                          localStorage.removeItem('userToken');
+                          localStorage.removeItem('userRole');
+                          localStorage.removeItem('userEmail');
+                          localStorage.removeItem('maBenhVien');
+                          localStorage.removeItem('hospitalName');
+                          window.location.href = '/partner-login';
+                        }}
                         className="block w-full text-left px-[16px] py-[8px] text-red-600 hover:bg-gray-100"
                       >
                         Đăng xuất
@@ -132,9 +150,10 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
       {/* MENU MOBILE */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-gray-900 px-[16px] py-[12px] space-y-[8px] text-[14px] text-gray-300">
-          <button type="button" onClick={(e) => handleNavigate('/hospital', e)} className="block w-full text-left text-white font-medium">Trang chủ</button>
-          <button type="button" onClick={(e) => handleNavigate('/listtinkhancap', e)} className="block w-full text-left hover:text-white">Tin khẩn cấp</button>
-          <button type="button" onClick={(e) => handleNavigate('/hospitals', e)} className="block w-full text-left hover:text-white">Danh sách bệnh viện</button>
+          <button type="button" onClick={(e) => { handleNavigate('/hospital-dashboard', e); setIsMobileMenuOpen(false); }} className="block w-full text-left text-white font-medium">Trang chủ</button>
+          <button type="button" onClick={(e) => { handleNavigate('/hospital/emergency', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Tin khẩn cấp</button>
+          <button type="button" onClick={(e) => { handleNavigate('/hospital/search-donor', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Tìm người hiến</button>
+          <button type="button" onClick={(e) => { handleNavigate('/hospital/notifications', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Thông báo</button>
           <button 
             type="button"
             onClick={() => {
@@ -194,7 +213,7 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
         </div>
 
         <div className="w-full bg-red-900 py-[12px] text-center text-white font-bold text-[15px] tracking-wide">
-          Hà Vũ Hồng Phúc - Lưu Tùng Quy - Trương Gia Tân
+          Hà Vũ Hồng Phúc - Lu Tùng Quy - Trương Gia Tân
         </div>
       </footer>
     </div>

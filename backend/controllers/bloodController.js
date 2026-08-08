@@ -26,7 +26,7 @@ const getHospitalIdentifier = (req, body = {}) => {
   return body.MaTaiKhoanBenhVien || body.maTaiKhoanBenhVien || body.MaBenhVien || body.maBenhVien || req.user?.maTaiKhoanBenhVien || req.user?.MaTaiKhoanBenhVien || req.user?.maBenhVien || req.user?.MaBenhVien || null;
 };
 
-// lấy danh sách bệnh viện hợp tác đang hoạt động
+// Lấy danh sách bệnh viện hợp tác đang hoạt động
 exports.getHospitals = async (req, res) => {
   try {
     const hospitals = await BenhVienHopTac.find({ TrangThai: { $in: ['dang hop tac', 'Đang hoạt động', 'Đang hợp tác'] } }).lean();
@@ -36,6 +36,7 @@ exports.getHospitals = async (req, res) => {
   }
 };
 
+// Lấy danh sách đơn đăng ký của tài khoản cá nhân
 exports.getMyOrders = async (req, res) => {
   try {
     const tokenMaTaiKhoan = req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
@@ -54,7 +55,45 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-// đăng ký hiến máu
+// Hủy đơn đăng ký của khách hàng
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tokenMaTaiKhoan = req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
+    const email = req.user?.Email || req.user?.email;
+
+    // Tìm đơn đăng ký khớp với ID đơn và thuộc sở hữu của tài khoản đang đăng nhập
+    const don = await DonDangKy.findOne({
+      _id: id,
+      $or: [
+        { MaTaiKhoan: tokenMaTaiKhoan },
+        { Email: email }
+      ]
+    });
+
+    if (!don) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đơn đăng ký' });
+    }
+
+    // Chỉ cho phép hủy khi đơn ở trạng thái chờ duyệt hoặc chờ xử lý
+    if (don.TrangThai !== 'Cho_Duyet' && don.TrangThai !== 'Cho_Xu_Ly') {
+      return res.status(400).json({ success: false, message: 'Đơn đăng ký không thể hủy ở trạng thái hiện tại' });
+    }
+
+    don.TrangThai = 'Da_Huy';
+    await don.save();
+
+    return res.json({
+      success: true,
+      message: 'Đã hủy đơn đăng ký thành công'
+    });
+  } catch (error) {
+    console.error('Lỗi khi hủy đơn đăng ký:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
+  }
+};
+
+// Đăng ký hiến máu
 exports.registerDonate = async (req, res) => {
   try {
     const {
@@ -134,7 +173,7 @@ exports.registerDonate = async (req, res) => {
   }
 };
 
-// đăng ký nhận máu
+// Đăng ký nhận máu
 exports.registerReceive = async (req, res) => {
   try {
     const {

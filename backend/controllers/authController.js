@@ -62,7 +62,12 @@ exports.dangNhapDoiTac = async (req, res) => {
     }
     
     const token = jwt.sign(
-      { id: benhVien._id, role: 'hospital', maBenhVien: benhVien.MaBenhVien },
+      {
+        id: benhVien._id,
+        role: 'hospital',
+        maBenhVien: benhVien.MaBenhVien,
+        maTaiKhoanBenhVien: benhVien.MaTaiKhoanBenhVien || benhVien.MaBenhVien
+      },
       process.env.JWT_SECRET || 'secretkey',
       { expiresIn: '7d' }
     );
@@ -72,6 +77,7 @@ exports.dangNhapDoiTac = async (req, res) => {
       token,
       user: {
         maBenhVien: benhVien.MaBenhVien,
+        maTaiKhoanBenhVien: benhVien.MaTaiKhoanBenhVien || benhVien.MaBenhVien,
         tenBenhVien: benhVien.TenBenhVien,
         email: benhVien.Email,
         role: 'hospital'

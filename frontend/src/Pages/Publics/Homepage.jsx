@@ -148,7 +148,7 @@ const Homepage = () => {
                         
                         {/* Nút 1: Đăng ký nhận máu (Màu Đen) */}
                         <a
-                        href="./RegisterReceive"
+                        href="/register-receive"
                         className="w-full sm:w-auto px-[32px] py-[14px] bg-black hover:bg-gray-800 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
                         >
                         Đăng Ký Nhận Máu
@@ -156,7 +156,7 @@ const Homepage = () => {
 
                         {/* Nút 2: Đăng ký hiến máu (Màu Đỏ) */}
                         <a
-                        href="./RegisterDonate"
+                        href="/register-donate"
                         className="w-full sm:w-auto px-[32px] py-[14px] bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
                         >
                         Đăng Ký Hiến Máu

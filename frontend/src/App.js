@@ -61,10 +61,10 @@ function App() {
   else if (currentPath === '/search-donor' || currentPath === '/searchdonor') {
     PageComponent = SearchDonorMatch;
   }
-    else if (currentPath === 'register-donate' || currentPath === '/registerdonate') {
+  else if (currentPath === '/register-donate' || currentPath === '/registerdonate') {
     PageComponent = RegisterDonate;
   }
-  else if (currentPath === 'register-receive' || currentPath === '/registerreceive') {
+  else if (currentPath === '/register-receive' || currentPath === '/registerreceive') {
     PageComponent = RegisterReceive;
   }
   else {

@@ -17,6 +17,8 @@ const Cus_Profile = () => {
   });
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [orders, setOrders] = useState([]);
 
   // tính ngày tối đa được chọn cho ngày sinh (đảm bảo khách hàng từ 10 tuổi trở lên)
   const getMaxDob = () => {
@@ -62,6 +64,39 @@ const Cus_Profile = () => {
         window.location.href = "/login";
       });
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "orders") return;
+
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
+    setLoadingOrders(true);
+    fetch("http://localhost:5000/api/blood/my-orders", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          setOrders(result.data || []);
+        } else {
+          setOrders([]);
+        }
+      })
+      .catch(() => {
+        setOrders([]);
+      })
+      .finally(() => {
+        setLoadingOrders(false);
+      });
+  }, [activeTab]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -384,11 +419,76 @@ const Cus_Profile = () => {
             )}
 
             {activeTab === "orders" && (
-              <div>
-                <h2 className="text-xl font-bold mb-6">Xem đơn đăng ký</h2>
-                <p className="text-gray-500 text-sm">Chức năng xem danh sách đơn đang được hoàn thiện...</p>
-              </div>
-            )}
+  <div>
+    <h2 className="text-xl font-bold mb-4">Danh sách đơn đăng ký của khách hàng</h2>
+    
+              {loadingOrders ? (
+                <p className="text-gray-500 text-sm">Đang tải danh sách đơn...</p>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
+                  Chưa có đơn đăng ký nào được ghi nhận.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300 text-sm text-left">
+                    <thead>
+                      <tr className="bg-gray-100 text-gray-800 font-semibold border-b border-gray-300 whitespace-nowrap">
+                        <th className="border border-gray-300 p-2.5 text-center w-12">STT</th>
+                        <th className="border border-gray-300 p-2.5 text-center">Mã tài khoản</th>
+                        <th className="border border-gray-300 p-2.5 text-center">Mã đơn</th>
+                        <th className="border border-gray-300 p-2.5 text-center">Loại đơn</th>
+                        <th className="border border-gray-300 p-2.5">Họ tên người gửi</th>
+                        <th className="border border-gray-300 p-2.5 text-center">Điện thoại</th>
+                        <th className="border border-gray-300 p-2.5">Email</th>
+                        <th className="border border-gray-300 p-2.5 text-center">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((order, index) => {
+                        // định dạng hiển thị tên trạng thái rõ nghĩa
+                        const formatTrangThai = (status) => {
+                          switch (status) {
+                            case 'Cho_Duyet':
+                            case 'Cho_Xu_Ly':
+                              return 'Chờ duyệt';
+                            case 'Dat_Y_Te':
+                              return 'Đạt y tế';
+                            case 'Hoan_Thanh':
+                              return 'Hoàn thành';
+                            case 'Tu_Choi':
+                              return 'Từ chối';
+                            default:
+                              return status || 'Chờ duyệt';
+                          }
+                        };
+
+                        return (
+                          <tr key={order._id || index} className="hover:bg-gray-50 border-b border-gray-200">
+                            <td className="border border-gray-300 p-2.5 text-center font-medium whitespace-nowrap">{index + 1}</td>
+                            <td className="border border-gray-300 p-2.5 text-center font-medium whitespace-nowrap">{order.MaTaiKhoan}</td>
+                            <td className="border border-gray-300 p-2.5 text-center font-semibold text-red-600 whitespace-nowrap">{order.MaDon}</td>
+                            <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
+                              <span className={`inline-block px-3 py-1 rounded text-xs font-semibold whitespace-nowrap ${order.LoaiDon === 'Hien' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {order.LoaiDon === 'Hien' ? 'Hiến máu' : 'Nhận máu'}
+                              </span>
+                            </td>
+                            <td className="border border-gray-300 p-2.5 font-medium whitespace-nowrap">{order.HoTen}</td>
+                            <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">{order.SoDienThoai}</td>
+                            <td className="border border-gray-300 p-2.5 whitespace-nowrap">{order.Email}</td>
+                            <td className="border border-gray-300 p-2.5 text-center whitespace-nowrap">
+                              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 whitespace-nowrap">
+                                {formatTrangThai(order.TrangThai)}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
           </div>
         </div>
       </div>

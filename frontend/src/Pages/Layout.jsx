@@ -56,8 +56,8 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
                   </button>
                   {isCategoryMenuOpen && (
                     <div className="absolute left-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                      <a href="../RegisterDonate" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký hiến máu</a>
-                      <a href="../RegisterReceive" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký nhận máu</a>
+                      <a href="/register-donate" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký hiến máu</a>
+                      <a href="/register-receive" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký nhận máu</a>
                     </div>
                   )}
                 </div>
@@ -122,8 +122,8 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
           <a href="/homepage" className="block text-white font-medium">Trang chủ</a>
           <a href="/ListTinKhancap" className="block hover:text-white">Tin khẩn cấp</a>
           <a href="/hospitals" className="block hover:text-white">Danh sách bệnh viện</a>
-          <a href="../register-donate" className="block hover:text-white">Đăng ký hiến máu</a>
-          <a href="../RegisterReceive" className="block hover:text-white">Đăng ký nhận máu</a>
+          <a href="/register-donate" className="block hover:text-white">Đăng ký hiến máu</a>
+          <a href="/register-receive" className="block hover:text-white">Đăng ký nhận máu</a>
         </div>
       )}
 
@@ -143,9 +143,19 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
           </h3>
           <ul className="space-y-[10px] text-[14px] text-gray-300">
             <li>
-              <a href="/register-donate" className="hover:text-red-500 transition-colors">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!localStorage.getItem('userToken')) {
+                    window.location.href = '/login';
+                    return;
+                  }
+                  window.location.href = '/register-donate';
+                }}
+                className="hover:text-red-500 transition-colors"
+              >
                 Donor Signup
-              </a>
+              </button>
             </li>
             <li>
               <a href="/partner-login" className="hover:text-red-500 transition-colors">
@@ -153,9 +163,19 @@ const Layout = ({ children, searchTerm = '', setSearchTerm }) => {
               </a>
             </li>
             <li>
-              <a href="/register-receive" className="hover:text-red-500 transition-colors">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!localStorage.getItem('userToken')) {
+                    window.location.href = '/login';
+                    return;
+                  }
+                  window.location.href = '/register-receive';
+                }}
+                className="hover:text-red-500 transition-colors"
+              >
                 Blood Recipient Signup
-              </a>
+              </button>
             </li>
           </ul>
         </div>

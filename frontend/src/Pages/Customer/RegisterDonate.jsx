@@ -3,17 +3,18 @@ import Layout from "../Layout";
 
 const RegisterDonate = () => {
   const [loading, setLoading] = useState(true);
-  const [hospitals, setHospitals] = useState([]); // danh sách bệnh viện hợp tác lấy từ DB
+  const [hospitals, setHospitals] = useState([]);
 
-  // cờ kiểm tra điều kiện đăng ký
   const [isProfileIncomplete, setIsProfileIncomplete] = useState(false);
   const [isUnder12Weeks, setIsUnder12Weeks] = useState(false);
   const [lastDonationDateStr, setLastDonationDateStr] = useState('');
+  
+  // State hiển thị chuỗi ngày dd/mm/yyyy riêng cho giao diện UI
+  const [displayNgayHienText, setDisplayNgayHienText] = useState('Chưa từng hiến máu');
 
-  // state lưu dữ liệu form đăng ký hiến máu (đã bổ sung MaBenhVien)
   const [formData, setFormData] = useState({
     MaDon: '',
-    MaBenhVien: '', // chứa mã bệnh viện khách hàng chọn
+    MaBenhVien: '',
     HoTen: '',
     GioiTinh: 'Nam',
     NgaySinh: '',
@@ -22,12 +23,34 @@ const RegisterDonate = () => {
     Email: '',
     DiaChi: '',
     NhomMau: '',
-    NgayHienGanNhat: '', // chỉ hiển thị, khóa không cho khách hàng sửa
+    NgayHienGanNhat: null, // Lưu ngày chuẩn Date/ISO để gửi về DB
     BenhNen: 'Không có bệnh nền'
   });
 
   const [errors, setErrors] = useState({});
   const [modal, setModal] = useState({ open: false, message: '', type: 'error' });
+
+  // 1. Định dạng dd/mm/yyyy hiển thị lên giao diện UI
+  const formatDateVN = (dateInput) => {
+    if (!dateInput) return 'Chưa từng hiến máu';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return 'Chưa từng hiến máu';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // 2. Định dạng YYYY-MM-DD dành riêng cho input type="date"
+  const formatDateToLocalInput = (dateInput) => {
+    if (!dateInput) return '';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const showModal = (message, type = 'error') => {
     setModal({ open: true, message, type });
@@ -37,7 +60,6 @@ const RegisterDonate = () => {
     setModal({ open: false, message: '', type: 'error' });
   };
 
-  // tự động tải thông tin bệnh viện hợp tác và hồ sơ cá nhân
   useEffect(() => {
     const token = localStorage.getItem('userToken');
     if (!token) {
@@ -47,17 +69,17 @@ const RegisterDonate = () => {
 
     const fetchDataFromDB = async () => {
       try {
-        // 1. Tải danh sách bệnh viện hợp tác đang hoạt động
+        // Tải danh sách bệnh viện hợp tác
         const resHospitals = await fetch('http://localhost:5000/api/blood/hospitals');
         const dataHospitals = await resHospitals.json();
         
         let defaultMaBenhVien = '';
         if (dataHospitals.success && dataHospitals.data.length > 0) {
           setHospitals(dataHospitals.data);
-          defaultMaBenhVien = dataHospitals.data[0].MaBenhVien; // gán bệnh viện đầu tiên làm mặc định
+          defaultMaBenhVien = dataHospitals.data[0].MaBenhVien;
         }
 
-        // 2. Tải thông tin hồ sơ khách hàng
+        // Tải thông tin hồ sơ khách hàng
         const response = await fetch('http://localhost:5000/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -77,22 +99,26 @@ const RegisterDonate = () => {
           }
 
           const ngayHienMauDb = user.NgayHienGanNhat || user.NgayDangKyHienMauGanNhat;
-          const todayIso = new Date().toISOString().split('T')[0];
-          let displayNgayHien = todayIso;
+          let rawDateForDB = null;
 
           if (ngayHienMauDb) {
             const lastDate = new Date(ngayHienMauDb);
-            displayNgayHien = lastDate.toISOString().split('T')[0];
+            rawDateForDB = lastDate.toISOString(); // Dữ liệu ngày chuẩn gửi DB
+
+            // Cập nhật chuỗi dd/mm/yyyy hiển thị trên UI
+            const formattedVN = formatDateVN(lastDate);
+            setDisplayNgayHienText(formattedVN);
+            setLastDonationDateStr(formattedVN);
 
             const today = new Date();
             const diffTime = Math.abs(today - lastDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            setLastDonationDateStr(lastDate.toLocaleDateString('vi-VN'));
-
             if (diffDays < 84) {
               setIsUnder12Weeks(true);
             }
+          } else {
+            setDisplayNgayHienText('Chưa từng hiến máu');
           }
 
           setFormData((prev) => ({
@@ -101,13 +127,13 @@ const RegisterDonate = () => {
             MaBenhVien: defaultMaBenhVien,
             HoTen: hoTen,
             GioiTinh: user.GioiTinh || 'Nam',
-            NgaySinh: ngaySinh ? new Date(ngaySinh).toISOString().split('T')[0] : '',
+            NgaySinh: ngaySinh ? formatDateToLocalInput(ngaySinh) : '',
             SoCCCD: cccd,
             SoDienThoai: sdt,
             Email: user.Email || user.email || '',
             DiaChi: diaChi,
             NhomMau: user.NhomMau || '',
-            NgayHienGanNhat: displayNgayHien,
+            NgayHienGanNhat: rawDateForDB, // Gửi chuẩn ISO Date về Backend
             BenhNen: 'Không có bệnh nền'
           }));
         }
@@ -237,7 +263,7 @@ const RegisterDonate = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             
-            {/* Lựa chọn Bệnh viện hợp tác tiếp nhận */}
+            {/* Bệnh viện tiếp nhận */}
             <div className="flex flex-col md:flex-row md:items-center">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">
                 Bệnh viện tiếp nhận <span className="text-red-500">*</span>
@@ -389,18 +415,17 @@ const RegisterDonate = () => {
             </div>
             {errors.DiaChi && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.DiaChi}</p>}
 
-            {/* Ngày hiến máu gần nhất - CỐ ĐỊNH, KHÔNG CHO CHỈNH SỬA */}
+            {/* Ngày hiến máu gần nhất: Hiển thị chuỗi dd/mm/yyyy từ displayNgayHienText */}
             <div className="flex flex-col md:flex-row md:items-center">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">
                 Ngày hiến máu gần nhất
               </label>
               <input
-                type="date"
-                name="NgayHienGanNhat"
-                value={formData.NgayHienGanNhat}
+                type="text"
+                value={displayNgayHienText}
                 readOnly
                 disabled
-                className="w-full md:w-2/3 p-2 border rounded-md text-sm bg-gray-100 text-gray-600 font-medium cursor-not-allowed select-none"
+                className="w-full md:w-2/3 p-2 border rounded-md text-sm bg-gray-100 text-gray-700 font-semibold cursor-not-allowed select-none"
               />
             </div>
 
@@ -420,7 +445,7 @@ const RegisterDonate = () => {
               ></textarea>
             </div>
 
-            {/* nút đăng ký hoặc thông báo lỗi ràng buộc */}
+            {/* Nút gửi hoặc Cảnh báo */}
             <div className="pt-4 border-t mt-4 flex justify-end">
               {isProfileIncomplete ? (
                 <div className="w-full bg-red-50 border border-red-300 p-3 rounded-md text-center">

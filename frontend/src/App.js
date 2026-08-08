@@ -16,6 +16,8 @@ import HospitalPage from './Pages/Hospital/HospitalPage';
 import HospitalList from './Pages/Publics/HospitalList';
 import ListTinKhanCap from './Pages/Publics/ListTinKhanCap';
 import SearchDonorMatch from './Pages/Hospital/SearchDonorMatch';
+import HospitalInventory from './Pages/Hospital/HospitalInventory';
+import HospitalOrders from './Pages/Hospital/HospitalOrders';
 //admin
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import './App.css';
@@ -73,6 +75,12 @@ function App() {
   }
   else if (currentPath === '/hospital/emergency') {
   PageComponent = HospitalPage; // hoặc import và dùng
+  }
+  else if (currentPath === '/hospital/inventory' || currentPath === '/hospital_inventory') {
+    PageComponent = HospitalInventory;
+  }
+  else if (currentPath === '/hospital/orders' || currentPath === '/hospital_orders') {
+    PageComponent = HospitalOrders;
   }
   else {
     PageComponent = Homepage; // Mặc định là trang chủ

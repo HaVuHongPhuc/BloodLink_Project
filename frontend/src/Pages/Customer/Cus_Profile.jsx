@@ -261,14 +261,15 @@ const Cus_Profile = () => {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto py-8 px-4 font-sans">
         <h1 className="text-3xl font-bold mb-6">Thông tin tài khoản</h1>
 
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="w-full md:w-64 bg-gray-50 p-2 rounded-lg h-fit space-y-1 border border-gray-200">
+        <div className="flex flex-col md:flex-row gap-6 items-start">
+          {/* SỬA TẠI ĐÂY: Thêm shrink-0 và w-60/w-64 cố định độ rộng menu */}
+          <div className="w-full md:w-60 shrink-0 bg-gray-50 p-2 rounded-lg space-y-1 border border-gray-200">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`w-full text-left py-2 px-4 text-sm font-medium transition ${
+              className={`w-full text-left py-2.5 px-4 text-sm font-medium whitespace-nowrap transition rounded-md ${
                 activeTab === "profile"
                   ? "bg-white text-black font-bold border-l-4 border-black shadow-sm"
                   : "text-gray-600 hover:bg-gray-100"
@@ -278,7 +279,7 @@ const Cus_Profile = () => {
             </button>
             <button
               onClick={() => setActiveTab("password")}
-              className={`w-full text-left py-2 px-4 text-sm font-medium transition ${
+              className={`w-full text-left py-2.5 px-4 text-sm font-medium whitespace-nowrap transition rounded-md ${
                 activeTab === "password"
                   ? "bg-white text-black font-bold border-l-4 border-black shadow-sm"
                   : "text-gray-600 hover:bg-gray-100"
@@ -288,7 +289,7 @@ const Cus_Profile = () => {
             </button>
             <button
               onClick={() => setActiveTab("orders")}
-              className={`w-full text-left py-2 px-4 text-sm font-medium transition ${
+              className={`w-full text-left py-2.5 px-4 text-sm font-medium whitespace-nowrap transition rounded-md ${
                 activeTab === "orders"
                   ? "bg-white text-black font-bold border-l-4 border-black shadow-sm"
                   : "text-gray-600 hover:bg-gray-100"
@@ -298,7 +299,7 @@ const Cus_Profile = () => {
             </button>
             <button
               onClick={() => setActiveTab("notifications")}
-              className={`w-full text-left py-2 px-4 text-sm font-medium transition ${
+              className={`w-full text-left py-2.5 px-4 text-sm font-medium whitespace-nowrap transition rounded-md ${
                 activeTab === "notifications"
                   ? "bg-white text-black font-bold border-l-4 border-black shadow-sm"
                   : "text-gray-600 hover:bg-gray-100"
@@ -308,7 +309,8 @@ const Cus_Profile = () => {
             </button>
           </div>
 
-          <div className="flex-1 bg-white shadow rounded-lg p-6 border border-gray-100 space-y-8">
+          {/* SỬA TẠI ĐÂY: Thêm min-w-0 để bảng dữ liệu tự cuộn ngang thay vì đẩy vỡ layout */}
+          <div className="flex-1 min-w-0 bg-white shadow rounded-lg p-6 border border-gray-100 space-y-8">
             {activeTab === "profile" && (
               <div>
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 space-y-4">

@@ -59,14 +59,17 @@ const Homepage = () => {
   return (
     <Layout>
       <div>
+        {/* POSTER BANNER */}
         <div className="w-full flex justify-center">
-          <img src={posterhienmau} 
-            alt="Description"
+          <img 
+            src={posterhienmau} 
+            alt="Poster hiến máu"
             className="w-full h-auto rounded-lg shadow"
-            style={{display: 'flex', justifyContent: 'center',width: '1600px', height: '600px' }}
-            />
+            style={{ display: 'flex', justifyContent: 'center', width: '1600px', height: '600px' }}
+          />
         </div>
 
+        {/* TIÊU ĐỀ DANH SÁCH */}
         <div>
           <h1 className="text-4xl text-black font-bold mt-[50px] mb-[16px] max-w-[1600px] mx-auto">
             DANH SÁCH TIN KHẨN CẤP
@@ -88,7 +91,7 @@ const Homepage = () => {
             <div className="flex gap-[25px] h-full items-center">
               {emergencyList.map((item, index) => {
                 const maTinStr = item.MaTin || item.maTin || `TKC${index + 1}`;
-                const tenBVStr = item.TenBenhVien || item.tenBV || "Bệnh viện";               
+                const tenBVStr = item.TenBenhVien || item.tenBV || "Bệnh viện";       
                 const sdtStr = item.SoDienThoaiBenhVien || item.sdt || "Đang cập nhật";
                 const nhomMauStr = item.NhomMau || item.nhomMau || "A+";
                 const soLuongCan = Number(item.SoLuong !== undefined ? item.SoLuong : item.soLuong || 0);
@@ -97,7 +100,7 @@ const Homepage = () => {
                 const ngayDangStr = formatDate(item.NgayDang || item.ngayDang);
 
                 return (
-                  /* Ô CHỨA TIN: */
+                  /* Ô CHỨA TIN */
                   <div 
                     key={item._id || index} 
                     className="w-[500px] h-[500px] bg-white rounded-[12px] p-[28px] flex-shrink-0 shadow-md flex flex-col justify-between"
@@ -108,7 +111,7 @@ const Homepage = () => {
                         CẦN NGƯỜI HIẾN MÁU KHẨN CẤP #{maTinStr}
                       </h2>
 
-                      {/* Thông tin chi tiết lấy từ Database */}
+                      {/* Thông tin chi tiết */}
                       <div className="space-y-[12px] text-gray-800 text-[15px]">
                         <p>
                           <span className="font-bold text-red-600">Nhóm máu cần:</span>{" "}
@@ -125,45 +128,8 @@ const Homepage = () => {
                         </div>
                       </div>
                     </div>
-                </div>
 
-                {/* KHỐI KÊU GỌI HÀNH ĐỘNG (HIẾN VÀ NHẬN MÁ */}
-                    <div className="w-[1600px] p-[10px] bg-gradient-to-r from-red-400 via-red-100 to-red-400 rounded-[16px] border border-red-100 shadow-sm text-center">
-                    
-                    {/* Tiêu đề chính */}
-                    <h2 className="text-[32px] font-bold text-gray-900 tracking-tight">
-                        Chung Tay Vì Cộng Đồng
-                    </h2>
-
-                    {/* Dấu gạch chân màu đỏ trang trí (giống trong hình) */}
-                    <div className="w-[80px] h-[4px] bg-red-600 mx-auto mt-[12px] mb-[18px] rounded-full"></div>
-
-                    {/* Đoạn văn mô tả */}
-                    <p className="text-gray-600 text-[16px] max-w-[700px] mx-auto mb-[32px] leading-relaxed">
-                        Hãy cùng chúng tôi lan tỏa tình yêu thương và cứu sống thêm nhiều người. 
-                        Mọi bệnh nhân đều có quyền được tiếp cận nguồn máu an toàn và kịp thời.
-                    </p>
-
-                    {/* Cặp nút hành động */}
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-[16px]">
-                        
-                        {/* Nút 1: Đăng ký nhận máu (Màu Đen) */}
-                        <a
-                        href="/register-receive"
-                        className="w-full sm:w-auto px-[32px] py-[14px] bg-black hover:bg-gray-800 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
-                        >
-                        Đăng Ký Nhận Máu
-                        </a>
-
-                        {/* Nút 2: Đăng ký hiến máu (Màu Đỏ) */}
-                        <a
-                        href="/register-donate"
-                        className="w-full sm:w-auto px-[32px] py-[14px] bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
-                        >
-                        Đăng Ký Hiến Máu
-                        </a>
-
-                    {/* Nút đăng ký */}
+                    {/* Nút đăng ký cho từng thẻ */}
                     <button 
                       onClick={() => window.location.href = "/register-donate"}
                       className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-[14px] rounded-[8px] transition duration-200 uppercase cursor-pointer"
@@ -180,14 +146,13 @@ const Homepage = () => {
         {/* KHỐI ĐIỀU HƯỚNG NHANH */}
         <div className="w-full max-w-[1000px] mx-auto my-[30px] shadow-xl rounded-[12px] overflow-hidden">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-
             {/* Ô 1: Tìm Bệnh Viện */}
             <a 
               href="/hospitals" 
               className="bg-[#b91c1c] hover:bg-[#991b1b] text-white h-[140px] flex flex-col items-center justify-center gap-[12px] transition-all cursor-pointer group"
             >
               <div className="text-[36px] group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon icon={faHospital} style={{color: "rgb(255, 255, 255)"}} />
+                <FontAwesomeIcon icon={faHospital} style={{ color: "rgb(255, 255, 255)" }} />
               </div>
               <span className="text-[18px] font-bold uppercase tracking-wide">
                 Tìm Bệnh Viện
@@ -200,7 +165,7 @@ const Homepage = () => {
               className="bg-[#111111] hover:bg-[#222222] text-white h-[140px] flex flex-col items-center justify-center gap-[12px] transition-all cursor-pointer group"
             >
               <div className="text-[36px] group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon icon={faClipboardList} style={{color: "rgb(255, 255, 255)"}} />
+                <FontAwesomeIcon icon={faClipboardList} style={{ color: "rgb(255, 255, 255)" }} />
               </div>
               <span className="text-[18px] font-bold uppercase tracking-wide">
                 Danh Sách Máu
@@ -213,7 +178,7 @@ const Homepage = () => {
               className="bg-[#b91c1c] hover:bg-[#991b1b] text-white h-[140px] flex flex-col items-center justify-center gap-[12px] transition-all cursor-pointer group"
             >
               <div className="text-[36px] group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon icon={faHandHoldingDroplet} style={{color: "rgb(255, 255, 255)"}} />
+                <FontAwesomeIcon icon={faHandHoldingDroplet} style={{ color: "rgb(255, 255, 255)" }} />
               </div>
               <span className="text-[18px] font-bold uppercase tracking-wide">
                 Trở thành người hiến máu
@@ -224,33 +189,25 @@ const Homepage = () => {
 
         {/* KHỐI KÊU GỌI HÀNH ĐỘNG (HIẾN VÀ NHẬN MÁU) */}
         <div className="w-full max-w-[1600px] mx-auto p-[30px] bg-gradient-to-r from-red-400 via-red-100 to-red-400 rounded-[16px] border border-red-100 shadow-sm text-center">
-          
-          {/* Tiêu đề chính */}
           <h2 className="text-[32px] font-bold text-gray-900 tracking-tight">
             Chung Tay Vì Cộng Đồng
           </h2>
 
-          {/* Dấu gạch chân màu đỏ trang trí (giống trong hình) */}
           <div className="w-[80px] h-[4px] bg-red-600 mx-auto mt-[12px] mb-[18px] rounded-full"></div>
 
-          {/* Đoạn văn mô tả */}
           <p className="text-gray-600 text-[16px] max-w-[700px] mx-auto mb-[32px] leading-relaxed">
             Hãy cùng chúng tôi lan tỏa tình yêu thương và cứu sống thêm nhiều người. 
             Mọi bệnh nhân đều có quyền được tiếp cận nguồn máu an toàn và kịp thời.
           </p>
 
-          {/* Cặp nút hành động */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-[16px]">
-
-            {/* Nút 1: Đăng ký nhận máu (Màu Đen) */}
             <a
               href="/register-receive"
               className="w-full sm:w-auto px-[32px] py-[14px] bg-black hover:bg-gray-800 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
             >
               Đăng Ký Nhận Máu
             </a>
-            
-            {/* Nút 2: Đăng ký hiến máu (Màu Đỏ) */}
+
             <a
               href="/register-donate"
               className="w-full sm:w-auto px-[32px] py-[14px] bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
@@ -260,7 +217,7 @@ const Homepage = () => {
           </div>
         </div>
 
-        {/* KHỐI OURAIM */}
+        {/* KHỐI OUR AIM (MỤC TIÊU CỦA CHÚNG TÔI) */}
         <div className="w-full max-w-[1600px] mx-auto my-[60px]">              
           <div className="text-center mb-[40px]">
             <h2 className="text-[32px] font-bold text-gray-900 tracking-tight">
@@ -269,10 +226,7 @@ const Homepage = () => {
             <div className="w-[80px] h-[4px] bg-red-600 mx-auto mt-[12px] rounded-full"></div>
           </div>
 
-          {/* Lưới 4 thẻ mục tiêu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[24px]">
-
-            {/* Thẻ 1 */}
             <div className="bg-white p-[32px] rounded-[12px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col items-center text-center group cursor-pointer min-h-[240px] justify-center">
               <img 
                 src={require('../HinhAnh,icons/ourAim1.png')} 
@@ -284,7 +238,6 @@ const Homepage = () => {
               </h3>
             </div>
 
-            {/* Thẻ 2 */}
             <div className="bg-white p-[32px] rounded-[12px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col items-center text-center group cursor-pointer min-h-[240px] justify-center">
               <img 
                 src={require('../HinhAnh,icons/ourAim2.png')} 
@@ -296,7 +249,6 @@ const Homepage = () => {
               </h3>
             </div>
 
-            {/* Thẻ 3 */}
             <div className="bg-white p-[32px] rounded-[12px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col items-center text-center group cursor-pointer min-h-[240px] justify-center">
               <img 
                 src={require('../HinhAnh,icons/ourAim3.png')} 
@@ -308,7 +260,6 @@ const Homepage = () => {
               </h3>
             </div>
 
-            {/* Thẻ 4 */}
             <div className="bg-white p-[32px] rounded-[12px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col items-center text-center group cursor-pointer min-h-[240px] justify-center">
               <img 
                 src={require('../HinhAnh,icons/ourAim4.png')} 

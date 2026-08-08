@@ -24,13 +24,7 @@ const Cus_Profile = () => {
 
   const [cancelModal, setCancelModal] = useState({ open: false, orderId: null });
 
-  const getMaxDob = () => {
-    const today = new Date();
-    today.setFullYear(today.getFullYear() - 10);
-    return today.toISOString().split("T")[0];
-  };
-
-  // tính ngày tối đa được chọn cho ngày sinh (đảm bảo khách hàng từ 10 tuổi trở lên)
+  // Tính ngày tối đa được chọn cho ngày sinh (đảm bảo khách hàng từ 10 tuổi trở lên)
   const getMaxDob = () => {
     const today = new Date();
     today.setFullYear(today.getFullYear() - 10);

@@ -17,12 +17,14 @@ const errorHandler = require('./middlewares/errorHandler');
 const hospitalListRoutes = require("./routes/hospitalListRoutes");
 const thongBaoRoutes = require('./routes/thongBaoRoutes');
 const hospitalRoutes = require('./routes/hospitalRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes');
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cors());
 app.use('/api/hospital', hospitalRoutes);
+app.use('/api/inventory', inventoryRoutes);
 // 3. Kết nối MongoDB
 connectDB();
 

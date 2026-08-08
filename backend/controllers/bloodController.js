@@ -81,6 +81,29 @@ exports.cancelOrder = async (req, res) => {
     don.TrangThai = 'Da_Huy';
     await don.save();
 
+    if (don.LoaiDon === 'Hien') {
+      try {
+        const query = don.MaTaiKhoan ? { MaTaiKhoan: don.MaTaiKhoan } : { Email: don.Email };
+        const otherPendingDonation = await DonDangKy.findOne({
+          ...query,
+          LoaiDon: 'Hien',
+          TrangThai: { $in: ['Cho_Duyet', 'Cho_Xu_Ly'] },
+          _id: { $ne: don._id }
+        });
+
+        if (!otherPendingDonation) {
+          await TaiKhoan.findOneAndUpdate(query, {
+            $unset: {
+              NgayHienGanNhat: 1,
+              NgayDangKyHienMauGanNhat: 1
+            }
+          });
+        }
+      } catch (updateError) {
+        console.error('Lỗi khi cập nhật lại ngày hiến máu sau khi hủy đơn:', updateError);
+      }
+    }
+
     return res.json({
       success: true,
       message: 'Đã hủy đơn đăng ký'
@@ -120,9 +143,11 @@ exports.registerDonate = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Vui lòng chọn Bệnh viện tiếp nhận' });
     }
 
-    const now = new Date();
+        const now = new Date();
     const autoMaDon = MaDon || `D${now.getTime().toString().slice(-9)}`;
-    const ngayHienFormat = NgayHienGanNhat ? new Date(NgayHienGanNhat) : now;
+    // Ưu tiên ngày hiến máu gần nhất từ DB, nếu không có thì lấy từ form
+    const sourceDate = userDoc?.NgayHienGanNhat || NgayHienGanNhat;
+    const ngayHienFormat = sourceDate ? new Date(sourceDate) : null;
 
     const dbReady = await waitForDb();
     if (!dbReady) {
@@ -150,14 +175,18 @@ exports.registerDonate = async (req, res) => {
 
     await donMoi.save();
 
+    const taiKhoanUpdate = {
+      NgayDangKyHienMauGanNhat: now,
+    };
+
+    // Chỉ cập nhật ngày hiến máu gần nhất vào tài khoản nếu trong DB chưa có
+    if (!userDoc?.NgayHienGanNhat && ngayHienFormat) {
+      taiKhoanUpdate.NgayHienGanNhat = ngayHienFormat;
+    }
+
     await TaiKhoan.findOneAndUpdate(
       { MaTaiKhoan: autoMaTaiKhoan },
-      {
-        $set: {
-          NgayDangKyHienMauGanNhat: now,
-          NgayHienGanNhat: ngayHienFormat
-        }
-      }
+      { $set: taiKhoanUpdate }
     );
 
     return res.status(201).json({

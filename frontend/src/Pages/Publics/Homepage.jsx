@@ -125,6 +125,43 @@ const Homepage = () => {
                         </div>
                       </div>
                     </div>
+                </div>
+
+                {/* KHỐI KÊU GỌI HÀNH ĐỘNG (HIẾN VÀ NHẬN MÁ */}
+                    <div className="w-[1600px] p-[10px] bg-gradient-to-r from-red-400 via-red-100 to-red-400 rounded-[16px] border border-red-100 shadow-sm text-center">
+                    
+                    {/* Tiêu đề chính */}
+                    <h2 className="text-[32px] font-bold text-gray-900 tracking-tight">
+                        Chung Tay Vì Cộng Đồng
+                    </h2>
+
+                    {/* Dấu gạch chân màu đỏ trang trí (giống trong hình) */}
+                    <div className="w-[80px] h-[4px] bg-red-600 mx-auto mt-[12px] mb-[18px] rounded-full"></div>
+
+                    {/* Đoạn văn mô tả */}
+                    <p className="text-gray-600 text-[16px] max-w-[700px] mx-auto mb-[32px] leading-relaxed">
+                        Hãy cùng chúng tôi lan tỏa tình yêu thương và cứu sống thêm nhiều người. 
+                        Mọi bệnh nhân đều có quyền được tiếp cận nguồn máu an toàn và kịp thời.
+                    </p>
+
+                    {/* Cặp nút hành động */}
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-[16px]">
+                        
+                        {/* Nút 1: Đăng ký nhận máu (Màu Đen) */}
+                        <a
+                        href="/register-receive"
+                        className="w-full sm:w-auto px-[32px] py-[14px] bg-black hover:bg-gray-800 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+                        >
+                        Đăng Ký Nhận Máu
+                        </a>
+
+                        {/* Nút 2: Đăng ký hiến máu (Màu Đỏ) */}
+                        <a
+                        href="/register-donate"
+                        className="w-full sm:w-auto px-[32px] py-[14px] bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+                        >
+                        Đăng Ký Hiến Máu
+                        </a>
 
                     {/* Nút đăng ký */}
                     <button 

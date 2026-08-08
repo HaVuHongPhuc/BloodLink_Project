@@ -3,26 +3,27 @@ import Layout from "../Layout";
 
 const RegisterDonate = () => {
   const [loading, setLoading] = useState(true);
+  const [hospitals, setHospitals] = useState([]); // danh sách bệnh viện hợp tác lấy từ DB
 
-  // State tách họ tên làm 3 ô input hiển thị
-  const [nameParts, setNameParts] = useState({ firstName: '', midName: '', lastName: '' });
+  // cờ kiểm tra điều kiện đăng ký
+  const [isProfileIncomplete, setIsProfileIncomplete] = useState(false);
+  const [isUnder12Weeks, setIsUnder12Weeks] = useState(false);
+  const [lastDonationDateStr, setLastDonationDateStr] = useState('');
 
-  // State lưu dữ liệu form khớp 100% với Model BloodDonation
+  // state lưu dữ liệu form đăng ký hiến máu (đã bổ sung MaBenhVien)
   const [formData, setFormData] = useState({
-    maDon: '',
-    HovaTen: '',
+    MaDon: '',
+    MaBenhVien: '', // chứa mã bệnh viện khách hàng chọn
+    HoTen: '',
     GioiTinh: 'Nam',
-    DayofBirth: '',
-    CCCDorPASSPORT: '',
-    NgheNghiep: '',
-    addressOnCCCD: '',
-    CurrentResidence: '',
-    PhoneNumber: '',
+    NgaySinh: '',
+    SoCCCD: '',
+    SoDienThoai: '',
     Email: '',
+    DiaChi: '',
     NhomMau: '',
-    NgayHienGanNhat: '',
-    UnderlyingMedicalCondition_Optional: '',
-    TrangThaiDon: 'Cho_Duyet'
+    NgayHienGanNhat: '', // chỉ hiển thị, khóa không cho khách hàng sửa
+    BenhNen: 'Không có bệnh nền'
   });
 
   const [errors, setErrors] = useState({});
@@ -36,12 +37,27 @@ const RegisterDonate = () => {
     setModal({ open: false, message: '', type: 'error' });
   };
 
-  // 1. TRUY VẤN DỮ LIỆU TỪ DB KHI LOAD TRANG (Autofill từ User Profile)
+  // tự động tải thông tin bệnh viện hợp tác và hồ sơ cá nhân
   useEffect(() => {
-    const fetchUserProfileFromDB = async () => {
-      try {
-        const token = localStorage.getItem('token');
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
 
+    const fetchDataFromDB = async () => {
+      try {
+        // 1. Tải danh sách bệnh viện hợp tác đang hoạt động
+        const resHospitals = await fetch('http://localhost:5000/api/blood/hospitals');
+        const dataHospitals = await resHospitals.json();
+        
+        let defaultMaBenhVien = '';
+        if (dataHospitals.success && dataHospitals.data.length > 0) {
+          setHospitals(dataHospitals.data);
+          defaultMaBenhVien = dataHospitals.data[0].MaBenhVien; // gán bệnh viện đầu tiên làm mặc định
+        }
+
+        // 2. Tải thông tin hồ sơ khách hàng
         const response = await fetch('http://localhost:5000/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -50,52 +66,65 @@ const RegisterDonate = () => {
         if (response.ok && result.data) {
           const user = result.data;
 
-          const nameArray = (user.HovaTen || user.fullName || '').trim().split(' ');
-          const lastName = nameArray[0] || '';
-          const firstName = nameArray.length > 1 ? nameArray[nameArray.length - 1] : '';
-          const midName = nameArray.slice(1, -1).join(' ') || '';
+          const hoTen = user.HoTen || '';
+          const sdt = user.SoDienThoai || '';
+          const cccd = user.SoCCCD || '';
+          const ngaySinh = user.NgaySinh || '';
+          const diaChi = user.DiaChi || '';
 
-          setNameParts({ firstName, midName, lastName });
+          if (!hoTen.trim() || !sdt.trim() || !cccd.trim() || !ngaySinh || !diaChi.trim()) {
+            setIsProfileIncomplete(true);
+          }
+
+          const ngayHienMauDb = user.NgayHienGanNhat || user.NgayDangKyHienMauGanNhat;
+          const todayIso = new Date().toISOString().split('T')[0];
+          let displayNgayHien = todayIso;
+
+          if (ngayHienMauDb) {
+            const lastDate = new Date(ngayHienMauDb);
+            displayNgayHien = lastDate.toISOString().split('T')[0];
+
+            const today = new Date();
+            const diffTime = Math.abs(today - lastDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            setLastDonationDateStr(lastDate.toLocaleDateString('vi-VN'));
+
+            if (diffDays < 84) {
+              setIsUnder12Weeks(true);
+            }
+          }
 
           setFormData((prev) => ({
             ...prev,
-            maDon: `DK${Date.now().toString().slice(-8)}`,
-            HovaTen: user.HovaTen || user.fullName || '',
+            MaDon: `D${Date.now().toString().slice(-9)}`,
+            MaBenhVien: defaultMaBenhVien,
+            HoTen: hoTen,
             GioiTinh: user.GioiTinh || 'Nam',
-            DayofBirth: user.DayofBirth ? new Date(user.DayofBirth).toISOString().split('T')[0] : '',
-            CCCDorPASSPORT: user.CCCDorPASSPORT || user.SoCCCD || '',
-            NgheNghiep: user.NgheNghiep || '',
-            addressOnCCCD: user.addressOnCCCD || user.address || '',
-            CurrentResidence: user.CurrentResidence || user.address || '',
-            PhoneNumber: user.PhoneNumber || user.phone || '',
+            NgaySinh: ngaySinh ? new Date(ngaySinh).toISOString().split('T')[0] : '',
+            SoCCCD: cccd,
+            SoDienThoai: sdt,
             Email: user.Email || user.email || '',
-            NhomMau: user.NhomMau || user.bloodType || 'Chua_Biet',
-            NgayHienGanNhat: user.NgayHienGanNhat ? new Date(user.NgayHienGanNhat).toISOString().split('T')[0] : '',
-            UnderlyingMedicalCondition_Optional: user.UnderlyingMedicalCondition_Optional || ''
+            DiaChi: diaChi,
+            NhomMau: user.NhomMau || '',
+            NgayHienGanNhat: displayNgayHien,
+            BenhNen: 'Không có bệnh nền'
           }));
         }
       } catch (error) {
-        console.error('Không thể tải thông tin từ Database:', error);
+        console.error('Không thể tải thông tin từ cơ sở dữ liệu:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserProfileFromDB();
+    fetchDataFromDB();
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleNameChange = (e) => {
-    const { name, value } = e.target;
-    const updated = { ...nameParts, [name]: value };
-    setNameParts(updated);
-
-    const full = `${updated.lastName} ${updated.midName} ${updated.firstName}`.replace(/\s+/g, ' ').trim();
-    setFormData((prev) => ({ ...prev, HovaTen: full }));
+    setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const checkIs18Plus = (dobString) => {
@@ -108,27 +137,25 @@ const RegisterDonate = () => {
     return age >= 18;
   };
 
-  // 2. GỬI ĐƠN ĐĂNG KÝ VỀ BACKEND
   const handleSubmit = async (e) => {
     e.preventDefault();
     let err = {};
 
-    if (!formData.HovaTen) err.HovaTen = 'Vui lòng nhập đầy đủ họ và tên';
-    else if (/\d/.test(formData.HovaTen)) err.HovaTen = 'Họ tên chỉ chứa ký tự chữ, không chứa chữ số';
+    if (!formData.MaBenhVien) err.MaBenhVien = 'Vui lòng chọn bệnh viện tiếp nhận';
+    if (!formData.HoTen.trim()) err.HoTen = 'Vui lòng nhập đầy đủ họ và tên';
+    else if (/\d/.test(formData.HoTen)) err.HoTen = 'Họ tên chỉ chứa ký tự chữ, không chứa chữ số';
 
-    if (!formData.DayofBirth) err.DayofBirth = 'Vui lòng chọn ngày sinh';
-    else if (!checkIs18Plus(formData.DayofBirth)) err.DayofBirth = 'Người hiến máu phải từ đủ 18 tuổi trở lên';
+    if (!formData.NgaySinh) err.NgaySinh = 'Vui lòng chọn ngày sinh';
+    else if (!checkIs18Plus(formData.NgaySinh)) err.NgaySinh = 'Người hiến máu phải từ đủ 18 tuổi trở lên';
 
-    const cccdRegex = /^([0-9]{12}|[A-Za-z0-9]{9})$/;
-    if (!cccdRegex.test(formData.CCCDorPASSPORT)) err.CCCDorPASSPORT = 'Số CCCD phải đủ 12 chữ số hoặc Hộ chiếu chứa 9 ký tự';
+    const cccdRegex = /^([0-9]{12}|[A-Za-z0-9]{9,15})$/;
+    if (!cccdRegex.test(formData.SoCCCD)) err.SoCCCD = 'Số CCCD phải đủ 12 chữ số hoặc Hộ chiếu từ 9 đến 15 ký tự';
 
-    const phoneRegex = /^0[0-9]{9}$/;
-    if (!phoneRegex.test(formData.PhoneNumber)) err.PhoneNumber = 'Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0';
+    const phoneRegex = /^0[0-9]{9,14}$/;
+    if (!phoneRegex.test(formData.SoDienThoai)) err.SoDienThoai = 'Số điện thoại phải từ 10 đến 15 chữ số và bắt đầu bằng số 0';
 
-    if (!formData.Email || !/^\S+@\S+\.\S+$/.test(formData.Email)) err.Email = 'Email không đúng định dạng (cần chứa @ và .)';
-    if (!formData.NgheNghiep.trim()) err.NgheNghiep = 'Vui lòng nhập nghề nghiệp';
-    if (!formData.addressOnCCCD.trim()) err.addressOnCCCD = 'Vui lòng nhập địa chỉ thường trú trên CCCD';
-    if (!formData.CurrentResidence.trim()) err.CurrentResidence = 'Vui lòng nhập nơi ở hiện tại';
+    if (!formData.Email || !/^\S+@\S+\.\S+$/.test(formData.Email)) err.Email = 'Email không đúng định dạng';
+    if (!formData.DiaChi.trim()) err.DiaChi = 'Vui lòng nhập địa chỉ liên hệ';
 
     setErrors(err);
 
@@ -138,33 +165,27 @@ const RegisterDonate = () => {
       return;
     }
 
+    const token = localStorage.getItem('userToken');
+
     try {
       const response = await fetch('http://localhost:5000/api/blood/register-donate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify(formData)
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        const message = result.code === 'DUPLICATE_CCCD'
-          ? 'Chứng minh nhân dân/Passport đã được sử dụng'
-          : result.code === 'DUPLICATE_DONATION'
-            ? 'Thông tin này đang ở trạng thái "hiến máu"'
-            : result.message || 'Đăng ký không thành công!';
-
-        showModal(message, 'error');
+        showModal(result.message || 'Đăng ký không thành công!', 'error');
       } else {
-        let successMsg = `Đăng ký hiến máu thành công!\nMã đơn của bạn: ${formData.maDon}`;
-        if (result.warningMessage) {
-          successMsg += `\n\nCẢNH BÁO: ${result.warningMessage}`;
-        }
-
-        showModal(successMsg, 'success');
+        showModal('Đã đăng ký đơn thành công', 'success');
         setTimeout(() => {
           window.location.href = '/';
-        }, 1400);
+        }, 1500);
       }
     } catch (error) {
       showModal('Không thể kết nối tới máy chủ!', 'error');
@@ -183,11 +204,13 @@ const RegisterDonate = () => {
     <Layout>
       {modal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-[384px] h-[220px] rounded-2xl border bg-white p-6 text-center shadow-2xl flex flex-col justify-between border-red-200">
+          <div className="w-[384px] p-6 rounded-2xl bg-white text-center shadow-2xl flex flex-col justify-between border border-gray-200">
             <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${modal.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-              {modal.type === 'success' ? 'V' : '!'}
+              {modal.type === 'success' ? '✓' : '!'}
             </div>
-            <p className="whitespace-pre-line text-base font-semibold text-slate-800">{modal.message}</p>
+            <p className={`my-4 text-base font-semibold ${modal.type === 'success' ? 'text-green-700' : 'text-slate-800'}`}>
+              {modal.message}
+            </p>
             <button
               type="button"
               onClick={() => {
@@ -205,65 +228,51 @@ const RegisterDonate = () => {
       )}
 
       <div className="min-h-screen bg-gray-50 flex justify-center items-center p-6 font-sans">
-              {/* Kích thước cố định màn hình */}
-        <div className="bg-white w-[768px] h-[1050px] p-8 rounded-xl shadow-sm border border-gray-200 overflow-y-auto flex flex-col justify-between">
+        <div className="bg-white w-[768px] p-8 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between">
           
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-slate-800">Phiếu Đăng Ký Hiến Máu</h1>
             <div className="w-20 h-1 bg-red-500 mx-auto mt-2 rounded-full"></div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 flex-1 flex flex-col justify-between">
+          <form onSubmit={handleSubmit} className="space-y-4">
             
+            {/* Lựa chọn Bệnh viện hợp tác tiếp nhận */}
+            <div className="flex flex-col md:flex-row md:items-center">
+              <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">
+                Bệnh viện tiếp nhận <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="MaBenhVien"
+                value={formData.MaBenhVien}
+                onChange={handleChange}
+                className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500 bg-white font-medium text-gray-800"
+              >
+                {hospitals.map((hosp) => (
+                  <option key={hosp._id} value={hosp.MaBenhVien}>
+                    {hosp.TenBenhVien}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {errors.MaBenhVien && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.MaBenhVien}</p>}
+
             {/* Họ và Tên */}
             <div className="flex flex-col md:flex-row md:items-center">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">
                 Họ và Tên <span className="text-red-500">*</span>
               </label>
-              <div className="w-full md:w-2/3 grid grid-cols-3 gap-2">
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="Họ"
-                  value={nameParts.lastName}
-                  onChange={handleNameChange}
-                  className="p-2 border rounded-md text-sm outline-none focus:border-red-500"
-                />
-                <input
-                  type="text"
-                  name="midName"
-                  placeholder="Tên đệm"
-                  value={nameParts.midName}
-                  onChange={handleNameChange}
-                  className="p-2 border rounded-md text-sm outline-none focus:border-red-500"
-                />
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder="Tên"
-                  value={nameParts.firstName}
-                  onChange={handleNameChange}
-                  className="p-2 border rounded-md text-sm outline-none focus:border-red-500"
-                />
-              </div>
-            </div>
-            {errors.HovaTen && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.HovaTen}</p>}
-
-            {/* Nghề nghiệp */}
-            <div className="flex flex-col md:flex-row md:items-center">
-              <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">
-                Nghề nghiệp <span className="text-red-500">*</span>
-              </label>
               <input
                 type="text"
-                name="NgheNghiep"
-                placeholder="Nhập nghề nghiệp hiện tại"
-                value={formData.NgheNghiep}
+                name="HoTen"
+                maxLength={255}
+                placeholder="Nhập đầy đủ họ và tên"
+                value={formData.HoTen}
                 onChange={handleChange}
                 className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500"
               />
             </div>
-            {errors.NgheNghiep && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.NgheNghiep}</p>}
+            {errors.HoTen && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.HoTen}</p>}
 
             {/* Email */}
             <div className="flex flex-col md:flex-row md:items-center">
@@ -288,14 +297,15 @@ const RegisterDonate = () => {
               </label>
               <input
                 type="text"
-                name="PhoneNumber"
-                placeholder="Nhập số điện thoại (ví dụ: 0912345678)"
-                value={formData.PhoneNumber}
+                name="SoDienThoai"
+                maxLength={15}
+                placeholder="Nhập số điện thoại"
+                value={formData.SoDienThoai}
                 onChange={handleChange}
                 className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500"
               />
             </div>
-            {errors.PhoneNumber && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.PhoneNumber}</p>}
+            {errors.SoDienThoai && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.SoDienThoai}</p>}
 
             {/* Ngày sinh */}
             <div className="flex flex-col md:flex-row md:items-center">
@@ -304,13 +314,13 @@ const RegisterDonate = () => {
               </label>
               <input
                 type="date"
-                name="DayofBirth"
-                value={formData.DayofBirth}
+                name="NgaySinh"
+                value={formData.NgaySinh}
                 onChange={handleChange}
                 className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500 text-gray-700"
               />
             </div>
-            {errors.DayofBirth && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.DayofBirth}</p>}
+            {errors.NgaySinh && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.NgaySinh}</p>}
 
             {/* Giới tính */}
             <div className="flex flex-col md:flex-row md:items-center">
@@ -324,23 +334,24 @@ const RegisterDonate = () => {
                 className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500 bg-white"
               >
                 <option value="Nam">Nam</option>
-                <option value="Nu">Nữ</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
               </select>
             </div>
 
             {/* Nhóm máu */}
             <div className="flex flex-col md:flex-row md:items-center">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">
-                Nhóm máu <span className="text-red-500">*</span>
+                Nhóm máu
               </label>
               <input
                 type="text"
                 name="NhomMau"
                 maxLength={5}
-                placeholder="Nhập nhóm máu (ví dụ: A+, O-, Chưa biết)"
+                placeholder="Nhập nhóm máu (VD: O, A+, Chưa biết)"
                 value={formData.NhomMau}
                 onChange={handleChange}
-                className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500"
+                className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500 font-semibold uppercase"
               />
             </div>
 
@@ -351,48 +362,34 @@ const RegisterDonate = () => {
               </label>
               <input
                 type="text"
-                name="CCCDorPASSPORT"
-                placeholder="Nhập 12 số CCCD hoặc 9 ký tự Hộ chiếu"
-                value={formData.CCCDorPASSPORT}
+                name="SoCCCD"
+                maxLength={15}
+                placeholder="Nhập 12 số CCCD hoặc số Hộ chiếu"
+                value={formData.SoCCCD}
                 onChange={handleChange}
                 className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500"
               />
             </div>
-            {errors.CCCDorPASSPORT && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.CCCDorPASSPORT}</p>}
+            {errors.SoCCCD && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.SoCCCD}</p>}
 
-            {/* Địa chỉ thường trú */}
+            {/* Địa chỉ liên hệ */}
             <div className="flex flex-col md:flex-row md:items-start">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0 pt-2">
-                Địa chỉ thường trú (CCCD) <span className="text-red-500">*</span>
+                Địa chỉ liên hệ <span className="text-red-500">*</span>
               </label>
               <textarea
-                name="addressOnCCCD"
+                name="DiaChi"
                 rows="2"
-                placeholder="Nhập địa chỉ thường trú ghi trên CCCD"
-                value={formData.addressOnCCCD}
+                maxLength={255}
+                placeholder="Nhập địa chỉ liên hệ hiện tại"
+                value={formData.DiaChi}
                 onChange={handleChange}
                 className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500"
               ></textarea>
             </div>
-            {errors.addressOnCCCD && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.addressOnCCCD}</p>}
+            {errors.DiaChi && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.DiaChi}</p>}
 
-            {/* Nơi ở hiện tại */}
-            <div className="flex flex-col md:flex-row md:items-start">
-              <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0 pt-2">
-                Nơi ở hiện tại / Tạm trú <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                name="CurrentResidence"
-                rows="2"
-                placeholder="Nhập địa chỉ nơi ở / tạm trú hiện tại"
-                value={formData.CurrentResidence}
-                onChange={handleChange}
-                className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500"
-              ></textarea>
-            </div>
-            {errors.CurrentResidence && <p className="text-xs text-red-500 md:ml-[33.33%]">{errors.CurrentResidence}</p>}
-
-            {/* Ngày hiến máu gần nhất */}
+            {/* Ngày hiến máu gần nhất - CỐ ĐỊNH, KHÔNG CHO CHỈNH SỬA */}
             <div className="flex flex-col md:flex-row md:items-center">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">
                 Ngày hiến máu gần nhất
@@ -401,34 +398,56 @@ const RegisterDonate = () => {
                 type="date"
                 name="NgayHienGanNhat"
                 value={formData.NgayHienGanNhat}
-                onChange={handleChange}
-                className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500 text-gray-700"
+                readOnly
+                disabled
+                className="w-full md:w-2/3 p-2 border rounded-md text-sm bg-gray-100 text-gray-600 font-medium cursor-not-allowed select-none"
               />
             </div>
 
-            {/* Tiền sử bệnh lý */}
+            {/* Bệnh nền */}
             <div className="flex flex-col md:flex-row md:items-start">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0 pt-2">
-                Tiền sử bệnh lý / Bệnh nền
+                Bệnh nền / Tiền sử bệnh
               </label>
               <textarea
-                name="UnderlyingMedicalCondition_Optional"
+                name="BenhNen"
                 rows="2"
-                placeholder="Nhập tiền sử bệnh lý nếu có (hoặc ghi Không)"
-                value={formData.UnderlyingMedicalCondition_Optional}
+                maxLength={255}
+                placeholder="Nhập thông tin bệnh nền (mặc định: Không có bệnh nền)"
+                value={formData.BenhNen}
                 onChange={handleChange}
                 className="w-full md:w-2/3 p-2 border rounded-md text-sm outline-none focus:border-red-500"
               ></textarea>
             </div>
 
-            {/* Nút gửi */}
-            <div className="pt-2 flex justify-end">
-              <button
-                type="submit"
-                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm rounded-md shadow transition duration-200"
-              >
-                Gửi Đăng Ký Hiến Máu
-              </button>
+            {/* nút đăng ký hoặc thông báo lỗi ràng buộc */}
+            <div className="pt-4 border-t mt-4 flex justify-end">
+              {isProfileIncomplete ? (
+                <div className="w-full bg-red-50 border border-red-300 p-3 rounded-md text-center">
+                  <p className="text-sm font-semibold text-red-700 mb-2">
+                    Vui lòng cập nhật đầy đủ thông tin hồ sơ cá nhân trước khi đăng ký hiến máu.
+                  </p>
+                  <a
+                    href="/profile"
+                    className="inline-block px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition"
+                  >
+                    Đi tới Cập nhật hồ sơ
+                  </a>
+                </div>
+              ) : isUnder12Weeks ? (
+                <div className="w-full bg-amber-50 border border-amber-300 p-3 rounded-md text-center">
+                  <p className="text-sm font-semibold text-amber-800">
+                    Bạn chưa đủ 12 tuần kể từ lần hiến máu gần nhất ({lastDonationDateStr}). Vui lòng quay lại sau!
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm rounded-md shadow transition duration-200"
+                >
+                  Gửi Đăng Ký Hiến Máu
+                </button>
+              )}
             </div>
 
           </form>

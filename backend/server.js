@@ -1,10 +1,10 @@
-require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
-// 1. Đọc file .env trước tiên
-dotenv.config();
+// 1. Đọc file .env trước tiên từ thư mục backend
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 // 2. Import hàm connectDB từ file config/db.js
 const connectDB = require('./config/db');

@@ -1,219 +1,253 @@
-const BloodDonation = require('../models/BloodDonation');
-const BloodReceive = require('../models/BloodReceive');
+const mongoose = require('mongoose');
+const DonDangKy = require('../models/DonDangKy');
+const TaiKhoan = require('../models/TaiKhoan');
+const BenhVienHopTac = require('../models/BenhVienHopTac');
 
-const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const waitForDb = async () => {
+  if (mongoose.connection.readyState === 1) return true;
+  await mongoose.connection.asPromise();
+  return mongoose.connection.readyState === 1;
+};
 
-const registerDonate = async (req, res) => {
+const getUserAccount = async (req, fallbackEmail) => {
+  const tokenMaTaiKhoan = req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
+  const email = fallbackEmail || req.user?.Email || req.user?.email;
+
+  return TaiKhoan.findOne({
+    $or: [
+      { MaTaiKhoan: tokenMaTaiKhoan },
+      { Email: email },
+      { Email: fallbackEmail }
+    ]
+  });
+};
+
+const getHospitalIdentifier = (req, body = {}) => {
+  return body.MaTaiKhoanBenhVien || body.maTaiKhoanBenhVien || body.MaBenhVien || body.maBenhVien || req.user?.maTaiKhoanBenhVien || req.user?.MaTaiKhoanBenhVien || req.user?.maBenhVien || req.user?.MaBenhVien || null;
+};
+
+// Lấy danh sách bệnh viện hợp tác đang hoạt động
+exports.getHospitals = async (req, res) => {
   try {
-    const {
-      maDon, HovaTen, GioiTinh, DayofBirth, CCCDorPASSPORT,
-      NgheNghiep, addressOnCCCD, CurrentResidence, PhoneNumber,
-      Email, NhomMau, NgayHienGanNhat, UnderlyingMedicalCondition_Optional
-    } = req.body;
-
-    const normalizedName = (HovaTen || '').trim();
-    const normalizedCCCD = (CCCDorPASSPORT || '').trim();
-    const normalizedOccupation = (NgheNghiep || '').trim();
-    const normalizedAddressCCCD = (addressOnCCCD || '').trim();
-    const normalizedResidence = (CurrentResidence || '').trim();
-    const normalizedPhone = (PhoneNumber || '').trim();
-    const normalizedEmail = (Email || '').trim();
-    const normalizedBloodGroup = (NhomMau || '').trim();
-
-    // 1. Kiểm tra trùng đơn hiến
-    const existingDonationByInfo = await BloodDonation.findOne({
-      CCCDorPASSPORT: normalizedCCCD,
-      HovaTen: { $regex: new RegExp(`^${escapeRegExp(normalizedName)}$`, 'i') }
-    });
-
-    if (existingDonationByInfo) {
-      return res.status(409).json({
-        success: false,
-        code: 'DUPLICATE_DONATION',
-        message: 'Thông tin này đang ở trạng thái "hiến máu"'
-      });
-    }
-
-    // 2. Kiểm tra trùng CCCD
-    const existingDonationByCCCD = await BloodDonation.findOne({
-      CCCDorPASSPORT: normalizedCCCD
-    });
-
-    if (existingDonationByCCCD) {
-      return res.status(409).json({
-        success: false,
-        code: 'DUPLICATE_CCCD',
-        message: 'Chứng minh nhân dân/Passport đã được sử dụng'
-      });
-    }
-
-    // 3. Đối soát chéo đơn nhận máu (Bọc try-catch riêng để tránh dừng luồng)
-    let warningMessage = null;
-    try {
-      if (BloodReceive) {
-        const dualCheck = await BloodReceive.findOne({
-          CCCDorPASSPORT: normalizedCCCD,
-          HovaTen: { $regex: new RegExp(`^${escapeRegExp(normalizedName)}$`, 'i') }
-        });
-        if (dualCheck) {
-          warningMessage = `Khách hàng ${normalizedName} (CCCD: ${normalizedCCCD}) hiện cũng đang có đơn đăng ký nhận máu trên hệ thống!`;
-        }
-      }
-    } catch (checkErr) {
-      console.log('Loi khi doi soat cheo BloodReceive:', checkErr.message);
-    }
-
-    // 4. Khởi tạo và Lưu vào Database
-    const newDonation = new BloodDonation({
-      maDon: maDon || `DK${Date.now().toString().slice(-8)}`,
-      HovaTen: normalizedName,
-      GioiTinh: GioiTinh === 'Nữ' ? 'Nu' : GioiTinh, // Chuyển Nữ thành Nu nếu cần
-      DayofBirth: DayofBirth ? new Date(DayofBirth) : null,
-      CCCDorPASSPORT: normalizedCCCD,
-      NgheNghiep: normalizedOccupation,
-      addressOnCCCD: normalizedAddressCCCD,
-      CurrentResidence: normalizedResidence,
-      PhoneNumber: normalizedPhone,
-      Email: normalizedEmail,
-      NhomMau: normalizedBloodGroup,
-      NgayHienGanNhat: NgayHienGanNhat ? new Date(NgayHienGanNhat) : null,
-      UnderlyingMedicalCondition_Optional: UnderlyingMedicalCondition_Optional || '',
-      TrangThaiDon: 'Cho_Duyet'
-    });
-
-    await newDonation.save();
-
-    return res.status(201).json({
-      success: true,
-      message: 'Đăng ký hiến máu thành công!',
-      warningMessage: warningMessage,
-      data: newDonation
-    });
-
+    const hospitals = await BenhVienHopTac.find({ TrangThai: { $in: ['dang hop tac', 'Đang hoạt động', 'Đang hợp tác'] } }).lean();
+    return res.json({ success: true, data: hospitals });
   } catch (error) {
-    // In trực tiếp lỗi ra Terminal Backend để dễ theo dõi
-    console.error('LOI THUC SU KHI LUU DON:', error);
-
-    if (error.code === 11000 || (error.name === 'MongoServerError' && error.message.includes('duplicate key'))) {
-      return res.status(409).json({
-        success: false,
-        code: 'DUPLICATE_CCCD',
-        message: 'Chứng minh nhân dân/Passport đã được sử dụng'
-      });
-    }
-
-    // Trả về câu thông báo lỗi
-    return res.status(500).json({
-      success: false,
-      message: `Lỗi DB: ${error.message}`
-    });
+    return res.status(500).json({ success: false, message: 'Lỗi lấy danh sách bệnh viện', error: error.message });
   }
 };
 
-// ---------------------------------------------------------------------------------------------------------------------
+// Lấy danh sách đơn đăng ký của tài khoản cá nhân
+exports.getMyOrders = async (req, res) => {
+  try {
+    const tokenMaTaiKhoan = req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
+    const email = req.user?.Email || req.user?.email;
 
-const registerReceive = async (req, res) => {
+    const orders = await DonDangKy.find({
+      $or: [
+        { MaTaiKhoan: tokenMaTaiKhoan },
+        { Email: email }
+      ]
+    }).sort({ createdAt: -1 }).lean();
+
+    return res.json({ success: true, data: orders });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Lỗi lấy danh sách đơn đăng ký', error: error.message });
+  }
+};
+
+// BỔ SUNG: Hủy đơn đăng ký của khách hàng
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tokenMaTaiKhoan = req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
+    const email = req.user?.Email || req.user?.email;
+
+    const don = await DonDangKy.findOne({
+      _id: id,
+      $or: [
+        { MaTaiKhoan: tokenMaTaiKhoan },
+        { Email: email }
+      ]
+    });
+
+    if (!don) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đơn đăng ký' });
+    }
+
+    if (don.TrangThai !== 'Cho_Duyet' && don.TrangThai !== 'Cho_Xu_Ly') {
+      return res.status(400).json({ success: false, message: 'Đơn đăng ký không thể hủy ở trạng thái hiện tại' });
+    }
+
+    don.TrangThai = 'Da_Huy';
+    await don.save();
+
+    return res.json({
+      success: true,
+      message: 'Đã hủy đơn đăng ký'
+    });
+  } catch (error) {
+    console.error('Lỗi khi hủy đơn đăng ký:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
+  }
+};
+
+// Đăng ký hiến máu
+exports.registerDonate = async (req, res) => {
   try {
     const {
-      maDon, HovaTen, GioiTinh, DayofBirth, CCCDorPASSPORT,
-      NgheNghiep, addressOnCCCD, CurrentResidence, PhoneNumber,
-      Email, NhomMau, UnderlyingMedicalCondition_Optional
+      MaDon,
+      HoTen,
+      GioiTinh,
+      NgaySinh,
+      SoCCCD,
+      SoDienThoai,
+      Email,
+      DiaChi,
+      NhomMau,
+      NgayHienGanNhat,
+      BenhNen
     } = req.body;
 
-    const normalizedName = (HovaTen || '').trim();
-    const normalizedCCCD = (CCCDorPASSPORT || '').trim();
-    const normalizedOccupation = (NgheNghiep || '').trim();
-    const normalizedAddressCCCD = (addressOnCCCD || '').trim();
-    const normalizedResidence = (CurrentResidence || '').trim();
-    const normalizedPhone = (PhoneNumber || '').trim();
-    const normalizedEmail = (Email || '').trim();
-    const normalizedBloodGroup = (NhomMau || '').trim();
-    const normalizedCondition = (UnderlyingMedicalCondition_Optional || '').trim();
+    const userDoc = await getUserAccount(req, Email);
+    const autoMaTaiKhoan = userDoc ? userDoc.MaTaiKhoan : req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
+    const hospitalId = getHospitalIdentifier(req, req.body);
 
-    // 1. Kiểm tra đơn nhận máu đã tồn tại hay chưa
-    const existingReceive = await BloodReceive.findOne({
-      CCCDorPASSPORT: normalizedCCCD,
-      Status: 'Cho_Xu_Ly'
-    });
-
-    if (existingReceive) {
-      return res.status(409).json({
-        success: false,
-        code: 'DUPLICATE_RECEIVE',
-        message: 'Bệnh nhân này đã có một đơn đăng ký nhận máu đang chờ xử lý'
-      });
+    if (!autoMaTaiKhoan) {
+      return res.status(400).json({ success: false, message: 'Không tìm thấy Mã tài khoản trong cơ sở dữ liệu' });
     }
 
-    // 2. Đối soát chéo đơn hiến máu
-    let warningMessage = null;
-    try {
-      if (BloodDonation) {
-        const dualCheck = await BloodDonation.findOne({
-          CCCDorPASSPORT: normalizedCCCD,
-          HovaTen: { $regex: new RegExp(`^${escapeRegExp(normalizedName)}$`, 'i') }
-        });
-        if (dualCheck) {
-          warningMessage = `Hệ thống ghi nhận khách hàng ${normalizedName} (CCCD: ${normalizedCCCD}) hiện cũng đang có đơn đăng ký HIẾN MÁU.`;
+    if (!hospitalId) {
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn Bệnh viện tiếp nhận' });
+    }
+
+    const now = new Date();
+    const autoMaDon = MaDon || `D${now.getTime().toString().slice(-9)}`;
+    const ngayHienFormat = NgayHienGanNhat ? new Date(NgayHienGanNhat) : now;
+
+    const dbReady = await waitForDb();
+    if (!dbReady) {
+      return res.status(503).json({ success: false, message: 'Database chưa sẵn sàng' });
+    }
+
+    const donMoi = new DonDangKy({
+      MaDon: autoMaDon,
+      LoaiDon: 'Hien',
+      MaTaiKhoan: autoMaTaiKhoan,
+      MaBenhVien: hospitalId,
+      MaTaiKhoanBenhVien: hospitalId,
+      HoTen,
+      GioiTinh: GioiTinh || 'Nam',
+      NgaySinh: NgaySinh || null,
+      SoDienThoai,
+      Email: Email || req.user?.Email || req.user?.email,
+      DiaChi: DiaChi || '',
+      SoCCCD,
+      NhomMau: NhomMau || '',
+      NgayHienGanNhat: ngayHienFormat,
+      BenhNen: BenhNen || 'Không có bệnh nền',
+      TrangThai: 'Cho_Duyet'
+    });
+
+    await donMoi.save();
+
+    await TaiKhoan.findOneAndUpdate(
+      { MaTaiKhoan: autoMaTaiKhoan },
+      {
+        $set: {
+          NgayDangKyHienMauGanNhat: now,
+          NgayHienGanNhat: ngayHienFormat
         }
       }
-    } catch (checkErr) {
-      console.log('Lỗi khi đối soát chéo BloodDonation:', checkErr.message);
-    }
-
-    // 3. Khởi tạo và Lưu vào Collection PhieuDangKyNhanMau
-    const newReceive = new BloodReceive({
-      maDon: maDon || `RN${Date.now().toString().slice(-8)}`,
-      HovaTen: normalizedName,
-      GioiTinh: GioiTinh === 'Nữ' ? 'Nu' : GioiTinh,
-      DayofBirth: DayofBirth ? new Date(DayofBirth) : null,
-      CCCDorPASSPORT: normalizedCCCD,
-      NgheNghiep: normalizedOccupation,
-      addressOnCCCD: normalizedAddressCCCD,
-      CurrentResidence: normalizedResidence,
-      PhoneNumber: normalizedPhone,
-      Email: normalizedEmail,
-      NhomMau: normalizedBloodGroup,
-      UnderlyingMedicalCondition_Optional: normalizedCondition,
-      Status: 'Cho_Xu_Ly'
-    });
-
-    await newReceive.save();
+    );
 
     return res.status(201).json({
       success: true,
-      message: 'Đăng ký nhận máu thành công!',
-      warningMessage: warningMessage,
-      data: newReceive
+      message: 'Đã đăng ký đơn thành công',
+      data: donMoi
+    });
+  } catch (error) {
+    console.error('Lỗi khi lưu đơn đăng ký hiến máu:', error);
+    return res.status(500).json({ message: 'Lỗi máy chủ', error: error.message });
+  }
+};
+
+// Đăng ký nhận máu
+exports.registerReceive = async (req, res) => {
+  try {
+    const {
+      MaDon,
+      HoTen,
+      GioiTinh,
+      NgaySinh,
+      SoCCCD,
+      SoDienThoai,
+      Email,
+      DiaChi,
+      NhomMauCan,
+      SoLuong,
+      MucDich,
+      NoiNhanMau
+    } = req.body;
+
+    const userDoc = await getUserAccount(req, Email);
+    const autoMaTaiKhoan = userDoc ? userDoc.MaTaiKhoan : req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
+    const hospitalId = getHospitalIdentifier(req, req.body);
+
+    if (!autoMaTaiKhoan) {
+      return res.status(400).json({ success: false, message: 'Không tìm thấy Mã tài khoản trong cơ sở dữ liệu' });
+    }
+
+    if (!hospitalId) {
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn Bệnh viện tiếp nhận' });
+    }
+
+    const now = new Date();
+    const autoMaDon = MaDon || `R${now.getTime().toString().slice(-9)}`;
+
+    const dbReady = await waitForDb();
+    if (!dbReady) {
+      return res.status(503).json({ success: false, message: 'Database chưa sẵn sàng' });
+    }
+
+    const donMoi = new DonDangKy({
+      MaDon: autoMaDon,
+      LoaiDon: 'Nhan',
+      MaTaiKhoan: autoMaTaiKhoan,
+      MaBenhVien: hospitalId,
+      MaTaiKhoanBenhVien: hospitalId,
+      HoTen,
+      GioiTinh: GioiTinh || 'Nam',
+      NgaySinh: NgaySinh || null,
+      SoDienThoai,
+      Email: Email || req.user?.Email || req.user?.email,
+      DiaChi: DiaChi || '',
+      SoCCCD,
+      NhomMauCan: NhomMauCan || null,
+      SoLuong: SoLuong || null,
+      MucDich: MucDich || '',
+      NoiNhanMau: NoiNhanMau || '',
+      TrangThai: 'Cho_Duyet'
     });
 
+    await donMoi.save();
+
+    await TaiKhoan.findOneAndUpdate(
+      { MaTaiKhoan: autoMaTaiKhoan },
+      {
+        $set: {
+          NgayDangKyNhanMauGanNhat: now,
+          LuotDangKyNhanMau: (userDoc?.LuotDangKyNhanMau || 0) + 1
+        }
+      }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Đã đăng ký đơn nhận máu thành công',
+      data: donMoi
+    });
   } catch (error) {
     console.error('Lỗi khi lưu đơn đăng ký nhận máu:', error);
-
-    if (error.code === 11000 || (error.name === 'MongoServerError' && error.message.includes('duplicate key'))) {
-      return res.status(409).json({
-        success: false,
-        code: 'DUPLICATE_KEY',
-        message: 'Mã đơn hoặc Chứng minh nhân dân/Passport bị trùng lặp'
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({
-        success: false,
-        code: 'VALIDATION_ERROR',
-        message: messages.join(', ')
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: `Lỗi DB: ${error.message}`
-    });
+    return res.status(500).json({ message: 'Lỗi máy chủ', error: error.message });
   }
-};
-
-module.exports = {
-  registerDonate,
-  registerReceive
 };

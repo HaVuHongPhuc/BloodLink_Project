@@ -7,6 +7,10 @@ const BenhVienHopTacSchema = new mongoose.Schema({
     unique: true,
     ref: 'TaiKhoanBenhVien'
   },
+  MaTaiKhoanBenhVien: {
+    type: String,
+    default: null
+  },
   TenBenhVien: {
     type: String,
     required: true

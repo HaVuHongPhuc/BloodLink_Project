@@ -7,6 +7,12 @@ const TaiKhoanBenhVienSchema = new mongoose.Schema({
     unique: true,
     default: () => 'BV' + String(Date.now()).slice(-9)
   },
+  MaTaiKhoanBenhVien: {
+    type: String,
+    unique: true,
+    sparse: true,
+    default: () => 'TKBV' + String(Date.now()).slice(-9)
+  },
   Email: {
     type: String,
     required: true,
@@ -57,6 +63,9 @@ const TaiKhoanBenhVienSchema = new mongoose.Schema({
 TaiKhoanBenhVienSchema.pre('save', function(next) {
   if (!this.MaBenhVien) {
     this.MaBenhVien = 'BV' + String(Date.now()).slice(-9);
+  }
+  if (!this.MaTaiKhoanBenhVien) {
+    this.MaTaiKhoanBenhVien = 'TKBV' + String(Date.now()).slice(-9);
   }
   if (!this.NgayThamGia && this.TrangThai === 'hoat dong') {
     this.NgayThamGia = new Date();

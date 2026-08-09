@@ -81,7 +81,7 @@ const VerifyPartner = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">BM02: Danh sách chờ xác thực</h2>
+        <h2 className="text-xl font-semibold">Danh sách chờ xác thực</h2>
         <button
           onClick={fetchPendingList}
           className="text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1"

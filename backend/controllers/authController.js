@@ -44,33 +44,33 @@ exports.dangKyDoiTac = async (req, res) => {
 
     if (missingFields.length > 0) {
       return res.status(400).json({
-        message: 'MS02: Vui lòng nhập đầy đủ thông tin đăng ký đối tác',
+        message: 'Vui lòng nhập đầy đủ thông tin đăng ký đối tác',
         missingFields
       });
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return res.status(400).json({
-        message: 'MS06: Vui lòng kiểm tra lại định dạng email',
+        message: 'Vui lòng kiểm tra lại định dạng email',
         invalidField: 'Email'
       });
     }
 
     if (!/^0[0-9]{9,10}$/.test(normalizedPhone)) {
       return res.status(400).json({
-        message: 'MS06: Vui lòng kiểm tra lại định dạng số điện thoại',
+        message: 'Vui lòng kiểm tra lại định dạng số điện thoại',
         invalidField: 'SoDienThoaiBenhVien'
       });
     }
 
     const existingEmail = await YeuCauDangKyDoiTac.findOne({ Email: normalizedEmail });
     if (existingEmail) {
-      return res.status(400).json({ message: 'MS25: Tài khoản đã tồn tại' });
+      return res.status(400).json({ message: 'Tài khoản đã tồn tại' });
     }
 
     const existingTax = await YeuCauDangKyDoiTac.findOne({ MaSoThue: normalizedTax });
     if (existingTax) {
-      return res.status(400).json({ message: 'MS25: Mã số thuế đã tồn tại' });
+      return res.status(400).json({ message: 'Mã số thuế đã tồn tại' });
     }
 
     const tempPassword = Math.random().toString(36).slice(-8);
@@ -90,25 +90,25 @@ exports.dangKyDoiTac = async (req, res) => {
     });
 
     await yeuCau.save();
-    res.status(201).json({ message: 'MS01: Đăng ký tài khoản thành công' });
+    res.status(201).json({ message: 'Đăng ký tài khoản thành công' });
   } catch (error) {
     console.error('Error dangKyDoiTac:', error);
     if (error.code === 11000) {
       const key = Object.keys(error.keyValue || {})[0];
       if (key === 'Email') {
-        return res.status(400).json({ message: 'MS25: Tài khoản đã tồn tại', error: error.message });
+        return res.status(400).json({ message: 'Tài khoản đã tồn tại', error: error.message });
       }
       if (key === 'MaSoThue') {
-        return res.status(400).json({ message: 'MS25: Mã số thuế đã tồn tại', error: error.message });
+        return res.status(400).json({ message: 'Mã số thuế đã tồn tại', error: error.message });
       }
     }
 
     if (error.name === 'ValidationError') {
       const validationMessages = Object.values(error.errors || {}).map((err) => err.message).join('; ');
-      return res.status(400).json({ message: 'MS02: Vui lòng nhập đúng trường dữ liệu', error: validationMessages || error.message });
+      return res.status(400).json({ message: 'Vui lòng nhập đúng trường dữ liệu', error: validationMessages || error.message });
     }
 
-    res.status(400).json({ message: 'MS02: Vui lòng nhập đúng trường dữ liệu', error: error.message });
+    res.status(400).json({ message: 'Vui lòng nhập đúng trường dữ liệu', error: error.message });
   }
 };
 
@@ -118,13 +118,13 @@ exports.dangNhapDoiTac = async (req, res) => {
     const { Email, MatKhau } = req.body;
     
     if (!Email || !MatKhau) {
-      return res.status(400).json({ message: 'MS06: Vui lòng kiểm tra lại định dạng email' });
+      return res.status(400).json({ message: 'Vui lòng kiểm tra lại định dạng email' });
     }
     
     const normalizedEmail = Email.trim().toLowerCase();
     const benhVien = await TaiKhoanBenhVien.findOne({ Email: normalizedEmail }).select('+MatKhau');
     if (!benhVien) {
-      return res.status(401).json({ message: 'MS08: Vui lòng đăng nhập bằng tài khoản đối tác' });
+      return res.status(401).json({ message: 'Vui lòng đăng nhập bằng tài khoản đối tác' });
     }
     
     if (benhVien.TrangThai !== 'hoat dong') {
@@ -133,7 +133,7 @@ exports.dangNhapDoiTac = async (req, res) => {
     
     const isMatch = await bcrypt.compare(MatKhau, benhVien.MatKhau);
     if (!isMatch) {
-      return res.status(401).json({ message: 'MS07: Mật khẩu không đúng, Vui lòng thử lại' });
+      return res.status(401).json({ message: 'Mật khẩu không đúng, Vui lòng thử lại' });
     }
     
     const token = jwt.sign(
@@ -148,7 +148,7 @@ exports.dangNhapDoiTac = async (req, res) => {
     );
     
     res.json({
-      message: 'MS05: Đăng nhập thành công',
+      message: 'Đăng nhập thành công',
       token,
       user: {
         maBenhVien: benhVien.MaBenhVien,
@@ -169,7 +169,7 @@ exports.dangNhapKhachHang = async (req, res) => {
     const { identifier, MatKhau } = req.body;
     
     if (!identifier || !MatKhau) {
-      return res.status(400).json({ message: 'MS06: Vui lòng kiểm tra lại định dạng email hoặc mã tài khoản' });
+      return res.status(400).json({ message: 'Vui lòng kiểm tra lại định dạng email hoặc mã tài khoản' });
     }
     
     const searchValue = identifier.trim();
@@ -186,7 +186,7 @@ exports.dangNhapKhachHang = async (req, res) => {
     const user = await TaiKhoan.findOne(query).select('+MatKhau');
     
     if (!user) {
-      return res.status(401).json({ message: 'MS19: Không tìm thấy tài khoản, vui lòng đăng nhập bằng tài khoản khác' });
+      return res.status(401).json({ message: 'Không tìm thấy tài khoản, vui lòng đăng nhập bằng tài khoản khác' });
     }
 
     if (user.TrangThai !== 'hoat dong') {
@@ -195,7 +195,7 @@ exports.dangNhapKhachHang = async (req, res) => {
     
     const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
     if (!isMatch) {
-      return res.status(401).json({ message: 'MS07: Mật khẩu không đúng, Vui lòng thử lại' });
+      return res.status(401).json({ message: 'Mật khẩu không đúng, Vui lòng thử lại' });
     }
     
     const token = jwt.sign(
@@ -205,7 +205,7 @@ exports.dangNhapKhachHang = async (req, res) => {
     );
     
     res.json({
-      message: 'MS05: Đăng nhập thành công',
+      message: 'Đăng nhập thành công',
       token,
       user: {
         maTaiKhoan: user.MaTaiKhoan,
@@ -225,16 +225,16 @@ exports.dangKyKhachHang = async (req, res) => {
     const { Email, MatKhau, XacNhanMatKhau, ...rest } = req.body;
     
     if (!Email || !Email.match(/^\S+@\S+\.\S+$/)) {
-      return res.status(400).json({ message: 'MS06: Vui lòng kiểm tra lại định dạng email' });
+      return res.status(400).json({ message: 'Vui lòng kiểm tra lại định dạng email' });
     }
     
     if (MatKhau !== XacNhanMatKhau) {
-      return res.status(400).json({ message: 'MS42: Mật khẩu xác nhận không đúng. Vui lòng nhập lại' });
+      return res.status(400).json({ message: 'Mật khẩu xác nhận không đúng. Vui lòng nhập lại' });
     }
     
     const existing = await TaiKhoan.findOne({ Email: Email.toLowerCase() });
     if (existing) {
-      return res.status(400).json({ message: 'MS25: Tài khoản đã tồn tại' });
+      return res.status(400).json({ message: 'Tài khoản đã tồn tại' });
     }
     
     const salt = await bcrypt.genSalt(10);
@@ -256,10 +256,10 @@ exports.dangKyKhachHang = async (req, res) => {
     console.log('[DEBUG] Đã lưu thành công vào DB:', khachHang.db.name);
     console.log('[DEBUG] Đã lưu vào Collection:', khachHang.collection.name);
 
-    res.status(201).json({ message: 'MS01: Đăng ký tài khoản thành công', data: khachHang });
+    res.status(201).json({ message: 'Đăng ký tài khoản thành công', data: khachHang });
   } catch (error) {
     console.error('Lỗi khi lưu TaiKhoan:', error);
-    res.status(400).json({ message: 'MS02: Vui lòng nhập đúng trường dữ liệu', error: error.message });
+    res.status(400).json({ message: 'Vui lòng nhập đúng trường dữ liệu', error: error.message });
   }
 };
 
@@ -304,7 +304,7 @@ exports.timNguoiHienMauPhuHop = async (req, res) => {
     });
     
     if (ketQua.length === 0) {
-      return res.status(404).json({ message: 'MS10: Không tìm thấy kết quả phù hợp' });
+      return res.status(404).json({ message: 'Không tìm thấy kết quả phù hợp' });
     }
     
     res.json(ketQua);
@@ -336,11 +336,11 @@ exports.capNhatHoSoCaNhan = async (req, res) => {
     );
     
     res.json({
-      message: 'MS20: Cập nhật thành công',
+      message: 'Cập nhật thành công',
       user: updated
     });
   } catch (error) {
-    res.status(400).json({ message: 'MS02: Vui lòng nhập đúng trường dữ liệu', error: error.message });
+    res.status(400).json({ message: 'Vui lòng nhập đúng trường dữ liệu', error: error.message });
   }
 };
 
@@ -370,7 +370,7 @@ exports.doiMatKhau = async (req, res) => {
     
     const isMatch = await bcrypt.compare(matKhauCu, khachHang.MatKhau);
     if (!isMatch) {
-      return res.status(401).json({ message: 'MS22: Vui lòng kiểm tra lại mật khẩu cũ' });
+      return res.status(401).json({ message: 'Vui lòng kiểm tra lại mật khẩu cũ' });
     }
     
     const salt = await bcrypt.genSalt(10);
@@ -381,7 +381,7 @@ exports.doiMatKhau = async (req, res) => {
       { $set: { MatKhau: hashedPassword } }
     );
     
-    res.json({ message: 'MS21: Đã đổi mật khẩu thành công' });
+    res.json({ message: 'Đã đổi mật khẩu thành công' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }

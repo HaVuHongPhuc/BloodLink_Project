@@ -78,22 +78,11 @@ exports.xacThucDoiTac = async (req, res) => {
       });
       await benhVien.save();
       
-      const hopTac = new BenhVienHopTac({
-        MaBenhVien: benhVien.MaBenhVien,
-        TenBenhVien: yeuCau.TenBenhVien,
-        DiaChiBenhVien: yeuCau.DiaChiBenhVien,
-        TenNguoiLienHe: yeuCau.NguoiDaiDien,
-        SoDienThoaiLienHe: yeuCau.SoDienThoaiBenhVien,
-        Email: yeuCau.Email,
-        TrangThai: 'dang hop tac'
-      });
-      await hopTac.save();
-      
       yeuCau.TrangThai = 'da duyet';
       await yeuCau.save();
       
       res.json({
-        message: 'MS03: Đã tạo tài khoản',
+        message: 'Đã tạo tài khoản',
         matKhauTamThoi: randomPassword,
         maBenhVien: benhVien.MaBenhVien
       });
@@ -101,7 +90,7 @@ exports.xacThucDoiTac = async (req, res) => {
     } else if (action === 'tu_choi') {
       yeuCau.TrangThai = 'tu choi';
       await yeuCau.save();
-      res.json({ message: 'MS04: Đã từ chối yêu cầu' });
+      res.json({ message: 'Đã từ chối yêu cầu' });
     }
     
   } catch (error) {
@@ -222,7 +211,7 @@ exports.traCuuNguoiNhanMau = async (req, res) => {
       .lean();
 
     if (nguoiNhan.length === 0) {
-      return res.status(404).json({ message: 'MS10: Không tìm thấy kết quả phù hợp' });
+      return res.status(404).json({ message: 'Không tìm thấy kết quả phù hợp' });
     }
 
     res.json(nguoiNhan);
@@ -260,7 +249,7 @@ exports.updateHospital = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy bệnh viện' });
     }
     
-    res.json({ message: 'MS10: Cập nhật thành công', data: updated });
+    res.json({ message: 'Cập nhật thành công', data: updated });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -278,11 +267,11 @@ exports.deleteHospital = async (req, res) => {
     }
     
     if (hospital.TrangThai === 'dang hop tac') {
-      return res.status(400).json({ message: 'MS46: Bệnh viện vẫn đang hoạt động, không thể xóa' });
+      return res.status(400).json({ message: 'Bệnh viện vẫn đang hoạt động, không thể xóa' });
     }
     
     await BenhVienHopTac.findOneAndDelete({ MaBenhVien: maBenhVien });
-    res.json({ message: 'MS45: Xóa tài khoản bệnh viện hợp tác thành công' });
+    res.json({ message: 'Xóa tài khoản bệnh viện hợp tác thành công' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi server', error: error.message });

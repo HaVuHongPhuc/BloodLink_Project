@@ -174,7 +174,7 @@ const Homepage = () => {
 
             {/* Ô 3: Trở thành người hiến máu */}
             <a 
-              href="/register-donate" 
+              href="/listtinkhancap" 
               className="bg-[#b91c1c] hover:bg-[#991b1b] text-white h-[140px] flex flex-col items-center justify-center gap-[12px] transition-all cursor-pointer group"
             >
               <div className="text-[36px] group-hover:scale-110 transition-transform">
@@ -209,7 +209,7 @@ const Homepage = () => {
             </a>
 
             <a
-              href="/register-donate"
+              href="/listtinkhancap"
               className="w-full sm:w-auto px-[32px] py-[14px] bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold uppercase tracking-wider rounded-[8px] shadow-md hover:shadow-xl transition-all transform hover:-translate-y-0.5"
             >
               Đăng Ký Hiến Máu

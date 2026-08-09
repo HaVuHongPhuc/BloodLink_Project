@@ -259,7 +259,7 @@ const Cus_Profile = () => {
         <h1 className="text-3xl font-bold mb-6">Thông tin tài khoản</h1>
 
         <div className="flex flex-col md:flex-row gap-6 items-start">
-          {/* SỬA TẠI ĐÂY: Thêm shrink-0 và w-60/w-64 cố định độ rộng menu */}
+          {/* Menu bên trái - cố định độ rộng */}
           <div className="w-full md:w-60 shrink-0 bg-gray-50 p-2 rounded-lg space-y-1 border border-gray-200">
             <button
               onClick={() => setActiveTab("profile")}
@@ -303,7 +303,6 @@ const Cus_Profile = () => {
             </button>
           </div>
 
-          {/* SỬA TẠI ĐÂY: Thêm min-w-0 để bảng dữ liệu tự cuộn ngang thay vì đẩy vỡ layout */}
           <div className="flex-1 min-w-0 bg-white shadow rounded-lg p-6 border border-gray-100 space-y-8">
             {activeTab === "profile" && (
               <div>
@@ -441,27 +440,23 @@ const Cus_Profile = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm máu (Chọn hoặc tự nhập)</label>
-                      <input
-                        type="text"
-                        list="bloodTypeSuggestions"
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm máu</label>
+                      <select
                         name="bloodType"
-                        maxLength={5}
-                        placeholder="Chọn hoặc gõ (VD: O+, AB-)"
                         value={profile.bloodType}
                         onChange={handleChange}
                         className="w-full border border-gray-300 rounded px-3 py-2 font-semibold uppercase focus:outline-none focus:ring-1 focus:ring-red-500"
-                      />
-                      <datalist id="bloodTypeSuggestions">
-                        <option value="A+" />
-                        <option value="A-" />
-                        <option value="B+" />
-                        <option value="B-" />
-                        <option value="AB+" />
-                        <option value="AB-" />
-                        <option value="O+" />
-                        <option value="O-" />
-                      </datalist>
+                      >
+                        <option value="">Chọn nhóm máu</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                      </select>
                     </div>
                   </div>
 

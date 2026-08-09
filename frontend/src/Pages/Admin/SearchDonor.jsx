@@ -67,7 +67,7 @@ const SearchDonor = () => {
         setAllData(data);
         setResults(data);
         if (data.length === 0) {
-          setMessage("MS10: Không tìm thấy kết quả phù hợp");
+          setMessage("Không tìm thấy kết quả phù hợp");
         }
       } else {
         setAllData([]);
@@ -91,7 +91,7 @@ const SearchDonor = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">BM04: Tra cứu người hiến máu</h2>
+      <h2 className="text-xl font-semibold mb-4">Tra cứu người hiến máu</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
         <input

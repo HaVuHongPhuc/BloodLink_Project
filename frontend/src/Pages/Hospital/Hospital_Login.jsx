@@ -27,7 +27,7 @@ const Hospital_Login = () => {
     const newErrors = {};
 
     if (!email) newErrors.email = "Vui lòng nhập email";
-    else if (!validateEmail(email)) newErrors.email = "MS06: Vui lòng kiểm tra lại định dạng email";
+    else if (!validateEmail(email)) newErrors.email = "Vui lòng kiểm tra lại định dạng email";
 
     if (!password) newErrors.password = "Vui lòng nhập mật khẩu";
 
@@ -51,7 +51,7 @@ const Hospital_Login = () => {
         return;
       }
 
-      setSuccessMessage(data.message || "MS05: Đăng nhập thành công");
+      setSuccessMessage(data.message || "Đăng nhập thành công");
       setErrorMessage("");
       localStorage.setItem("userToken", data.token);
       localStorage.setItem("userRole", data.user?.role || "hospital");
@@ -79,7 +79,6 @@ const Hospital_Login = () => {
               <FontAwesomeIcon icon={faSignInAlt} className="text-white text-[28px]" />
             </div>
             <h1 className="text-[28px] font-bold text-gray-900">Đăng Nhập Đối Tác</h1>
-            <p className="text-gray-500 text-[14px] mt-[8px]">BM03: Phiếu đăng nhập</p>
           </div>
 
           {successMessage && (

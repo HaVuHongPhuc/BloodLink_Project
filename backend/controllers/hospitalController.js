@@ -47,7 +47,7 @@ exports.timNguoiHienMauPhuHop = async (req, res) => {
     if (!nguoiHien || nguoiHien.length === 0) {
       return res.status(404).json({ 
         success: false,
-        message: 'MS09: Không đủ dữ liệu để tìm kiếm' 
+        message: 'Không đủ dữ liệu để tìm kiếm' 
       });
     }
 
@@ -74,7 +74,7 @@ exports.timNguoiHienMauPhuHop = async (req, res) => {
     if (ketQua.length === 0) {
       return res.status(404).json({ 
         success: false,
-        message: 'MS10: Không tìm thấy kết quả phù hợp' 
+        message: 'Không tìm thấy kết quả phù hợp' 
       });
     }
 

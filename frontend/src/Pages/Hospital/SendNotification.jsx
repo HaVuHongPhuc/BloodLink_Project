@@ -28,7 +28,7 @@ const SendNotification = ({ maBenhVien, tenBenhVien, onClose, onSuccess }) => {
     const newErrors = {};
     if (!maTaiKhoan) newErrors.maTaiKhoan = "Vui lòng nhập mã tài khoản khách hàng";
     if (!noiDung || noiDung.trim() === "") {
-      newErrors.noiDung = "MS40: Vui lòng điền nội dung thông báo";
+      newErrors.noiDung = "Vui lòng điền nội dung thông báo";
     }
 
     if (Object.keys(newErrors).length > 0) {

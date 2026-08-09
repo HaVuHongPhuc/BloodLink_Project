@@ -10,9 +10,9 @@ import {
   faTint,
   faClipboardList
 } from '@fortawesome/free-solid-svg-icons';
-import footerImgNew from '../HinhAnh,icons/footer.png'; // điều chỉnh đường dẫn nếu cần
+import footerImgNew from '../HinhAnh,icons/footer.png';
 
-const HospitalLayout = ({ children }) => {
+const HospitalLayout = ({ children, onOpenCreateModal }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
@@ -40,7 +40,7 @@ const HospitalLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* HEADER - giống Layout.jsx */}
+      {/* HEADER */}
       <header className="sticky top-0 z-50 bg-black text-white shadow-md">
         <nav className="w-full px-4 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
@@ -131,8 +131,15 @@ const HospitalLayout = ({ children }) => {
 
             {/* Right side */}
             <div className="flex items-center space-x-3">
+              {/* ✅ NÚT ĐĂNG TIN KHẨN CẤP - ĐÃ CÓ */}
               <button 
-                onClick={(e) => handleNavigate('/hospital/emergency/create', e)} 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (typeof onOpenCreateModal === 'function') {
+                    onOpenCreateModal();
+                  }
+                }}
                 className="hidden sm:flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-md text-xs uppercase"
               >
                 <FontAwesomeIcon icon={faBullhorn} />
@@ -150,7 +157,6 @@ const HospitalLayout = ({ children }) => {
                   </button>
                   {isProfileMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-md shadow-lg py-1 z-10 text-sm">
-                      {/* Chỉ giữ nút đăng xuất */}
                       <button 
                         onClick={handleLogout} 
                         className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
@@ -190,10 +196,11 @@ const HospitalLayout = ({ children }) => {
           <button onClick={(e) => { handleNavigate('/hospital/notifications', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Thông báo</button>
           <button onClick={(e) => { handleNavigate('/hospital/inventory', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Kho máu</button>
           <button onClick={(e) => { handleNavigate('/hospital/orders', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Đơn đăng ký</button>
+          {/* ✅ NÚT ĐĂNG TIN TRÊN MOBILE */}
           <button 
             onClick={() => { 
               setIsMobileMenuOpen(false);
-              handleNavigate('/hospital/emergency/create');
+              if (typeof onOpenCreateModal === 'function') onOpenCreateModal();
             }} 
             className="block w-full text-left text-red-500 font-bold pt-2 border-t border-gray-700"
           >
@@ -207,7 +214,7 @@ const HospitalLayout = ({ children }) => {
         {children}
       </main>
 
-      {/* Footer - giống Layout.jsx */}
+      {/* Footer */}
       <footer className="w-full bg-black text-white font-sans mt-auto">
         <div className="w-full max-w-7xl h-[350px] mx-auto px-[40px] flex items-center justify-between gap-[20px]">
           <div className="w-[175px] h-[140px] flex flex-col justify-between flex-shrink-0">

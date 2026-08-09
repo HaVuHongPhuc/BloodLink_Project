@@ -18,6 +18,7 @@ const HospitalPage = () => {
   const [selectedNewsId, setSelectedNewsId] = useState(null);
   const [newsToDelete, setNewsToDelete] = useState(null);
   const [systemMessage, setSystemMessage] = useState({ type: "", text: "" });
+  const [hospitalProfile, setHospitalProfile] = useState(null);
 
   const [formData, setFormData] = useState({
     tenBV: "",
@@ -27,20 +28,6 @@ const HospitalPage = () => {
     soLuong: "",
     mucDich: ""
   });
-
-  const generateMaBV = (tenBV) => {
-    if (!tenBV) return "BV001";
-    const cleanStr = tenBV
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/g, "d").replace(/Đ/g, "D");
-    const words = cleanStr.trim().split(/\s+/);
-    const initials = words.map(word => {
-      if (/^\d+$/.test(word)) return word;
-      return word[0];
-    }).join('').toUpperCase();
-    return initials.length <= 10 ? initials : initials.slice(0, 10);
-  };
 
   const formatDate = (dateVal) => {
     if (!dateVal) return "";
@@ -77,8 +64,40 @@ const HospitalPage = () => {
     }
   };
 
+  const loadHospitalProfile = async () => {
+    const token = localStorage.getItem("userToken");
+    if (!token) return null;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/hospital/profile", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const profile = await response.json();
+      setHospitalProfile(profile);
+      setFormData((prev) => ({
+        ...prev,
+        tenBV: profile.TenBenhVien || prev.tenBV || "",
+        sdt: profile.SoDienThoaiBenhVien || prev.sdt || "",
+        email: profile.Email || prev.email || ""
+      }));
+      return profile;
+    } catch (error) {
+      console.error("Lỗi tải thông tin bệnh viện:", error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchUrgentNews();
+  }, []);
+
+  useEffect(() => {
+    loadHospitalProfile();
   }, []);
 
   useEffect(() => {
@@ -90,7 +109,17 @@ const HospitalPage = () => {
 
   const handleOpenCreateModal = () => {
     setSystemMessage({ type: "", text: "" });
-    setFormData({ tenBV: "", sdt: "", email: "", nhomMau: "A+", soLuong: "", mucDich: "" });
+    if (!hospitalProfile) {
+      loadHospitalProfile();
+    }
+    setFormData({
+      tenBV: hospitalProfile?.TenBenhVien || localStorage.getItem("hospitalName") || "",
+      sdt: hospitalProfile?.SoDienThoaiBenhVien || "",
+      email: hospitalProfile?.Email || localStorage.getItem("userEmail") || "",
+      nhomMau: "A+",
+      soLuong: "",
+      mucDich: ""
+    });
     setIsCreateModalOpen(true);
   };
 
@@ -113,24 +142,38 @@ const HospitalPage = () => {
       return;
     }
     try {
-      const dynamicMaBV = generateMaBV(formData.tenBV);
+      const freshProfile = hospitalProfile || await loadHospitalProfile();
+      const token = localStorage.getItem("userToken");
+      const resolvedTenBV = freshProfile?.TenBenhVien || formData.tenBV.trim() || localStorage.getItem("hospitalName") || "";
+      const resolvedMaBV = freshProfile?.MaBenhVien || localStorage.getItem("maBenhVien") || "";
+      const resolvedSdt = freshProfile?.SoDienThoaiBenhVien || formData.sdt;
+      const resolvedEmail = freshProfile?.Email || formData.email.trim() || localStorage.getItem("userEmail") || "";
+
+      if (!resolvedMaBV || !resolvedTenBV || !resolvedSdt || !resolvedEmail) {
+        setSystemMessage({ type: "error", text: "Không lấy được đầy đủ thông tin bệnh viện từ cơ sở dữ liệu" });
+        return;
+      }
+
       const bodyPayload = {
-        MaBenhVien: dynamicMaBV,
-        TenBenhVien: formData.tenBV.trim(),
-        SoDienThoaiBenhVien: formData.sdt,
-        Email: formData.email.trim(),
+        MaBenhVien: resolvedMaBV,
+        TenBenhVien: resolvedTenBV,
+        SoDienThoaiBenhVien: resolvedSdt,
+        Email: resolvedEmail,
         NhomMau: formData.nhomMau || "A+",
         SoLuong: Number(formData.soLuong),
         MucDich: formData.mucDich.trim()
       };
       const response = await fetch("http://localhost:5000/api/urgent-news", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(bodyPayload),
       });
       const resData = await response.json();
       if (response.ok) {
-        setListData([resData.data || resData, ...listData]);
+        setListData((prev) => [resData.data || resData, ...prev]);
         setSystemMessage({ type: "success", text: resData.message || "Đăng tin khẩn cấp thành công" });
         setIsCreateModalOpen(false);
       } else {
@@ -242,7 +285,7 @@ const HospitalPage = () => {
         <img src={posterhienmau} alt="Description" className="w-full h-[450px] object-fill rounded-lg shadow" />
       </div>
 
-      {systemMessage.text && (
+      {systemMessage.text && !isCreateModalOpen && !isEditModalOpen && (
         <div className={`p-[16px] rounded-[8px] flex items-center gap-[12px] mb-[24px] border text-[14px] max-w-[1600px] mx-auto transition-all ${
           systemMessage.type === "error" ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
         }`}>
@@ -309,9 +352,15 @@ const HospitalPage = () => {
               <h2 className="text-[22px] font-bold text-gray-900 uppercase">Đăng tin khẩn cấp</h2>
             </div>
             <form onSubmit={handleCreatePost} className="space-y-[16px]">
+              {systemMessage.text && systemMessage.type === "error" && (
+                <div className="rounded-[8px] border border-red-200 bg-red-50 p-[12px] text-[13px] text-red-700 flex items-start gap-[8px]">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="mt-[2px]" />
+                  <p className="font-semibold">{systemMessage.text}</p>
+                </div>
+              )}
               <div>
                 <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Tên bệnh viện:</label>
-                <input type="text" maxLength={50} value={formData.tenBV} onChange={(e) => setFormData({...formData, tenBV: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" placeholder="Nhập tên bệnh viện (≤ 50 ký tự)..." />
+                <input type="text" maxLength={50} value={formData.tenBV} readOnly className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" placeholder="Tên bệnh viện từ hồ sơ đối tác" />
               </div>
               <div className="grid grid-cols-2 gap-[16px]">
                 <div>
@@ -358,6 +407,12 @@ const HospitalPage = () => {
               <h2 className="text-[22px] font-bold text-gray-900 uppercase">Cập nhật thông tin khẩn cấp</h2>
             </div>
             <form onSubmit={handleUpdatePost} className="space-y-[16px]">
+              {systemMessage.text && systemMessage.type === "error" && (
+                <div className="rounded-[8px] border border-red-200 bg-red-50 p-[12px] text-[13px] text-red-700 flex items-start gap-[8px]">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="mt-[2px]" />
+                  <p className="font-semibold">{systemMessage.text}</p>
+                </div>
+              )}
               <div>
                 <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Tên bệnh viện:</label>
                 <input type="text" maxLength={50} value={formData.tenBV} onChange={(e) => setFormData({...formData, tenBV: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" />

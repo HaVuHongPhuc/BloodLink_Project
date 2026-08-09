@@ -12,6 +12,8 @@ const RegisterDonate = () => {
   // State hiển thị chuỗi ngày dd/mm/yyyy riêng cho giao diện UI
   const [displayNgayHienText, setDisplayNgayHienText] = useState('Chưa từng hiến máu');
 
+  const [urgentNewsContext, setUrgentNewsContext] = useState(null);
+
   const [formData, setFormData] = useState({
     MaDon: '',
     MaBenhVien: '',
@@ -69,6 +71,11 @@ const RegisterDonate = () => {
 
     const fetchDataFromDB = async () => {
       try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const urgentNewsId = searchParams.get('urgentNewsId');
+        const urgentNewsHospitalCode = searchParams.get('hospitalCode');
+        const urgentNewsHospitalName = searchParams.get('hospitalName');
+
         // Tải danh sách bệnh viện hợp tác
         const resHospitals = await fetch('http://localhost:5000/api/blood/hospitals');
         const dataHospitals = await resHospitals.json();
@@ -77,6 +84,18 @@ const RegisterDonate = () => {
         if (dataHospitals.success && dataHospitals.data.length > 0) {
           setHospitals(dataHospitals.data);
           defaultMaBenhVien = dataHospitals.data[0].MaBenhVien;
+
+          if (urgentNewsHospitalCode) {
+            const matchedHospital = dataHospitals.data.find((hospital) => hospital.MaBenhVien === urgentNewsHospitalCode);
+            if (matchedHospital) {
+              defaultMaBenhVien = matchedHospital.MaBenhVien;
+              setUrgentNewsContext({
+                id: urgentNewsId,
+                hospitalCode: matchedHospital.MaBenhVien,
+                hospitalName: urgentNewsHospitalName || matchedHospital.TenBenhVien
+              });
+            }
+          }
         }
 
         // Tải thông tin hồ sơ khách hàng
@@ -194,13 +213,18 @@ const RegisterDonate = () => {
     const token = localStorage.getItem('userToken');
 
     try {
+      const payload = {
+        ...formData,
+        urgentNewsId: urgentNewsContext?.id || null
+      };
+
       const response = await fetch('http://localhost:5000/api/blood/register-donate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       const result = await response.json();
@@ -263,6 +287,12 @@ const RegisterDonate = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             
+            {urgentNewsContext && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                Đăng ký cho tin khẩn cấp tại <span className="font-semibold">{urgentNewsContext.hospitalName}</span> (Mã: {urgentNewsContext.hospitalCode})
+              </div>
+            )}
+
             {/* Bệnh viện tiếp nhận */}
             <div className="flex flex-col md:flex-row md:items-center">
               <label className="w-full md:w-1/3 text-sm font-semibold text-gray-800 mb-1 md:mb-0">

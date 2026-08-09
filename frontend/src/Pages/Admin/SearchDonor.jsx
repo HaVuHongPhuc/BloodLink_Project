@@ -90,14 +90,14 @@ const SearchDonor = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Tra cứu người hiến máu</h2>
+    <div className="w-full max-w-full rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+      <h2 className="mb-3 text-lg font-semibold text-gray-800 sm:mb-4 sm:text-xl">Tra cứu người hiến máu</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4 sm:mb-4">
         <input
           type="text"
           placeholder="Tìm theo tên, email, SĐT..."
-          className="md:col-span-2 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:px-4 sm:py-2.5"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -105,24 +105,21 @@ const SearchDonor = () => {
         <input
           type="text"
           placeholder="Từ ngày (dd/mm/yyyy)"
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:px-4 sm:py-2.5"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
         />
         <input
           type="text"
           placeholder="Đến ngày (dd/mm/yyyy)"
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:px-4 sm:py-2.5"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
         />
-      </div>
-
-      <div className="flex gap-2 mb-4">
         <button
           onClick={handleSearch}
           disabled={loading}
-          className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50 sm:w-auto"
         >
           <FontAwesomeIcon icon={loading ? faSync : faSearch} className={loading ? "animate-spin" : ""} />
           Tìm kiếm
@@ -130,16 +127,16 @@ const SearchDonor = () => {
       </div>
 
       {message && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-2 rounded mb-4">
+        <div className="mb-4 rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-700 sm:px-4">
           {message}
         </div>
       )}
 
-      {loading && <p className="text-gray-500">Đang tải...</p>}
+      {loading && <p className="text-sm text-gray-500">Đang tải...</p>}
 
       {!loading && results.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="min-w-[760px] w-full border-collapse text-sm">
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-2 text-left">STT</th>
@@ -183,7 +180,7 @@ const SearchDonor = () => {
               ))}
             </tbody>
           </table>
-          <p className="text-gray-400 text-xs mt-2">Hiển thị {results.length} kết quả</p>
+          <p className="mt-2 text-xs text-gray-400">Hiển thị {results.length} kết quả</p>
         </div>
       )}
     </div>

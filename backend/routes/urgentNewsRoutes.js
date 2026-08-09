@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require("../middlewares/authMiddleware");
 const controller = require("../controllers/urgentNewsController");
 
 // 1. GET: Lấy tất cả tin khẩn cấp (Hàm getAll)
@@ -9,12 +10,12 @@ router.get("/", controller.getAll);
 router.get("/:id", controller.getOne);
 
 // 3. POST: Đăng tin khẩn cấp (Hàm createUrgentNews)
-router.post("/", controller.createUrgentNews);
+router.post("/", authMiddleware, controller.createUrgentNews);
 
 // 4. PUT: Cập nhật tin khẩn cấp (Hàm updateNews)
-router.put("/:id", controller.updateNews);
+router.put("/:id", authMiddleware, controller.updateNews);
 
 // 5. DELETE: Xóa (ẩn) tin khẩn cấp (Hàm deleteNews)
-router.delete("/:id", controller.deleteNews);
+router.delete("/:id", authMiddleware, controller.deleteNews);
 
 module.exports = router;

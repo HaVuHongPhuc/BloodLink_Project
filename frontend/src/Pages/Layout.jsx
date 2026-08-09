@@ -11,25 +11,25 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
   const userRole = localStorage.getItem("userRole");
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen overflow-x-hidden bg-gray-50 flex flex-col">
       {/* HEADER */}
       <header className="sticky top-0 z-50 bg-black text-white shadow-md">
-        <nav className="w-full px-[16px] sm:px-[24px] lg:px-[32px]">
-          <div className="relative flex h-[64px] items-center justify-between">
+        <nav className="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">
+          <div className="relative flex min-h-[56px] items-center justify-between gap-2 py-2 sm:min-h-[64px] sm:py-0">
             {/* Nút Hamburger */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-[8px] text-gray-400 hover:text-white"
+              className="lg:hidden flex-shrink-0 p-2 text-gray-400 hover:text-white"
             >
-              <svg className="w-[24px] h-[24px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
               </svg>
             </button>
 
             {/* Logo */}
-            <a href="/homepage" className="flex items-center gap-[8px] font-bold text-[20px] text-red-600 mr-[16px]">
+            <a href="/homepage" className="mr-2 flex min-w-0 items-center gap-2 font-bold text-[18px] text-red-600 sm:text-[20px]">
               <FontAwesomeIcon icon={faDroplet} className="text-red-600" />
-              <span>BloodLink</span>
+              <span className="truncate">BloodLink</span>
             </a>
 
             {/* Menu Desktop */}
@@ -76,11 +76,11 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
             </div>
 
             {/* KHỐI PHẢI: Đăng nhập / Profile */}
-            <div className="flex items-center space-x-[8px] flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center gap-2">
               {isLoggedIn ? (
                 <div className="relative">
                   <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex rounded-full bg-red-600">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="User profile" className="w-[32px] h-[32px] rounded-full" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="User profile" className="h-8 w-8 rounded-full sm:h-9 sm:w-9" />
                   </button>
                   {isProfileMenuOpen && (
                     <div className="absolute right-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
@@ -111,11 +111,11 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
                 </div>
               ) : (
                 <>
-                  <a href="/login" className="px-[12px] py-[6px] text-[14px] font-medium text-white bg-red-600 rounded-[6px] hover:bg-red-700 transition">
+                  <a href="/login" className="rounded-[6px] bg-red-600 px-3 py-2 text-[13px] font-medium text-white transition hover:bg-red-700 sm:px-[12px] sm:py-[6px] sm:text-[14px]">
                     Đăng nhập
                   </a>
-                  <a href="/partner-login" className="px-[12px] py-[6px] text-[14px] font-medium text-gray-200 border border-gray-600 rounded-[6px] hover:bg-gray-800 transition">
-                    đăng nhập tài khoản đối tác
+                  <a href="/partner-login" className="hidden rounded-[6px] border border-gray-600 px-3 py-2 text-[13px] font-medium text-gray-200 transition hover:bg-gray-800 sm:inline-flex sm:px-[12px] sm:py-[6px] sm:text-[14px]">
+                    Đối tác
                   </a>
                 </>
               )}
@@ -155,13 +155,41 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
       )}
 
       {/* BODY */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto p-[16px] sm:p-[24px] lg:p-[32px]">
+      <main className="mx-auto flex-1 w-full max-w-[1600px] px-3 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8">
         {children}
       </main>
 
       {/* FOOTER */}
-      <footer className="w-full bg-black text-white font-sans mt-auto">
-        {/* ... footer ... */}
+      <footer className="mt-auto w-full bg-black text-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 text-sm text-gray-300 sm:px-6 sm:py-10 lg:grid-cols-3 lg:px-8 lg:text-base">
+          <div>
+            <div className="mb-3 flex items-center gap-2 font-semibold text-red-500">
+              <FontAwesomeIcon icon={faDroplet} />
+              <span>BloodLink</span>
+            </div>
+            <p className="leading-6 text-gray-400">
+              Nền tảng kết nối người hiến máu, bệnh viện và cộng đồng để hỗ trợ kịp thời và an toàn.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-3 font-semibold uppercase tracking-wide text-white">Liên kết nhanh</h3>
+            <ul className="space-y-2">
+              <li><a href="/homepage" className="transition hover:text-white">Trang chủ</a></li>
+              <li><a href="/listtinkhancap" className="transition hover:text-white">Tin khẩn cấp</a></li>
+              <li><a href="/hospitals" className="transition hover:text-white">Danh sách bệnh viện</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-3 font-semibold uppercase tracking-wide text-white">Liên hệ</h3>
+            <ul className="space-y-2 text-gray-400">
+              <li>Email: support@bloodlink.vn</li>
+              <li>Hotline: 1900 1234</li>
+              <li>Địa chỉ: Hà Nội, Việt Nam</li>
+            </ul>
+          </div>
+        </div>
       </footer>
     </div>
   );

@@ -58,37 +58,36 @@ const Homepage = () => {
 
   return (
     <Layout>
-      <div>
+      <div className="w-full">
         {/* POSTER BANNER */}
-        <div className="w-full flex justify-center">
+        <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">
           <img 
             src={posterhienmau} 
             alt="Poster hiến máu"
-            className="w-full h-auto rounded-lg shadow"
-            style={{ display: 'flex', justifyContent: 'center', width: '1600px', height: '600px' }}
+            className="h-auto max-h-[360px] w-full rounded-2xl object-cover shadow-lg sm:max-h-[480px] lg:max-h-[600px]"
           />
         </div>
 
         {/* TIÊU ĐỀ DANH SÁCH */}
-        <div>
-          <h1 className="text-4xl text-black font-bold mt-[50px] mb-[16px] max-w-[1600px] mx-auto">
+        <div className="mx-auto mt-8 w-full max-w-7xl px-3 sm:px-4 lg:px-6">
+          <h1 className="mb-4 text-2xl font-bold text-black sm:text-3xl lg:text-4xl">
             DANH SÁCH TIN KHẨN CẤP
           </h1>
         </div>
 
         {/* Khung chứa danh sách tin khẩn cấp */}
-        <div className="w-full max-w-[1600px] h-[600px] bg-red-400 rounded-[16px] p-[30px] mx-auto overflow-x-auto">
+        <div className="mx-auto mt-2 w-full max-w-7xl rounded-[16px] bg-red-400 p-4 sm:p-6 lg:p-8">
           {loading ? (
-            <div className="flex h-full items-center justify-center text-white font-bold text-[20px]">
+            <div className="flex min-h-[320px] items-center justify-center text-center text-[18px] font-bold text-white sm:text-[20px]">
               Đang tải danh sách tin khẩn cấp từ máy chủ...
             </div>
           ) : emergencyList.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-white font-bold text-[20px]">
+            <div className="flex min-h-[320px] items-center justify-center text-center text-[18px] font-bold text-white sm:text-[20px]">
               Hiện tại không có tin khẩn cấp nào cần hỗ trợ.
             </div>
           ) : (
             /* Hàng chứa các ô tin nằm ngang */
-            <div className="flex gap-[25px] h-full items-center">
+            <div className="flex flex-nowrap gap-4 overflow-x-auto pb-2">
               {emergencyList.map((item, index) => {
                 const maTinStr = item.MaTin || item.maTin || `TKC${index + 1}`;
                 const tenBVStr = item.TenBenhVien || item.tenBV || "Bệnh viện";       
@@ -103,7 +102,7 @@ const Homepage = () => {
                   /* Ô CHỨA TIN */
                   <div 
                     key={item._id || index} 
-                    className="w-[500px] h-[500px] bg-white rounded-[12px] p-[28px] flex-shrink-0 shadow-md flex flex-col justify-between"
+                    className="flex h-[480px] w-[85vw] max-w-[320px] flex-shrink-0 flex-col justify-between rounded-[12px] bg-white p-4 shadow-md sm:max-w-[360px] sm:p-5 md:h-[500px] md:w-[420px] lg:max-w-[500px] lg:p-7"
                   >
                     <div>
                       {/* Dòng tiêu đề chữ đỏ */}
@@ -144,7 +143,7 @@ const Homepage = () => {
         </div>
 
         {/* KHỐI ĐIỀU HƯỚNG NHANH */}
-        <div className="w-full max-w-[1000px] mx-auto my-[30px] shadow-xl rounded-[12px] overflow-hidden">
+        <div className="mx-auto my-6 w-full max-w-6xl overflow-hidden rounded-[12px] px-3 shadow-xl sm:px-4 lg:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {/* Ô 1: Tìm Bệnh Viện */}
             <a 
@@ -162,9 +161,9 @@ const Homepage = () => {
             {/* Ô 2: Danh Sách Máu */}
             <a 
               href="/blood-bank" 
-              className="bg-[#111111] hover:bg-[#222222] text-white h-[140px] flex flex-col items-center justify-center gap-[12px] transition-all cursor-pointer group"
+              className="flex h-[140px] flex-col items-center justify-center gap-[12px] bg-[#111111] text-white transition-all group hover:bg-[#222222]"
             >
-              <div className="text-[36px] group-hover:scale-110 transition-transform">
+              <div className="text-[30px] transition-transform group-hover:scale-110 sm:text-[36px]">
                 <FontAwesomeIcon icon={faClipboardList} style={{ color: "rgb(255, 255, 255)" }} />
               </div>
               <span className="text-[18px] font-bold uppercase tracking-wide">
@@ -188,14 +187,14 @@ const Homepage = () => {
         </div>
 
         {/* KHỐI KÊU GỌI HÀNH ĐỘNG (HIẾN VÀ NHẬN MÁU) */}
-        <div className="w-full max-w-[1600px] mx-auto p-[30px] bg-gradient-to-r from-red-400 via-red-100 to-red-400 rounded-[16px] border border-red-100 shadow-sm text-center">
-          <h2 className="text-[32px] font-bold text-gray-900 tracking-tight">
+        <div className="mx-auto my-6 w-full max-w-7xl rounded-[16px] border border-red-100 bg-gradient-to-r from-red-400 via-red-100 to-red-400 p-4 text-center shadow-sm sm:p-6 lg:p-8">
+          <h2 className="text-[24px] font-bold tracking-tight text-gray-900 sm:text-[28px] lg:text-[32px]">
             Chung Tay Vì Cộng Đồng
           </h2>
 
-          <div className="w-[80px] h-[4px] bg-red-600 mx-auto mt-[12px] mb-[18px] rounded-full"></div>
+          <div className="mx-auto mb-4 mt-3 h-[4px] w-[80px] rounded-full bg-red-600"></div>
 
-          <p className="text-gray-600 text-[16px] max-w-[700px] mx-auto mb-[32px] leading-relaxed">
+          <p className="mx-auto mb-6 max-w-[700px] text-[14px] leading-relaxed text-gray-600 sm:text-[15px] lg:text-[16px]">
             Hãy cùng chúng tôi lan tỏa tình yêu thương và cứu sống thêm nhiều người. 
             Mọi bệnh nhân đều có quyền được tiếp cận nguồn máu an toàn và kịp thời.
           </p>
@@ -218,16 +217,16 @@ const Homepage = () => {
         </div>
 
         {/* KHỐI OUR AIM (MỤC TIÊU CỦA CHÚNG TÔI) */}
-        <div className="w-full max-w-[1600px] mx-auto my-[60px]">              
-          <div className="text-center mb-[40px]">
-            <h2 className="text-[32px] font-bold text-gray-900 tracking-tight">
+        <div className="mx-auto my-8 w-full max-w-7xl px-3 sm:px-4 lg:px-6">
+          <div className="mb-8 text-center">
+            <h2 className="text-[24px] font-bold tracking-tight text-gray-900 sm:text-[28px] lg:text-[32px]">
               Mục Tiêu Của Chúng Tôi
             </h2>
-            <div className="w-[80px] h-[4px] bg-red-600 mx-auto mt-[12px] rounded-full"></div>
+            <div className="mx-auto mt-3 h-[4px] w-[80px] rounded-full bg-red-600"></div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[24px]">
-            <div className="bg-white p-[32px] rounded-[12px] border border-gray-100 shadow-sm hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col items-center text-center group cursor-pointer min-h-[240px] justify-center">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex min-h-[240px] flex-col items-center justify-center rounded-[12px] border border-gray-100 bg-white p-6 text-center shadow-sm transition-all duration-300 group hover:border-red-200 hover:shadow-xl">
               <img 
                 src={require('../HinhAnh,icons/ourAim1.png')} 
                 alt="Số hóa quy trình" 

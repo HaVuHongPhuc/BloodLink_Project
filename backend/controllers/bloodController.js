@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const DonDangKy = require('../models/DonDangKy');
 const TaiKhoan = require('../models/TaiKhoan');
 const BenhVienHopTac = require('../models/BenhVienHopTac');
+const UrgentNews = require('../models/UrgentNews');
+const { applyUrgentNewsDonationRegistration } = require('../utils/urgentNewsUtils');
 
 const waitForDb = async () => {
   if (mongoose.connection.readyState === 1) return true;
@@ -174,6 +176,20 @@ exports.registerDonate = async (req, res) => {
     });
 
     await donMoi.save();
+
+    if (req.body.urgentNewsId) {
+      try {
+        const urgentNews = await UrgentNews.findById(req.body.urgentNewsId);
+        if (urgentNews && urgentNews.TrangThai === 'Đang hiển thị') {
+          const updatedNews = applyUrgentNewsDonationRegistration(urgentNews, 1);
+          urgentNews.SoLuongDaNhan = updatedNews.SoLuongDaNhan;
+          urgentNews.TrangThai = updatedNews.TrangThai;
+          await urgentNews.save();
+        }
+      } catch (urgentNewsError) {
+        console.error('Lỗi khi cập nhật tin khẩn cấp sau đăng ký hiến máu:', urgentNewsError);
+      }
+    }
 
     const taiKhoanUpdate = {
       NgayDangKyHienMauGanNhat: now,

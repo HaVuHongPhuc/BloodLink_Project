@@ -128,6 +128,17 @@ const ListTinKhanCap = () => {
     setSystemMessage({ type: "", text: "" });
   };
 
+  const handleRegisterUrgentNews = (row) => {
+    const maBV = row.MaBenhVien || row.maBV || "";
+    const tenBV = row.TenBenhVien || row.tenBV || "";
+    const params = new URLSearchParams({
+      urgentNewsId: row._id || row.MaTin || "",
+      hospitalCode: maBV,
+      hospitalName: tenBV
+    });
+    window.location.href = `/register-donate?${params.toString()}`;
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -138,11 +149,11 @@ const ListTinKhanCap = () => {
 
   return (
     <Layout>
-      <div className="w-full">
+      <div className="w-full px-3 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8">
         {/* Tiêu đề trang */}
-        <div className="flex items-center gap-[12px] mb-[28px]">
-          <FontAwesomeIcon icon={faBullhorn} className="text-red-600 text-[28px]" />
-          <h1 className="text-3xl font-bold text-gray-950 uppercase tracking-tight">Danh Sách Tin Khẩn Cấp</h1>
+        <div className="mb-6 flex items-center gap-3 sm:mb-7">
+          <FontAwesomeIcon icon={faBullhorn} className="text-[24px] text-red-600 sm:text-[28px]" />
+          <h1 className="text-2xl font-bold uppercase tracking-tight text-gray-950 sm:text-3xl">Danh Sách Tin Khẩn Cấp</h1>
         </div>
 
         {/* Khối hiển thị thông báo tự biến mất */}
@@ -154,8 +165,8 @@ const ListTinKhanCap = () => {
         )}
 
         {/* Thanh công cụ Tìm kiếm & Bộ lọc */}
-        <div className="bg-white p-[16px] rounded-[8px] shadow-sm border border-gray-200 mb-[20px] flex flex-col md:flex-row gap-[16px] justify-between items-center">
-          <form onSubmit={handleExecuteSearch} className="flex items-center gap-[8px] w-full md:max-w-[400px]">
+        <div className="mb-5 flex flex-col gap-3 rounded-[8px] border border-gray-200 bg-white p-3 shadow-sm sm:p-4 lg:flex-row lg:items-center lg:justify-between">
+          <form onSubmit={handleExecuteSearch} className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:max-w-[440px]">
             <div className="relative w-full">
               <span className="absolute inset-y-0 left-0 flex items-center pl-[12px] text-gray-400">
                 <FontAwesomeIcon icon={faSearch} />
@@ -168,10 +179,10 @@ const ListTinKhanCap = () => {
                 className="w-full border border-gray-300 rounded-[6px] py-[8px] pl-[36px] pr-[12px] text-[14px] text-gray-950 focus:outline-none focus:border-red-600"
               />
             </div>
-            <button type="submit" className="px-[16px] py-[8px] bg-gray-950 text-white rounded-[6px] text-[14px] font-medium hover:bg-gray-800 transition shadow-sm">Tìm</button>
+            <button type="submit" className="rounded-[6px] bg-gray-950 px-[16px] py-[8px] text-[14px] font-medium text-white shadow-sm transition hover:bg-gray-800">Tìm</button>
           </form>
 
-          <div className="flex items-center gap-[12px] w-full md:w-auto justify-end">
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:w-auto">
             <div className="flex items-center gap-[8px]">
               <span className="text-[14px] font-medium text-gray-600 whitespace-nowrap">
                 <FontAwesomeIcon icon={faFilter} className="mr-[4px]" /> Nhóm máu:
@@ -192,16 +203,16 @@ const ListTinKhanCap = () => {
                 <option value="O-">O-</option>
               </select>
             </div>
-            <button onClick={handleExecuteFilter} className="px-[16px] py-[8px] bg-red-600 text-white rounded-[6px] text-[14px] font-bold hover:bg-red-700 transition shadow-sm">Lọc</button>
+            <button onClick={handleExecuteFilter} className="rounded-[6px] bg-red-600 px-[16px] py-[8px] text-[14px] font-bold text-white shadow-sm transition hover:bg-red-700">Lọc</button>
             {(activeSearch || activeBloodFilter) && (
-              <button onClick={handleResetControls} className="px-[12px] py-[8px] text-gray-500 hover:text-gray-800 text-[13px] font-medium underline">Đặt lại</button>
+              <button onClick={handleResetControls} className="px-[12px] py-[8px] text-[13px] font-medium text-gray-500 underline hover:text-gray-800">Đặt lại</button>
             )}
           </div>
         </div>
 
         {/* Bảng hiển thị dữ liệu */}
-        <div className="w-full bg-white rounded-[8px] border border-gray-300 shadow-sm overflow-x-auto">
-          <table className="w-full table-auto text-left border-collapse text-[14px]">
+        <div className="w-full overflow-x-auto rounded-[8px] border border-gray-300 bg-white shadow-sm">
+          <table className="min-w-[900px] w-full table-auto border-collapse text-[14px]">
             <thead>
               <tr className="bg-gray-100 text-gray-800 uppercase font-bold text-[13px] border-b border-gray-300">
                 <th className="px-[12px] py-[14px] border-r border-gray-300 text-center w-[60px]">STT</th>
@@ -215,7 +226,8 @@ const ListTinKhanCap = () => {
                 <th className="px-[12px] py-[14px] border-r border-gray-300">Mục đích</th>
                 <th className="px-[12px] py-[14px] border-r border-gray-300 text-center">Ngày đăng</th>
                 <th className="px-[12px] py-[14px] border-r border-gray-300 text-center">Giờ đăng</th>
-                <th className="px-[12px] py-[14px] text-center bg-red-50 text-red-700">SL đã nhận</th>
+                <th className="px-[12px] py-[14px] border-r border-gray-300 text-center bg-red-50 text-red-700">SL đã nhận</th>
+                <th className="px-[12px] py-[14px] text-center bg-red-50 text-red-700">Đăng ký</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-gray-700">
@@ -247,7 +259,16 @@ const ListTinKhanCap = () => {
                     <td className="px-[12px] py-[12px] border-r border-gray-200 max-w-[180px] truncate" title={mucDich}>{mucDich}</td>
                     <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{ngayDang}</td>
                     <td className="px-[12px] py-[12px] border-r border-gray-200 text-center">{gioDang}</td>
-                    <td className="px-[12px] py-[12px] text-center bg-red-50 text-red-800 font-bold">{slDaNhan} đơn vị</td>
+                    <td className="px-[12px] py-[12px] border-r border-gray-200 text-center bg-red-50 text-red-800 font-bold">{slDaNhan} đơn vị</td>
+                    <td className="px-[12px] py-[12px] text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleRegisterUrgentNews(row)}
+                        className="rounded-[6px] bg-red-600 px-[10px] py-[7px] text-[12px] font-semibold text-white transition hover:bg-red-700"
+                      >
+                        Đăng ký hiến máu
+                      </button>
+                    </td>
                   </tr>
                 );
               })}

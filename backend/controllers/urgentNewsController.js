@@ -1,5 +1,20 @@
 // Note: UC05 - UC10 - đăng, sửa, xóa và lọc tin khẩn cấp.
 const UrgentNews = require("../models/UrgentNews");
+const TaiKhoanBenhVien = require("../models/TaiKhoanBenhVien");
+const { applyUrgentNewsDonationRegistration } = require("../utils/urgentNewsUtils");
+
+const resolveHospitalProfile = async (req) => {
+  const hospitalId = req.user?.maBenhVien || req.user?.MaBenhVien || req.user?.maTaiKhoanBenhVien || req.user?.MaTaiKhoanBenhVien;
+
+  if (!hospitalId) return null;
+
+  return TaiKhoanBenhVien.findOne({
+    $or: [
+      { MaBenhVien: hospitalId },
+      { MaTaiKhoanBenhVien: hospitalId }
+    ]
+  }).lean();
+};
 
 // 1. GET: Lấy danh sách tin khẩn cấp (Tự động ẩn tin đạt đủ máu hoặc đã đăng đủ 3 ngày)
 exports.getAll = async (req, res) => {
@@ -7,6 +22,25 @@ exports.getAll = async (req, res) => {
     const today = new Date();
     const threeDaysAgo = new Date(today);
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    const hospitalList = await TaiKhoanBenhVien.find({}, { MaBenhVien: 1, TenBenhVien: 1, _id: 0 }).lean();
+    const hospitalMap = new Map(
+      hospitalList.map((hospital) => [String(hospital.MaBenhVien || '').toUpperCase(), String(hospital.TenBenhVien || '').trim()])
+    );
+
+    const allNews = await UrgentNews.find({}, { MaTin: 1, MaBenhVien: 1, TenBenhVien: 1 }).lean();
+    const invalidNewsIds = allNews
+      .filter((news) => {
+        const code = String(news.MaBenhVien || '').toUpperCase();
+        const hospitalName = hospitalMap.get(code);
+        if (!hospitalName) return true;
+        return String(news.TenBenhVien || '').trim() !== hospitalName;
+      })
+      .map((news) => news._id);
+
+    if (invalidNewsIds.length > 0) {
+      await UrgentNews.deleteMany({ _id: { $in: invalidNewsIds } });
+    }
 
     // Tự động chuyển trạng thái sang "Đã ẩn" nếu ĐÃ ĐẠT ĐỦ SỐ LƯỢNG MÁU
     await UrgentNews.updateMany(
@@ -52,31 +86,70 @@ exports.getOne = async (req, res) => {
 // 3. POST: Đăng tin khẩn cấp (UC17 / UC14)
 exports.createUrgentNews = async (req, res) => {
   try {
-    const {
-      MaBenhVien,
-      TenBenhVien,
-      SoDienThoaiBenhVien,
-      Email,
-      NhomMau,
-      SoLuong,
-      MucDich
-    } = req.body;
+    const hospitalProfile = await resolveHospitalProfile(req);
+    const MaBenhVien = req.body.MaBenhVien || hospitalProfile?.MaBenhVien;
+    const TenBenhVien = req.body.TenBenhVien || hospitalProfile?.TenBenhVien;
+    const SoDienThoaiBenhVien = req.body.SoDienThoaiBenhVien || hospitalProfile?.SoDienThoaiBenhVien;
+    const Email = req.body.Email || hospitalProfile?.Email;
+    const { NhomMau, SoLuong, MucDich } = req.body;
 
     const emailRegex = /^\S+@\S+\.\S+$/;
+    const allowedBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-    // 1. Kiểm tra dữ liệu đầu vào (MS02)
-    if (
-      !MaBenhVien || MaBenhVien.length > 10 ||
-      !TenBenhVien || TenBenhVien.length > 50 ||
-      !SoDienThoaiBenhVien || SoDienThoaiBenhVien.length < 10 || SoDienThoaiBenhVien.length > 11 ||
-      !Email || !emailRegex.test(Email) || Email.length > 50 ||
-      !NhomMau ||
-      !SoLuong || Number(SoLuong) <= 0 ||
-      !MucDich || MucDich.length > 200
-    ) {
-      return res.status(400).json({
-        message: "Vui lòng nhập đúng trường dữ liệu"
-      });
+    if (!MaBenhVien) {
+      return res.status(400).json({ message: 'Thiếu mã bệnh viện' });
+    }
+
+    if (MaBenhVien.length > 20) {
+      return res.status(400).json({ message: 'Mã bệnh viện không được vượt quá 20 ký tự' });
+    }
+
+    if (!TenBenhVien || !TenBenhVien.trim()) {
+      return res.status(400).json({ message: 'Thiếu tên bệnh viện' });
+    }
+
+    if (TenBenhVien.length > 50) {
+      return res.status(400).json({ message: 'Tên bệnh viện không được vượt quá 50 ký tự' });
+    }
+
+    if (!SoDienThoaiBenhVien || !SoDienThoaiBenhVien.trim()) {
+      return res.status(400).json({ message: 'Thiếu số điện thoại bệnh viện' });
+    }
+
+    if (SoDienThoaiBenhVien.length < 10 || SoDienThoaiBenhVien.length > 11) {
+      return res.status(400).json({ message: 'Số điện thoại bệnh viện phải có độ dài từ 10 đến 11 chữ số' });
+    }
+
+    if (!Email || !Email.trim()) {
+      return res.status(400).json({ message: 'Thiếu email bệnh viện' });
+    }
+
+    if (!emailRegex.test(Email)) {
+      return res.status(400).json({ message: 'Email bệnh viện không hợp lệ' });
+    }
+
+    if (Email.length > 50) {
+      return res.status(400).json({ message: 'Email bệnh viện không được vượt quá 50 ký tự' });
+    }
+
+    if (!NhomMau) {
+      return res.status(400).json({ message: 'Vui lòng chọn nhóm máu' });
+    }
+
+    if (!allowedBloodGroups.includes(NhomMau)) {
+      return res.status(400).json({ message: 'Nhóm máu không hợp lệ' });
+    }
+
+    if (!SoLuong || Number(SoLuong) <= 0) {
+      return res.status(400).json({ message: 'Số lượng phải lớn hơn 0' });
+    }
+
+    if (!MucDich || !MucDich.trim()) {
+      return res.status(400).json({ message: 'Thiếu mục đích đăng tin' });
+    }
+
+    if (MucDich.length > 200) {
+      return res.status(400).json({ message: 'Mục đích không được vượt quá 200 ký tự' });
     }
 
     // 2. Kiểm tra giới hạn 100 tin (MS43 / BR16)

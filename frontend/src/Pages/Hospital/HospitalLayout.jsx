@@ -29,6 +29,16 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
     window.location.href = path;
   };
 
+  const handleUrgentNewsAction = (e) => {
+    if (e) e.preventDefault();
+    if (typeof onOpenCreateModal === 'function') {
+      onOpenCreateModal();
+      return;
+    }
+
+    window.location.href = '/hospital/emergency';
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userRole');
@@ -125,16 +135,11 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
               </button>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button 
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (typeof onOpenCreateModal === 'function') {
-                    onOpenCreateModal();
-                  }
-                }}
-                className="hidden sm:flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-md text-xs uppercase"
+                onClick={handleUrgentNewsAction}
+                className="hidden sm:inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-[0_10px_20px_rgba(220,38,38,0.22)] transition duration-200 hover:-translate-y-0.5 hover:from-red-500 hover:to-rose-500 hover:shadow-[0_14px_26px_rgba(220,38,38,0.28)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-black"
               >
                 <FontAwesomeIcon icon={faBullhorn} />
                 Đăng tin khẩn cấp
@@ -144,16 +149,16 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
                 <div className="relative">
                   <button 
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
-                    className="flex items-center gap-2 rounded-full bg-red-600 text-white px-3 py-1 text-sm font-medium hover:bg-red-700"
+                    className="flex items-center gap-2 rounded-full border border-red-500/40 bg-red-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-red-500 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-black"
                   >
                     <FontAwesomeIcon icon={faUser} />
                     <span className="hidden sm:inline">{hospitalName}</span>
                   </button>
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-md shadow-lg py-1 z-10 text-sm">
+                    <div className="absolute right-0 mt-3 w-52 overflow-hidden rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-[0_18px_40px_rgba(0,0,0,0.14)] z-10 text-sm">
                       <button 
                         onClick={handleLogout} 
-                        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                        className="block w-full px-4 py-3 text-left font-medium text-red-600 transition hover:bg-red-50"
                       >
                         Đăng xuất
                       </button>
@@ -192,9 +197,9 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
           <button onClick={(e) => { handleNavigate('/hospital/orders', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Đơn đăng ký</button>
           {/* ✅ NÚT ĐĂNG TIN TRÊN MOBILE */}
           <button 
-            onClick={() => { 
+            onClick={(e) => { 
+              handleUrgentNewsAction(e);
               setIsMobileMenuOpen(false);
-              if (typeof onOpenCreateModal === 'function') onOpenCreateModal();
             }} 
             className="block w-full text-left text-red-500 font-bold pt-2 border-t border-gray-700"
           >
@@ -209,46 +214,40 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full bg-black text-white font-sans mt-auto">
-        <div className="w-full max-w-7xl h-[350px] mx-auto px-[40px] flex items-center justify-between gap-[20px]">
-          <div className="w-[175px] h-[140px] flex flex-col justify-between flex-shrink-0">
-            <h3 className="text-[20px] font-bold text-white uppercase tracking-wider">REGISTER</h3>
-            <ul className="space-y-[10px] text-[14px] text-gray-300">
-              <li><button onClick={(e) => handleNavigate('/register-donate', e)} className="hover:text-red-500 transition-colors text-left">Donor Signup</button></li>
-              <li><button onClick={(e) => handleNavigate('/partner-login', e)} className="hover:text-red-500 transition-colors text-left">Hospital Signup</button></li>
-              <li><button onClick={(e) => handleNavigate('/register-receive', e)} className="hover:text-red-500 transition-colors text-left">Blood Recipient Signup</button></li>
+      <footer className="mt-auto w-full bg-black text-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 text-sm text-gray-300 sm:px-6 lg:grid-cols-[1.2fr_1fr_1.2fr] lg:px-8 lg:text-base">
+          <div>
+            <h3 className="mb-3 text-lg font-semibold uppercase tracking-wide text-white">Đăng ký</h3>
+            <ul className="space-y-2">
+              <li><button onClick={(e) => handleNavigate('/register-donate', e)} className="text-left transition hover:text-red-500">Đăng ký hiến máu</button></li>
+              <li><button onClick={(e) => handleNavigate('/partner-login', e)} className="text-left transition hover:text-red-500">Đăng ký bệnh viện</button></li>
+              <li><button onClick={(e) => handleNavigate('/register-receive', e)} className="text-left transition hover:text-red-500">Đăng ký nhận máu</button></li>
             </ul>
           </div>
 
-          <div className="w-[128px] h-[140px] flex flex-col justify-between flex-shrink-0">
-            <h3 className="text-[20px] font-bold text-white uppercase tracking-wider">COMPANY</h3>
-            <ul className="space-y-[10px] text-[14px] text-gray-300">
-              <li><button onClick={(e) => handleNavigate('/about', e)} className="hover:text-red-500 transition-colors text-left">About Us</button></li>
-              <li><button onClick={(e) => handleNavigate('/contact', e)} className="hover:text-red-500 transition-colors text-left">Contact Us</button></li>
-              <li><button onClick={(e) => handleNavigate('/terms', e)} className="hover:text-red-500 transition-colors text-left">Term of Services</button></li>
+          <div>
+            <h3 className="mb-3 text-lg font-semibold uppercase tracking-wide text-white">Công ty</h3>
+            <ul className="space-y-2">
+              <li><button onClick={(e) => handleNavigate('/about', e)} className="text-left transition hover:text-red-500">Về chúng tôi</button></li>
+              <li><button onClick={(e) => handleNavigate('/contact', e)} className="text-left transition hover:text-red-500">Liên hệ</button></li>
+              <li><button onClick={(e) => handleNavigate('/terms', e)} className="text-left transition hover:text-red-500">Điều khoản</button></li>
             </ul>
           </div>
 
-          <div className="w-[315px] h-[330px] flex items-center justify-center flex-shrink-0">
-            <img src={footerImgNew} alt="A Blood Donor Saved My Life" className="w-full h-full object-contain" />
-          </div>
-
-          <div className="w-[640px] h-[210px] flex flex-col justify-start flex-shrink-0 text-left">
-            <h4 className="text-[15px] font-bold text-red-600 mb-[4px]">Benefits of Blood Donation</h4>
-            <h2 className="text-[24px] font-bold text-white mb-[12px]">Save Lives, Be a Real Hero</h2>
-            <p className="text-[13px] text-gray-300 leading-[1.6] text-justify">
-              Donating blood is a noble act that not everyone can do. With advancements in
-              medicine, the need for blood has increased threefold since the industrial revolution.
-              Every year, India has a deficit of between 30% and 35%. It is absurd to say that the
-              country cannot meet this requirement with 1.2 billion people. The real challenge
-              is not the lack of blood donors, but finding someone willing to donate when needed.
-              Therefore, the aim should be to create a system of people who can help each other
-              in emergencies.
-            </p>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-center rounded-lg bg-zinc-900 p-3 sm:justify-start">
+              <img src={footerImgNew} alt="Blood donation illustration" className="h-28 w-full max-w-[220px] object-contain" />
+            </div>
+            <div>
+              <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-red-500">Lợi ích của hiến máu</h4>
+              <p className="text-sm leading-6 text-gray-300">
+                Hiến máu là hành động nhân văn giúp cứu sống người bệnh và tạo nên một cộng đồng sẻ chia, kịp thời trong các tình huống khẩn cấp.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="w-full bg-red-900 py-[12px] text-center text-white font-bold text-[15px] tracking-wide">
+        <div className="w-full bg-red-900 py-3 text-center text-sm font-semibold tracking-wide text-white">
           Hà Vũ Hồng Phúc - Lu Tùng Quy - Trương Gia Tân
         </div>
       </footer>

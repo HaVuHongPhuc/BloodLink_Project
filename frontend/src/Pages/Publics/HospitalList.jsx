@@ -56,14 +56,14 @@ const HospitalList = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+      <div className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6 lg:px-6 lg:py-8">
+        <h1 className="mb-4 flex items-center gap-3 text-2xl font-bold text-gray-800 sm:mb-6 sm:text-3xl">
           <FontAwesomeIcon icon={faHospital} className="text-red-600" />
           Danh sách bệnh viện hợp tác
         </h1>
 
         <div className="mb-6">
-          <div className="relative max-w-md">
+          <div className="relative w-full max-w-xl">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
             </div>
@@ -85,7 +85,7 @@ const HospitalList = () => {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((hospital) => (
               <div
                 key={hospital.MaBenhVien}

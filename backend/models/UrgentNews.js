@@ -13,7 +13,7 @@ const UrgentNewsSchema = new mongoose.Schema(
     MaBenhVien: {
         type: String,
         required: true,
-        maxlength: 10
+      maxlength: 20
     },
 
     TenBenhVien: { 

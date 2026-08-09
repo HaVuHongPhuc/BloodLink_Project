@@ -83,14 +83,14 @@ const Cus_Login = () => {
 
   return (
     <Layout>
-      <div className="min-h-[80vh] flex items-center justify-center py-[40px] px-[16px] bg-gray-50">
-        <div className="w-full max-w-[440px] bg-white rounded-[16px] shadow-lg p-[40px]">
-          <div className="text-center mb-[32px]">
-            <div className="w-[60px] h-[60px] bg-red-600 rounded-full flex items-center justify-center mx-auto mb-[16px]">
-              <FontAwesomeIcon icon={faSignInAlt} className="text-white text-[28px]" />
+      <div className="flex min-h-[80vh] items-center justify-center bg-gray-50 px-3 py-6 sm:px-4 sm:py-8 lg:px-6">
+        <div className="w-full max-w-[440px] rounded-[16px] bg-white p-4 shadow-lg sm:p-6 lg:p-8">
+          <div className="mb-6 text-center sm:mb-8">
+            <div className="mx-auto mb-4 flex h-[56px] w-[56px] items-center justify-center rounded-full bg-red-600 sm:h-[60px] sm:w-[60px]">
+              <FontAwesomeIcon icon={faSignInAlt} className="text-[24px] text-white sm:text-[28px]" />
             </div>
-            <h1 className="text-[28px] font-bold text-gray-900">Đăng Nhập</h1>
-            <p className="text-gray-500 text-[14px] mt-[8px]">Chào mừng bạn quay trở lại</p>
+            <h1 className="text-[24px] font-bold text-gray-900 sm:text-[28px]">Đăng Nhập</h1>
+            <p className="mt-2 text-[13px] text-gray-500 sm:text-[14px]">Chào mừng bạn quay trở lại</p>
           </div>
 
           {successMessage && (

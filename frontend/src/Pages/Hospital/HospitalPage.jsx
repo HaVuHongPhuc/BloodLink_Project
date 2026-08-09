@@ -204,6 +204,11 @@ const HospitalPage = () => {
   const handleUpdatePost = async (e) => {
     e.preventDefault();
     setSystemMessage({ type: "", text: "" });
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      setSystemMessage({ type: "error", text: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại" });
+      return;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.tenBV.trim() || formData.tenBV.length > 50 ||
       !formData.mucDich.trim() || formData.mucDich.length > 200 ||
@@ -231,7 +236,10 @@ const HospitalPage = () => {
       };
       const response = await fetch(`http://localhost:5000/api/urgent-news/${selectedNewsId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify(bodyPayload),
       });
       const resData = await response.json();
@@ -261,8 +269,19 @@ const HospitalPage = () => {
 
   const handleConfirmDelete = async () => {
     if (!newsToDelete) return;
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      setSystemMessage({ type: "error", text: "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại" });
+      setIsConfirmDeleteOpen(false);
+      return;
+    }
     try {
-      const response = await fetch(`http://localhost:5000/api/urgent-news/${newsToDelete._id}`, { method: "DELETE" });
+      const response = await fetch(`http://localhost:5000/api/urgent-news/${newsToDelete._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       const resData = await response.json();
       if (response.ok) {
         setListData((prev) => prev.filter((el) => el._id !== newsToDelete._id));

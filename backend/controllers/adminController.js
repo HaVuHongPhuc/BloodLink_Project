@@ -2,7 +2,49 @@ const YeuCauDangKyDoiTac = require('../models/YeuCauDangKyDoiTac');
 const TaiKhoanBenhVien = require('../models/TaiKhoanBenhVien');
 const BenhVienHopTac = require('../models/BenhVienHopTac');
 const TaiKhoan = require('../models/TaiKhoan');
+const DonDangKy = require('../models/DonDangKy');
 const bcrypt = require('bcryptjs');
+
+const parseDateFlexible = (value) => {
+  if (!value) return null;
+  const raw = String(value).trim();
+
+  const dmyMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    const year = Number(dmyMatch[3]);
+    const parsed = new Date(year, month - 1, day);
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getFullYear() !== year ||
+      parsed.getMonth() !== month - 1 ||
+      parsed.getDate() !== day
+    ) {
+      return null;
+    }
+    return parsed;
+  }
+
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (isoMatch) {
+    const year = Number(isoMatch[1]);
+    const month = Number(isoMatch[2]);
+    const day = Number(isoMatch[3]);
+    const parsed = new Date(year, month - 1, day);
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getFullYear() !== year ||
+      parsed.getMonth() !== month - 1 ||
+      parsed.getDate() !== day
+    ) {
+      return null;
+    }
+    return parsed;
+  }
+
+  return null;
+};
 
 // UC06: Xác thực tài khoản đối tác
 exports.xacThucDoiTac = async (req, res) => {
@@ -72,41 +114,52 @@ exports.danhSachChoXacThuc = async (req, res) => {
 // UC07: Tra cứu danh sách người hiến máu
 exports.traCuuNguoiHienMau = async (req, res) => {
   try {
-    const { keyword } = req.query;
-    
+    const { keyword, startDate, endDate } = req.query;
+
     const query = {
-      VaiTro: 'khach hang',
-      NgayDangKyHienMauGanNhat: { $ne: null }
+      LoaiDon: 'Hien'
     };
-    
+
+    const parsedStart = parseDateFlexible(startDate);
+    const parsedEnd = parseDateFlexible(endDate);
+
+    if ((startDate && !parsedStart) || (endDate && !parsedEnd)) {
+      return res.status(400).json({ message: 'Vui lòng nhập ngày theo định dạng dd/mm/yyyy' });
+    }
+
+    if (parsedStart || parsedEnd) {
+      query.createdAt = {};
+      if (parsedStart) {
+        parsedStart.setHours(0, 0, 0, 0);
+        query.createdAt.$gte = parsedStart;
+      }
+      if (parsedEnd) {
+        parsedEnd.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = parsedEnd;
+      }
+      if (query.createdAt.$gte && query.createdAt.$lte && query.createdAt.$gte > query.createdAt.$lte) {
+        return res.status(400).json({ message: 'Ngày bắt đầu không được lớn hơn ngày kết thúc' });
+      }
+    }
+
     if (keyword) {
       query.$or = [
         { HoTen: { $regex: keyword, $options: 'i' } },
         { Email: { $regex: keyword, $options: 'i' } },
-        { SoDienThoai: { $regex: keyword, $options: 'i' } }
+        { SoDienThoai: { $regex: keyword, $options: 'i' } },
+        { MaDon: { $regex: keyword, $options: 'i' } }
       ];
     }
-    
-    const nguoiHien = await TaiKhoan.find(query)
-      .select('MaTaiKhoan HoTen NhomMau GioiTinh NgaySinh SoDienThoai DiaChi NgayDangKyHienMauGanNhat NgayHienMauGanNhat LuotHien');
-    
-    const result = nguoiHien.map(nguoi => {
-      const ngayHienGanNhat = nguoi.NgayHienMauGanNhat;
-      let trangThai = 'Chưa sẵn sàng';
-      if (!ngayHienGanNhat) {
-        trangThai = 'Sẵn sàng';
-      } else {
-        const diffDays = Math.floor((Date.now() - new Date(ngayHienGanNhat)) / (1000 * 60 * 60 * 24));
-        trangThai = diffDays >= 84 ? 'Sẵn sàng' : 'Chưa sẵn sàng';
-      }
-      return { ...nguoi.toObject(), trangThai };
-    });
-    
-    if (result.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy kết quả phù hợp' });
+
+    const donHien = await DonDangKy.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (donHien.length === 0) {
+      return res.status(404).json({ message: 'MS10: Không tìm thấy kết quả phù hợp' });
     }
-    
-    res.json(result);
+
+    res.json(donHien);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -116,28 +169,51 @@ exports.traCuuNguoiHienMau = async (req, res) => {
 // UC08: Tra cứu danh sách người nhận máu
 exports.traCuuNguoiNhanMau = async (req, res) => {
   try {
-    const { keyword } = req.query;
-    
+    const { keyword, startDate, endDate } = req.query;
+
     const query = {
-      VaiTro: 'khach hang',
-      NgayDangKyNhanMauGanNhat: { $ne: null }
+      LoaiDon: 'Nhan'
     };
-    
+
+    const parsedStart = parseDateFlexible(startDate);
+    const parsedEnd = parseDateFlexible(endDate);
+
+    if ((startDate && !parsedStart) || (endDate && !parsedEnd)) {
+      return res.status(400).json({ message: 'Vui lòng nhập ngày theo định dạng dd/mm/yyyy' });
+    }
+
+    if (parsedStart || parsedEnd) {
+      query.createdAt = {};
+      if (parsedStart) {
+        parsedStart.setHours(0, 0, 0, 0);
+        query.createdAt.$gte = parsedStart;
+      }
+      if (parsedEnd) {
+        parsedEnd.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = parsedEnd;
+      }
+      if (query.createdAt.$gte && query.createdAt.$lte && query.createdAt.$gte > query.createdAt.$lte) {
+        return res.status(400).json({ message: 'Ngày bắt đầu không được lớn hơn ngày kết thúc' });
+      }
+    }
+
     if (keyword) {
       query.$or = [
         { HoTen: { $regex: keyword, $options: 'i' } },
         { Email: { $regex: keyword, $options: 'i' } },
-        { SoDienThoai: { $regex: keyword, $options: 'i' } }
+        { SoDienThoai: { $regex: keyword, $options: 'i' } },
+        { MaDon: { $regex: keyword, $options: 'i' } }
       ];
     }
-    
-    const nguoiNhan = await TaiKhoan.find(query)
-      .select('MaTaiKhoan HoTen NhomMau GioiTinh NgaySinh SoDienThoai DiaChi NgayDangKyNhanMauGanNhat LuotDangKyNhanMau');
-    
+
+    const nguoiNhan = await DonDangKy.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
     if (nguoiNhan.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy kết quả phù hợp' });
     }
-    
+
     res.json(nguoiNhan);
   } catch (error) {
     console.error(error);

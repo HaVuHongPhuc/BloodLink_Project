@@ -3,60 +3,20 @@ const DonDangKy = require('../models/DonDangKy');
 const KhoMau = require('../models/KhoMau');
 const TaiKhoan = require('../models/TaiKhoan');
 const BenhVienHopTac = require('../models/BenhVienHopTac');
+const LichSuNhapXuat = require('../models/LichSuNhapXuat');
 
-// 1. LẤY DỮ LIỆU KHO MÁU CỦA BỆNH VIỆN DẠNG BM21
-exports.getHospitalInventory = async (req, res) => {
-  try {
-    const userEmail = req.user?.Email || req.user?.email;
-    const userMaTK = req.user?.MaTaiKhoan || req.user?.maTaiKhoan || req.user?.id;
-    const userMaBV = req.user?.MaBenhVien || req.user?.maBenhVien || req.user?.MaTaiKhoanBenhVien;
-
-    // Tìm thông tin Bệnh viện trong bảng BenhVienHopTac
-    const hospitalDoc = await BenhVienHopTac.findOne({
-      $or: [
-        { Email: userEmail },
-        { MaBenhVien: userMaBV },
-        { MaBenhVien: userMaTK },
-        { MaTaiKhoanBenhVien: userMaTK }
-      ]
-    }).lean();
-
-    const idsToSearch = new Set();
-    if (hospitalDoc?.MaBenhVien) idsToSearch.add(hospitalDoc.MaBenhVien);
-    if (hospitalDoc?.MaTaiKhoanBenhVien) idsToSearch.add(hospitalDoc.MaTaiKhoanBenhVien);
-    if (userMaBV) idsToSearch.add(userMaBV);
-    if (userMaTK) idsToSearch.add(userMaTK);
-
-    const finalIds = Array.from(idsToSearch).filter(Boolean);
-
-    // Lấy tất cả các túi máu thuộc mã bệnh viện này
-    const inventoryItems = await KhoMau.find({
-      MaBenhVien: { $in: finalIds }
-    })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    return res.json({
-      success: true,
-      data: inventoryItems
-    });
-  } catch (error) {
-    console.error('Lỗi lấy dữ liệu kho máu:', error);
-    return res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
-  }
-};
-
-// 2. BR28: LẤY DANH SÁCH ĐƠN ĐĂNG KÝ GỬI TỚI BỆNH VIỆN
+// Lấy danh sách đơn đăng ký của bệnh viện
 exports.getHospitalOrders = async (req, res) => {
   try {
     const userEmail = req.user?.Email || req.user?.email;
-    const userMaTK = req.user?.MaTaiKhoan || req.user?.maTaiKhoan || req.user?.id;
+    const userMaTK = req.user?.maTaiKhoan || req.user?.MaTaiKhoan || req.user?.id;
     const userMaBV = req.user?.MaBenhVien || req.user?.maBenhVien || req.user?.MaTaiKhoanBenhVien;
 
     const hospitalDoc = await BenhVienHopTac.findOne({
       $or: [
         { Email: userEmail },
         { MaBenhVien: userMaBV },
+        { MaTaiKhoanBenhVien: userMaBV },
         { MaBenhVien: userMaTK },
         { MaTaiKhoanBenhVien: userMaTK }
       ]
@@ -68,33 +28,39 @@ exports.getHospitalOrders = async (req, res) => {
     if (userMaBV) idsToSearch.add(userMaBV);
     if (userMaTK) idsToSearch.add(userMaTK);
 
+    const accountDoc = await TaiKhoan.findOne({
+      $or: [{ Email: userEmail }, { MaTaiKhoan: userMaTK }]
+    }).lean();
+
+    if (accountDoc?.MaBenhVien) idsToSearch.add(accountDoc.MaBenhVien);
+    if (accountDoc?.MaTaiKhoanBenhVien) idsToSearch.add(accountDoc.MaTaiKhoanBenhVien);
+
     const finalIds = Array.from(idsToSearch).filter(Boolean);
 
+    if (finalIds.length === 0) {
+      return res.status(401).json({ success: false, message: 'Không thể xác định bệnh viện từ thông tin đăng nhập.' });
+    }
+
     const orders = await DonDangKy.find({
-      $or: [
-        { MaBenhVien: { $in: finalIds } },
-        { MaTaiKhoanBenhVien: { $in: finalIds } }
-      ]
+      $or: [{ MaBenhVien: { $in: finalIds } }, { MaTaiKhoanBenhVien: { $in: finalIds } }]
     })
       .sort({ createdAt: -1 })
       .lean();
 
-    return res.json({
-      success: true,
-      data: orders
-    });
+    return res.json({ success: true, data: orders });
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách đơn của bệnh viện:', error);
+    console.error('Lỗi lấy danh sách đơn của bệnh viện:', error);
     return res.status(500).json({ success: false, message: 'Lỗi máy chủ', error: error.message });
   }
 };
 
 // 3. BR29: BỆNH VIỆN DUYỆT ĐƠN ĐĂNG KÝ
 exports.approveOrder = async (req, res) => {
+  // >>> ĐÃ XÓA: Bắt đầu một Transaction <<<
+
   try {
     const { id } = req.params;
 
-    // Lấy mã bệnh viện từ user đang đăng nhập (đã được xác thực qua middleware)
     const hospitalId = req.user?.maBenhVien || req.user?.MaBenhVien || req.user?.MaTaiKhoanBenhVien;
     if (!hospitalId) {
       return res.status(401).json({ 
@@ -103,20 +69,20 @@ exports.approveOrder = async (req, res) => {
       });
     }
 
-    const order = await DonDangKy.findById(id);
+    // >>> ĐÃ XÓA: .session(session) <<<
+    const order = await DonDangKy.findById(id); 
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy đơn đăng ký' });
     }
 
-    // Chỉ cho phép duyệt các đơn đang chờ
     if (order.TrangThai !== 'Cho_Duyet' && order.TrangThai !== 'Cho_Xu_Ly') {
       return res.status(400).json({ success: false, message: 'Đơn này đã được xử lý trước đó.' });
     }
 
     const now = new Date();
+    let bloodBagInfo = null;
 
-    // ---- XỬ LÝ ĐƠN HIẾN MÁU ----
     if (order.LoaiDon === 'Hien') {
       if (!order.NhomMau || order.NhomMau.trim() === '') {
         return res.status(400).json({
@@ -125,60 +91,106 @@ exports.approveOrder = async (req, res) => {
         });
       }
 
+      const nhomMauChuan = order.NhomMau.trim().toUpperCase();
+      const autoMaMau = `M${now.getTime().toString().slice(-9)}`;
       const hanSuDung = new Date();
-      hanSuDung.setDate(now.getDate() + 42); // Máu có hạn sử dụng 42 ngày
+      hanSuDung.setDate(now.getDate() + 42);
 
-      // 1. Tạo và lưu túi máu mới vào KhoMau của bệnh viện đang duyệt
       const newBloodUnit = new KhoMau({
-        MaMau: `M${now.getTime().toString().slice(-9)}`,
-        NhomMau: order.NhomMau.trim().toUpperCase(),
-        SoLuong: 1, // Mặc định mỗi lần hiến là 1 đơn vị
+        MaMau: autoMaMau,
+        NhomMau: nhomMauChuan,
+        SoLuong: 1, 
         NgayNhap: now,
         HanSuDung: hanSuDung,
         TrangThai: 'Trong kho',
-        MaBenhVien: hospitalId, // Lấy mã từ bệnh viện đang đăng nhập
+        MaBenhVien: hospitalId, 
         MaDon: order.MaDon
       });
 
-      await newBloodUnit.save();
+      // >>> ĐÃ XÓA: { session } <<<
+      await newBloodUnit.save(); 
 
-      // 2. Cập nhật profile người hiến máu
       await TaiKhoan.findOneAndUpdate(
         { $or: [{ MaTaiKhoan: order.MaTaiKhoan }, { Email: order.Email }] },
         {
           $inc: { LuotHien: 1 },
           $set: { NgayHienGanNhat: now, NgayDangKyHienMauGanNhat: now }
-        }
+        },
+        // >>> ĐÃ XÓA: { session } <<<
       );
+
+      bloodBagInfo = {
+        MaMau: autoMaMau,
+        NhomMau: nhomMauChuan,
+        HinhThuc: 'Nhap'
+      };
     }
-    // ---- XỬ LÝ ĐƠN NHẬN MÁU ----
     else if (order.LoaiDon === 'Nhan') {
-      if (order.NhomMauCan) {
-        // Tìm 1 túi máu phù hợp trong kho của bệnh viện này
-        const bloodBag = await KhoMau.findOne({
-          MaBenhVien: hospitalId, // Chỉ tìm trong kho của bệnh viện đang đăng nhập
-          NhomMau: order.NhomMauCan.trim().toUpperCase(),
-          TrangThai: 'Trong kho'
-        });
-
-        // Nếu có túi máu phù hợp, cập nhật trạng thái
-        if (bloodBag) {
-          bloodBag.TrangThai = 'Da xuat';
-          bloodBag.NgayXuat = now;
-          await bloodBag.save();
-        }
-        // (Tùy chọn) Nếu không có, có thể thêm logic thông báo hoặc xử lý khác
+      if (!order.NhomMauCan || order.NhomMauCan.trim() === '') {
+          return res.status(400).json({ success: false, message: 'Đơn nhận máu thiếu thông tin nhóm máu cần.' });
       }
+
+      const nhomMauCanChuan = order.NhomMauCan.trim().toUpperCase();
+
+      // >>> ĐÃ XÓA: .session(session) <<<
+      const bloodBag = await KhoMau.findOne({
+        MaBenhVien: hospitalId, 
+        NhomMau: nhomMauCanChuan,
+        TrangThai: 'Trong kho'
+      }); 
+
+      if (!bloodBag) {
+        return res.status(400).json({ 
+            success: false, 
+            message: `Trong kho hiện tại không còn túi máu nào thuộc nhóm ${nhomMauCanChuan} để xuất.` 
+        });
+      }
+
+      bloodBag.TrangThai = 'Da xuat';
+      bloodBag.NgayXuat = now;
+      // >>> ĐÃ XÓA: { session } <<<
+      await bloodBag.save(); 
+
+      bloodBagInfo = {
+        MaMau: bloodBag.MaMau,
+        NhomMau: nhomMauCanChuan,
+        HinhThuc: 'Xuat'
+      };
     }
 
-    // Cuối cùng, cập nhật trạng thái đơn đăng ký là hoàn thành
-    order.TrangThai = 'Hoan_Thanh';
-    await order.save();
+    if (bloodBagInfo) {
+      const rawHistoryCode = order.MaDon ? `${order.MaDon}-${now.getTime().toString().slice(-6)}` : now.getTime().toString().slice(-12);
+      const autoMaLS = `LS${rawHistoryCode}`;
+      const newHistory = new LichSuNhapXuat({
+        MaLichSu: autoMaLS,
+        MaMau: bloodBagInfo.MaMau,
+        NhomMau: bloodBagInfo.NhomMau,
+        SoLuong: 1,
+        HinhThuc: bloodBagInfo.HinhThuc,
+        ThoiGian: now,
+        MaDon: order.MaDon,
+        MaBenhVien: hospitalId,
+        MaTaiKhoanBenhVien: hospitalId,
+        HoTenKhachHang: order.HoTen || '',
+        GhiChu: order.LoaiDon === 'Hien' ? 'Nhập máu từ đơn hiến máu' : 'Xuất máu cho đơn nhận máu'
+      });
+      
+      console.log('Attempting to save history entry:', newHistory);
+      await newHistory.save();
+      console.log('Successfully saved history entry.');
+    }
 
-    return res.json({ success: true, message: 'Đã duyệt đơn thành công', data: order });
+    order.TrangThai = 'Hoan_Thanh';
+    // >>> ĐÃ XÓA: { session } <<<
+    await order.save(); 
+
+    // >>> ĐÃ XÓA: Hoàn tất Transaction <<<
+
+    return res.json({ success: true, message: 'Đã duyệt đơn và ghi lịch sử thành công', data: order });
   } catch (error) {
+    // >>> ĐÃ XÓA: huỷ bỏ Transaction <<<
+
     console.error('Lỗi khi duyệt đơn:', error);
-    // Cung cấp thông tin lỗi chi tiết hơn trong môi trường dev
     const errorMessage = process.env.NODE_ENV === 'development' ? error.message : 'Lỗi máy chủ';
     return res.status(500).json({ success: false, message: errorMessage });
   }

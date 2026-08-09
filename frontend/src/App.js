@@ -19,6 +19,7 @@ import ListTinKhanCap from './Pages/Publics/ListTinKhanCap';
 import SearchDonorMatch from './Pages/Hospital/SearchDonorMatch';
 import HospitalInventory from './Pages/Hospital/HospitalInventory';
 import HospitalOrders from './Pages/Hospital/HospitalOrders';
+import HospitalHistory from './Pages/Hospital/HospitalHistory';
 //admin
 import AdminDashboard from './Pages/Admin/AdminDashboard';
 import './App.css';
@@ -86,6 +87,9 @@ function App() {
   }
   else if (currentPath === '/hospital-profile' || currentPath === '/hospital_profile') {
     PageComponent = Hospital_Profile;
+  }
+  else if (currentPath === '/hospital-history' || currentPath === '/hospital_history') {
+    PageComponent = HospitalHistory;
   }
   else {
     PageComponent = Homepage;

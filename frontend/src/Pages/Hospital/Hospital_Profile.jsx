@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Layout from "../Layout";
+import HospitalLayout from "./HospitalLayout";
 import ChangePassword from "../Customer/ChangePassword";
 
 const Hospital_Profile = () => {
@@ -82,10 +82,10 @@ const Hospital_Profile = () => {
     setTimeout(() => setSuccessMessage(""), 3000);
   };
 
-  if (!user) return <Layout><div>Loading...</div></Layout>;
+  if (!user) return <HospitalLayout><div>Loading...</div></HospitalLayout>;
 
   return (
-    <Layout>
+    <HospitalLayout>
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="bg-white shadow rounded-lg p-6">
           <h1 className="text-2xl font-bold mb-6">Hồ sơ bệnh viện</h1>
@@ -179,7 +179,7 @@ const Hospital_Profile = () => {
           )}
         </div>
       </div>
-    </Layout>
+    </HospitalLayout>
   );
 };
 

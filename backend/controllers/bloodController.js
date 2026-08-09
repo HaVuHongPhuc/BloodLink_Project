@@ -227,7 +227,24 @@ exports.registerReceive = async (req, res) => {
     }
 
     if (!hospitalId) {
-      return res.status(400).json({ success: false, message: 'Vui lòng chọn Bệnh viện tiếp nhận' });
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn nơi nhận máu' });
+    }
+
+    if (!NhomMauCan || !NhomMauCan.trim()) {
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn nhóm máu cần' });
+    }
+
+    if (!MucDich || !MucDich.trim()) {
+      return res.status(400).json({ success: false, message: 'Vui lòng điền mục đích nhận máu' });
+    }
+
+    if (!NoiNhanMau || !NoiNhanMau.trim()) {
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn nơi nhận máu' });
+    }
+
+    const soLuongValue = Number(SoLuong);
+    if (!soLuongValue || soLuongValue <= 0) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập số lượng máu cần' });
     }
 
     const now = new Date();
@@ -251,10 +268,10 @@ exports.registerReceive = async (req, res) => {
       Email: Email || req.user?.Email || req.user?.email,
       DiaChi: DiaChi || '',
       SoCCCD,
-      NhomMauCan: NhomMauCan || null,
-      SoLuong: SoLuong || null,
-      MucDich: MucDich || '',
-      NoiNhanMau: NoiNhanMau || '',
+      NhomMauCan: NhomMauCan.trim(),
+      SoLuong: soLuongValue,
+      MucDich: MucDich.trim(),
+      NoiNhanMau: NoiNhanMau.trim() || '',
       TrangThai: 'Cho_Duyet'
     });
 

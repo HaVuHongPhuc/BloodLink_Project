@@ -38,11 +38,11 @@ const ChangePassword = ({ userEmail, onCancel }) => {
     if (!newPassword) {
       newErrors.newPassword = "Vui lòng nhập mật khẩu mới";
     } else if (!validatePassword(newPassword)) {
-      newErrors.newPassword = "MS02: Mật khẩu mới không đúng định dạng (ít nhất 6 ký tự, có chữ và số)";
+      newErrors.newPassword = "Mật khẩu mới không đúng định dạng (ít nhất 6 ký tự, có chữ và số)";
     }
 
     if (newPassword && confirmPassword !== newPassword) {
-      newErrors.confirmPassword = "MS42: Xác nhận mật khẩu không khớp";
+      newErrors.confirmPassword = "Xác nhận mật khẩu không khớp";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -92,7 +92,7 @@ const ChangePassword = ({ userEmail, onCancel }) => {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <FontAwesomeIcon icon={faKey} className="text-red-600 text-2xl" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800">BM10: Đổi lại mật khẩu</h3>
+          <h3 className="text-xl font-bold text-gray-800">Đổi lại mật khẩu</h3>
           <p className="text-sm text-gray-500 mt-1">Email: <span className="font-semibold">{userEmail}</span></p>
         </div>
 

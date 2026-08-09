@@ -31,7 +31,7 @@ const timNguoiHienMauPhuHop = async (req, res) => {
     });
     
     if (ketQua.length === 0) {
-      return res.status(404).json({ message: 'MS10: Không tìm thấy kết quả phù hợp' });
+      return res.status(404).json({ message: 'Không tìm thấy kết quả phù hợp' });
     }
     
     res.json(ketQua);
@@ -73,12 +73,12 @@ const capNhatHoSoCaNhan = async (req, res) => {
     ).select('-MatKhau');
     
     res.json({
-      message: 'MS20: Cập nhật thành công',
+      message: 'Cập nhật thành công',
       data: updated,
       user: updated
     });
   } catch (error) {
-    res.status(400).json({ message: 'MS02: Vui lòng nhập đúng trường dữ liệu', error: error.message });
+    res.status(400).json({ message: 'Vui lòng nhập đúng trường dữ liệu', error: error.message });
   }
 };
 
@@ -110,7 +110,7 @@ const doiMatKhau = async (req, res) => {
     
     const isMatch = await bcrypt.compare(matKhauCu, khachHang.MatKhau);
     if (!isMatch) {
-      return res.status(401).json({ message: 'MS22: Vui lòng kiểm tra lại mật khẩu cũ' });
+      return res.status(401).json({ message: 'Vui lòng kiểm tra lại mật khẩu cũ' });
     }
     
     const salt = await bcrypt.genSalt(10);
@@ -121,7 +121,7 @@ const doiMatKhau = async (req, res) => {
       { $set: { MatKhau: hashedPassword } }
     );
     
-    res.json({ message: 'MS21: Đã đổi mật khẩu thành công' });
+    res.json({ message: 'Đã đổi mật khẩu thành công' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }

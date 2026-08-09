@@ -64,7 +64,7 @@ const Hospital_Register = () => {
     if (!Email) {
       newErrors.Email = "Vui lòng nhập email";
     } else if (!validateEmail(Email)) {
-      newErrors.Email = "MS06: Vui lòng kiểm tra lại định dạng email";
+      newErrors.Email = "Vui lòng kiểm tra lại định dạng email";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -90,7 +90,7 @@ const Hospital_Register = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccessMessage(data.message || "MS01: Đăng ký tài khoản thành công");
+        setSuccessMessage(data.message || "Đăng ký tài khoản thành công");
         setErrorMessage("");
         setFormData({
           TenBenhVien: "",
@@ -123,7 +123,7 @@ const Hospital_Register = () => {
               <FontAwesomeIcon icon={faUserPlus} className="text-white text-[28px]" />
             </div>
             <h1 className="text-[28px] font-bold text-gray-900">Đăng Ký Đối Tác</h1>
-            <p className="text-gray-500 text-[14px] mt-[8px]">BM01: Phiếu đăng ký tài khoản đối tác</p>
+            <p className="text-gray-500 text-[14px] mt-[8px]">Phiếu đăng ký tài khoản đối tác</p>
           </div>
 
           {successMessage && (

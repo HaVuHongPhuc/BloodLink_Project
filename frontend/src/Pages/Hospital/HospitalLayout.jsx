@@ -40,12 +40,10 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* HEADER */}
       <header className="sticky top-0 z-50 bg-black text-white shadow-md">
         <nav className="w-full px-4 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             
-            {/* Hamburger */}
             <button 
               type="button" 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
@@ -56,7 +54,6 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
               </svg>
             </button>
 
-            {/* Logo */}
             <button 
               onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
               className="flex items-center gap-2 font-bold text-xl text-red-600 mr-4"
@@ -65,7 +62,6 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
               <span>BloodLink</span>
             </button>
 
-            {/* Navigation - menu bệnh viện */}
             <div className="hidden lg:flex space-x-1 text-sm font-medium">
               <button 
                 onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
@@ -129,9 +125,7 @@ const HospitalLayout = ({ children, onOpenCreateModal }) => {
               </button>
             </div>
 
-            {/* Right side */}
             <div className="flex items-center space-x-3">
-              {/* ✅ NÚT ĐĂNG TIN KHẨN CẤP - ĐÃ CÓ */}
               <button 
                 type="button"
                 onClick={(e) => {

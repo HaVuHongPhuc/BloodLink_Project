@@ -24,7 +24,7 @@ const SearchDonor = () => {
         setAllData(data);
         setResults(data);
         if (data.length === 0) {
-          setMessage("MS10: Không tìm thấy kết quả phù hợp");
+          setMessage("Không tìm thấy kết quả phù hợp");
         }
       } else {
         setAllData([]);
@@ -45,7 +45,7 @@ const SearchDonor = () => {
   const handleSearch = () => {
     if (!keyword.trim()) {
       setResults(allData);
-      setMessage(allData.length === 0 ? "MS10: Không tìm thấy kết quả phù hợp" : "");
+      setMessage(allData.length === 0 ? "Không tìm thấy kết quả phù hợp" : "");
       return;
     }
     const filtered = allData.filter(
@@ -55,12 +55,12 @@ const SearchDonor = () => {
         (d.SoDienThoai || "").includes(keyword)
     );
     setResults(filtered);
-    setMessage(filtered.length === 0 ? "MS10: Không tìm thấy kết quả phù hợp" : "");
+    setMessage(filtered.length === 0 ? "Không tìm thấy kết quả phù hợp" : "");
   };
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">BM04: Tra cứu người hiến máu</h2>
+      <h2 className="text-xl font-semibold mb-4">Tra cứu người hiến máu</h2>
 
       <div className="flex gap-2 mb-4">
         <input

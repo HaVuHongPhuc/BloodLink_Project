@@ -31,12 +31,12 @@ const SearchDonorMatch = () => {
         setAllData(data);
         setResults(data);
         if (data.length === 0) {
-          setMessage("MS10: Không tìm thấy kết quả phù hợp");
+          setMessage("Không tìm thấy kết quả phù hợp");
         }
       } else {
         setAllData([]);
         setResults([]);
-        setMessage(data.message || "MS09: Không đủ dữ liệu để tìm kiếm");
+        setMessage(data.message || "Không đủ dữ liệu để tìm kiếm");
       }
     } catch (error) {
       setMessage("Lỗi kết nối server");
@@ -63,7 +63,7 @@ const SearchDonorMatch = () => {
     setResults(filtered);
     setSearched(true);
     if (filtered.length === 0) {
-      setMessage("MS10: Không tìm thấy kết quả phù hợp");
+      setMessage("Không tìm thấy kết quả phù hợp");
     } else {
       setMessage("");
     }
@@ -79,7 +79,7 @@ const SearchDonorMatch = () => {
     e.preventDefault();
     setSendMessage("");
     if (!sendData.noiDung.trim()) {
-      setSendMessage("MS40: Vui lòng điền nội dung thông báo");
+      setSendMessage("Vui lòng điền nội dung thông báo");
       return;
     }
     const maBenhVien = localStorage.getItem("maBenhVien") || "";
@@ -100,7 +100,7 @@ const SearchDonorMatch = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setSendMessage("✅ Gửi thông báo thành công!");
+        setSendMessage("Gửi thông báo thành công!");
         setTimeout(() => {
           setShowSendModal(false);
           setSendData({ maTaiKhoan: "", noiDung: "" });
@@ -124,7 +124,7 @@ const SearchDonorMatch = () => {
     <HospitalLayout>
       <div className="max-w-5xl mx-auto py-8 px-4">
         <h1 className="text-2xl font-bold mb-6">Tìm kiếm người hiến máu phù hợp</h1>
-        <p className="text-sm text-gray-500 mb-4">BM04: Danh sách người hiến máu</p>
+        <p className="text-sm text-gray-500 mb-4">Danh sách người hiến máu</p>
 
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -229,7 +229,7 @@ const SearchDonorMatch = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-lg p-6 shadow-2xl">
             <div className="flex justify-between items-center border-b pb-3 mb-4">
-              <h3 className="text-xl font-bold">BM13: Gửi thông báo</h3>
+              <h3 className="text-xl font-bold">Gửi thông báo</h3>
               <button onClick={() => setShowSendModal(false)} className="text-gray-400 hover:text-gray-600">
                 <FontAwesomeIcon icon={faTimes} />
               </button>

@@ -124,7 +124,7 @@ const ManageHospitals = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage("MS10: Cập nhật thành công");
+        setMessage("Cập nhật thành công");
         setMessageType("success");
         setEditingId(null);
         fetchHospitals();
@@ -155,7 +155,7 @@ const ManageHospitals = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage("MS45: Xóa thành công");
+        setMessage("Xóa thành công");
         setMessageType("success");
         fetchHospitals();
       } else {
@@ -226,7 +226,7 @@ const ManageHospitals = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">BM07: Danh sách bệnh viện hợp tác</h2>
+        <h2 className="text-xl font-semibold">Danh sách bệnh viện hợp tác</h2>
         <div className="flex gap-2">
           <button
             onClick={() => setShowAddModal(true)}
@@ -337,7 +337,6 @@ const ManageHospitals = () => {
                         >
                           <option value="Đang hợp tác">Đang hợp tác</option>
                           <option value="Ngừng hợp tác">Ngừng hợp tác</option>
-                          <option value="Đang hoạt động">Đang hoạt động</option>
                         </select>
                       ) : (
                         <span

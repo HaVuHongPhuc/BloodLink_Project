@@ -118,7 +118,7 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
                     Đăng nhập
                   </a>
                   <a href="/partner-login" className="px-[12px] py-[6px] text-[14px] font-medium text-gray-200 border border-gray-600 rounded-[6px] hover:bg-gray-800 transition">
-                    Đăng nhập Bệnh viện
+                    đăng nhập tài khoản đối tác
                   </a>
                 </>
               )}
@@ -147,7 +147,7 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
           {!isLoggedIn && (
             <>
               <a href="/login" className="block text-red-400 font-semibold">Đăng nhập</a>
-              <a href="/partner-login" className="block text-blue-400 font-semibold">Đăng nhập bệnh viện</a>
+              <a href="/partner-login" className="block text-blue-400 font-semibold">đăng nhập tài khoản đối tác</a>
             </>
           )}
         </div>

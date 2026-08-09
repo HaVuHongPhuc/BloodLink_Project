@@ -14,7 +14,7 @@ exports.guiThongBao = async (req, res) => {
 
     // Kiểm tra nội dung không được trống (BR11)
     if (!noiDung || noiDung.trim() === '') {
-      return res.status(400).json({ message: 'MS40: Vui lòng điền nội dung thông báo' });
+      return res.status(400).json({ message: 'Vui lòng điền nội dung thông báo' });
     }
 
     const thongBao = new ThongBao({
@@ -47,7 +47,7 @@ exports.xemThongBao = async (req, res) => {
       .sort({ NgayGui: -1 });
 
     if (danhSach.length === 0) {
-      return res.status(404).json({ message: 'MS47: Hiện tại không có thông báo nào' });
+      return res.status(404).json({ message: 'Hiện tại không có thông báo nào' });
     }
 
     // Cập nhật trạng thái thành "đã xem" (BR12)
@@ -78,7 +78,7 @@ exports.phanHoiThongBao = async (req, res) => {
 
     // Kiểm tra đã phản hồi trước đó (BR13)
     if (thongBao.TrangThai === 'da dong y' || thongBao.TrangThai === 'da tu choi') {
-      return res.status(400).json({ message: 'MS49: Thông báo đã được gửi phản hồi trước đó' });
+      return res.status(400).json({ message: 'Thông báo đã được gửi phản hồi trước đó' });
     }
 
     // Chỉ cho phép phản hồi khi đã xem
@@ -91,7 +91,7 @@ exports.phanHoiThongBao = async (req, res) => {
     await thongBao.save();
 
     res.json({
-      message: 'MS48: Đã gửi phản hồi',
+      message: 'Đã gửi phản hồi',
       data: thongBao
     });
   } catch (error) {

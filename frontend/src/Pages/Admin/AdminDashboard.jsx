@@ -17,22 +17,19 @@ const AdminDashboard = () => {
     console.log("🔍 AdminDashboard - Token:", token);
     console.log("🔍 AdminDashboard - Role:", role);
 
-    // Nếu không có token → chuyển về login
     if (!token) {
-      console.log("⛔ Không có token, chuyển về login");
+      console.log("Không có token, chuyển về login");
       window.location.href = "/login";
       return;
     }
 
-    // Nếu role không phải admin → chuyển về login
     if (role !== "quan tri he thong") {
-      console.log("⛔ Không phải admin, chuyển về login");
+      console.log("Không phải admin, chuyển về login");
       window.location.href = "/login";
       return;
     }
 
-    // Nếu đã đăng nhập và là admin → load trang
-    console.log("✅ Admin hợp lệ, load dashboard");
+    console.log("Admin hợp lệ, load dashboard");
     setLoading(false);
   }, []);
 

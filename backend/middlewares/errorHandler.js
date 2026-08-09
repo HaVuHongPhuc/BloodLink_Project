@@ -2,7 +2,7 @@
 const errorHandler = (error, req, res, next) => {
   const statusCode = error.statusCode || 500;
   res.status(statusCode).json({
-    code: error.code || 'MS01',
+    code: error.code || '',
     message: error.message || 'Đã xảy ra lỗi trong hệ thống'
   });
 };

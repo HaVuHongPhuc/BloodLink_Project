@@ -23,7 +23,7 @@ const RegisterDonate = () => {
     Email: '',
     DiaChi: '',
     NhomMau: '',
-    NgayHienGanNhat: null, // Lưu ngày chuẩn Date/ISO để gửi về DB
+    NgayHienGanNhat: null, 
     BenhNen: 'Không có bệnh nền'
   });
 

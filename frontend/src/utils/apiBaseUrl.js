@@ -1,5 +1,20 @@
 const normalizeBaseUrl = (value) => String(value || '').trim().replace(/\/+$/, '');
 
+const deriveApiBaseUrlFromHost = () => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const { protocol, hostname, port } = window.location;
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+    return '';
+  }
+
+  const apiHostname = hostname.startsWith('api_') ? hostname : `api_${hostname}`;
+  const portPart = port ? `:${port}` : '';
+  return `${protocol}//${apiHostname}${portPart}`;
+};
+
 const getDefaultBaseUrl = () => {
   if (typeof window === 'undefined') {
     return 'http://localhost:5000';
@@ -19,7 +34,7 @@ const getDefaultBaseUrl = () => {
     return 'http://localhost:5000';
   }
 
-  return normalizeBaseUrl(window.location.origin);
+  return deriveApiBaseUrlFromHost();
 };
 
 export const API_BASE_URL = getDefaultBaseUrl();

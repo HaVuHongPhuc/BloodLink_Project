@@ -2,6 +2,7 @@ import { useState } from "react";
 import Layout from "../Layout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { apiUrl } from "../../utils/apiBaseUrl";
 
 const Cus_Register = () => {
   const [formData, setFormData] = useState({
@@ -54,7 +55,7 @@ const Cus_Register = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/dang-ky-khach-hang", {
+      const response = await fetch(apiUrl("/api/auth/dang-ky-khach-hang"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

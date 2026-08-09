@@ -26,7 +26,9 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden p-[8px] text-gray-400 hover:text-white"
             >
-              {/* ... icon hamburger ... */}
+              <svg className="w-[24px] h-[24px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+              </svg>
             </button>
 
             {/* Logo */}
@@ -85,10 +87,16 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
                   </button>
                   {isProfileMenuOpen && (
                     <div className="absolute right-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                      <a href="/profile" className="block px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</a>
-                      {userRole === "hospital" && (
-                        <a href="/hospital-profile" className="block px-[16px] py-[8px] hover:bg-gray-100">Hồ sơ bệnh viện</a>
+                      {/* ✅ CHỈ HIỂN THỊ HỒ SƠ KHI KHÔNG PHẢI ADMIN */}
+                      {userRole !== "quan tri he thong" && (
+                        <>
+                          <a href="/profile" className="block px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</a>
+                          {userRole === "hospital" && (
+                            <a href="/hospital-profile" className="block px-[16px] py-[8px] hover:bg-gray-100">Hồ sơ bệnh viện</a>
+                          )}
+                        </>
                       )}
+                      {/* ✅ ADMIN CHỈ THẤY ĐĂNG XUẤT, KHÔNG CÓ GÌ KHÁC */}
                       <button
                         onClick={() => { 
                           localStorage.removeItem("userToken");

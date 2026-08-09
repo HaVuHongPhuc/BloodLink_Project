@@ -36,16 +36,8 @@ exports.xacThucDoiTac = async (req, res) => {
       });
       await benhVien.save();
       
-      const hopTac = new BenhVienHopTac({
-        MaBenhVien: benhVien.MaBenhVien,
-        TenBenhVien: yeuCau.TenBenhVien,
-        DiaChiBenhVien: yeuCau.DiaChiBenhVien,
-        TenNguoiLienHe: yeuCau.NguoiDaiDien,
-        SoDienThoaiLienHe: yeuCau.SoDienThoaiBenhVien,
-        Email: yeuCau.Email,
-        TrangThai: 'dang hop tac'
-      });
-      await hopTac.save();
+      // ✅ ĐÃ XÓA PHẦN TẠO BenhVienHopTac
+      // Không tự động thêm vào danh sách hợp tác
       
       yeuCau.TrangThai = 'da duyet';
       await yeuCau.save();

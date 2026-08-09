@@ -155,11 +155,12 @@ exports.traCuuNguoiNhanMau = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
 };
+
 // Lấy danh sách bệnh viện hợp tác
 exports.getAllHospitals = async (req, res) => {
   try {
-    const hospitals = await TaiKhoanBenhVien.find()
-      .select('MaBenhVien MaTaiKhoanBenhVien TenBenhVien DiaChiBenhVien NguoiDaiDien SoDienThoaiBenhVien Email TrangThai');
+    const hospitals = await BenhVienHopTac.find()
+      .select('MaBenhVien TenBenhVien DiaChiBenhVien TenNguoiLienHe SoDienThoaiLienHe Email TrangThai');
     res.json(hospitals);
   } catch (error) {
     console.error(error);
@@ -200,7 +201,7 @@ exports.deleteHospital = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy bệnh viện' });
     }
     
-    if (hospital.TrangThai === 'đang hợp tác') {
+    if (hospital.TrangThai === 'dang hop tac') {
       return res.status(400).json({ message: 'MS46: Bệnh viện vẫn đang hoạt động, không thể xóa' });
     }
     

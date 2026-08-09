@@ -16,18 +16,27 @@ const HospitalList = () => {
   }, []);
 
   const fetchHospitals = async () => {
-  try {
-    const res = await fetch("http://localhost:5000/api/hospitals");
-    const data = await res.json();
-    // Lọc chỉ lấy bệnh viện đang hợp tác
-    const activeHospitals = data.filter(
-      (h) => h.TrangThai === "Đang hợp tác" || h.TrangThai === "dang hop tac" || h.TrangThai === "Đang hoạt động"
-    );
-    setHospitals(activeHospitals);
-  } catch (error) {
-    console.error(error);
-  }
-};
+    try {
+      const res = await fetch("http://localhost:5000/api/hospitals");
+      if (!res.ok) {
+        throw new Error('Không thể tải danh sách bệnh viện');
+      }
+      const data = await res.json();
+      
+      // ✅ CHỈ lọc 2 trạng thái hợp tác đúng
+      const activeHospitals = data.filter(
+        (h) => h.TrangThai === "dang hop tac" || h.TrangThai === "Đang hợp tác"
+      );
+      
+      setHospitals(activeHospitals);
+      setFiltered(activeHospitals);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setError('Không thể tải danh sách bệnh viện');
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (e) => {
     const keyword = e.target.value.toLowerCase();
@@ -85,7 +94,9 @@ const HospitalList = () => {
                 <div className="flex items-start justify-between">
                   <h3 className="text-lg font-bold text-gray-800">{hospital.TenBenhVien}</h3>
                   <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                    {hospital.TrangThai === "đang hợp tác" ? "Đang hợp tác" : "Ngừng hợp tác"}
+                    {hospital.TrangThai === "dang hop tac" || hospital.TrangThai === "Đang hợp tác" 
+                      ? "Đang hợp tác" 
+                      : "Ngừng hợp tác"}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">

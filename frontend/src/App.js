@@ -28,6 +28,7 @@ function App() {
   const [emergencyList, setEmergencyList] = useState([]);
   let PageComponent;
 
+  // Public routes
   if (currentPath === '/cus_profile' || currentPath === '/profile') {
     PageComponent = Cus_Profile;
   }
@@ -49,33 +50,33 @@ function App() {
   else if (currentPath === '/listtinkhancap') {
     PageComponent = ListTinKhanCap;
   }
-  else if (currentPath === '/hospital') {
-    PageComponent = () => (
-      <HospitalPage
-        emergencyList={emergencyList}
-        setEmergencyList={setEmergencyList}/>
-    );
-  }
-  else if (currentPath === '/admin' || currentPath === '/admindashboard') {
-    PageComponent = AdminDashboard;
-  }
-  else if (currentPath === '/hospital-profile' || currentPath === '/hospital_profile') {
-    PageComponent = Hospital_Profile;
-  }
-  else if (currentPath === '/search-donor' || currentPath === '/searchdonor') {
-    PageComponent = SearchDonorMatch;
-  }
   else if (currentPath === '/register-donate' || currentPath === '/registerdonate') {
     PageComponent = RegisterDonate;
   }
   else if (currentPath === '/register-receive' || currentPath === '/registerreceive') {
     PageComponent = RegisterReceive;
   }
-  else if (currentPath === '/hospital-dashboard' || currentPath === '/hospital_dashboard') {
-  PageComponent = HospitalDashboard;
+  // Admin routes
+  else if (currentPath === '/admin' || currentPath === '/admindashboard') {
+    PageComponent = AdminDashboard;
   }
-  else if (currentPath === '/hospital/emergency') {
-  PageComponent = HospitalPage; // hoặc import và dùng
+  // Hospital routes
+  else if (currentPath === '/hospital-dashboard' || currentPath === '/hospital_dashboard') {
+    PageComponent = HospitalDashboard;
+  }
+  else if (currentPath === '/hospital/emergency' || currentPath === '/hospital') {
+    PageComponent = () => (
+      <HospitalPage
+        emergencyList={emergencyList}
+        setEmergencyList={setEmergencyList}
+      />
+    );
+  }
+  else if (currentPath === '/hospital/search-donor' || currentPath === '/search-donor' || currentPath === '/searchdonor') {
+    PageComponent = SearchDonorMatch;
+  }
+  else if (currentPath === '/hospital/notifications' || currentPath === '/hospital_notifications') {
+    PageComponent = HospitalNotifications;
   }
   else if (currentPath === '/hospital/inventory' || currentPath === '/hospital_inventory') {
     PageComponent = HospitalInventory;
@@ -83,13 +84,14 @@ function App() {
   else if (currentPath === '/hospital/orders' || currentPath === '/hospital_orders') {
     PageComponent = HospitalOrders;
   }
-   else if (currentPath === '/hospital/notifications' || currentPath === '/hospital_notifications') {
-  PageComponent = HospitalNotifications;
-}
-  else {
-    PageComponent = Homepage; // Mặc định là trang chủ
+  else if (currentPath === '/hospital-profile' || currentPath === '/hospital_profile') {
+    PageComponent = Hospital_Profile;
   }
-  return <PageComponent/>;
+  else {
+    PageComponent = Homepage;
+  }
+
+  return <PageComponent />;
 }
 
 export default App;

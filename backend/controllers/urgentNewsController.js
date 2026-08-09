@@ -108,16 +108,16 @@ exports.createUrgentNews = async (req, res) => {
       return res.status(400).json({ message: 'Thiếu tên bệnh viện' });
     }
 
-    if (TenBenhVien.length > 50) {
-      return res.status(400).json({ message: 'Tên bệnh viện không được vượt quá 50 ký tự' });
+    if (TenBenhVien.length > 255) {
+      return res.status(400).json({ message: 'Tên bệnh viện không được vượt quá 255 ký tự' });
     }
 
     if (!SoDienThoaiBenhVien || !SoDienThoaiBenhVien.trim()) {
       return res.status(400).json({ message: 'Thiếu số điện thoại bệnh viện' });
     }
 
-    if (SoDienThoaiBenhVien.length < 10 || SoDienThoaiBenhVien.length > 11) {
-      return res.status(400).json({ message: 'Số điện thoại bệnh viện phải có độ dài từ 10 đến 11 chữ số' });
+    if (SoDienThoaiBenhVien.length < 10 || SoDienThoaiBenhVien.length > 15) {
+      return res.status(400).json({ message: 'Số điện thoại bệnh viện phải có độ dài từ 10 đến 15 chữ số' });
     }
 
     if (!Email || !Email.trim()) {
@@ -128,8 +128,8 @@ exports.createUrgentNews = async (req, res) => {
       return res.status(400).json({ message: 'Email bệnh viện không hợp lệ' });
     }
 
-    if (Email.length > 50) {
-      return res.status(400).json({ message: 'Email bệnh viện không được vượt quá 50 ký tự' });
+    if (Email.length > 255) {
+      return res.status(400).json({ message: 'Email bệnh viện không được vượt quá 255 ký tự' });
     }
 
     if (!NhomMau) {

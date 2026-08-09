@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Layout from "../Layout";
+import { apiUrl } from "../../utils/apiBaseUrl";
 
 const RegisterReceive = () => {
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,7 @@ const RegisterReceive = () => {
     const fetchDataFromDB = async () => {
       try {
         // tải danh sách bệnh viện hợp tác
-        const resHospitals = await fetch('http://localhost:5000/api/blood/hospitals');
+        const resHospitals = await fetch(apiUrl('/api/blood/hospitals'));
         const dataHospitals = await resHospitals.json();
         
         let defaultMaBenhVien = '';
@@ -61,7 +62,7 @@ const RegisterReceive = () => {
         }
 
         // tải hồ sơ cá nhân
-        const response = await fetch('http://localhost:5000/api/users/profile', {
+        const response = await fetch(apiUrl('/api/users/profile'), {
           headers: { Authorization: `Bearer ${token}` }
         });
         const result = await response.json();
@@ -160,7 +161,7 @@ const RegisterReceive = () => {
     const token = localStorage.getItem('userToken');
 
     try {
-      const response = await fetch('http://localhost:5000/api/blood/register-receive', {
+      const response = await fetch(apiUrl('/api/blood/register-receive'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -56,7 +56,7 @@ exports.dangKyDoiTac = async (req, res) => {
       });
     }
 
-    if (!/^0[0-9]{9,10}$/.test(normalizedPhone)) {
+    if (!/^0[0-9]{9,14}$/.test(normalizedPhone)) {
       return res.status(400).json({
         message: 'Vui lòng kiểm tra lại định dạng số điện thoại',
         invalidField: 'SoDienThoaiBenhVien'

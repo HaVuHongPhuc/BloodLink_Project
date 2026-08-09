@@ -9,25 +9,30 @@ const YeuCauDangKyDoiTacSchema = new mongoose.Schema({
   },
   TenBenhVien: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 255
   },
   NguoiDaiDien: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 255
   },
   DiaChiBenhVien: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 255
   },
   MaSoThue: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    maxlength: 255
   },
   SoDienThoaiBenhVien: {
     type: String,
     required: true,
-    match: [/^0[0-9]{9,10}$/, 'Số điện thoại không hợp lệ']
+    maxlength: 15,
+    match: [/^0[0-9]{9,14}$/, 'Số điện thoại không hợp lệ']
   },
   Email: {
     type: String,
@@ -41,7 +46,7 @@ const YeuCauDangKyDoiTacSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  GhiChu: { type: String, default: '' },
+  GhiChu: { type: String, default: '', maxlength: 300 },
   NgayDangKy: {
     type: Date,
     default: Date.now

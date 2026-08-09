@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Layout from "../Layout";
+import { apiUrl } from "../../utils/apiBaseUrl";
 
 const RegisterDonate = () => {
   const [loading, setLoading] = useState(true);
@@ -77,7 +78,7 @@ const RegisterDonate = () => {
         const urgentNewsHospitalName = searchParams.get('hospitalName');
 
         // Tải danh sách bệnh viện hợp tác
-        const resHospitals = await fetch('http://localhost:5000/api/blood/hospitals');
+        const resHospitals = await fetch(apiUrl('/api/blood/hospitals'));
         const dataHospitals = await resHospitals.json();
         
         let defaultMaBenhVien = '';
@@ -99,7 +100,7 @@ const RegisterDonate = () => {
         }
 
         // Tải thông tin hồ sơ khách hàng
-        const response = await fetch('http://localhost:5000/api/users/profile', {
+        const response = await fetch(apiUrl('/api/users/profile'), {
           headers: { Authorization: `Bearer ${token}` }
         });
         const result = await response.json();
@@ -218,7 +219,7 @@ const RegisterDonate = () => {
         urgentNewsId: urgentNewsContext?.id || null
       };
 
-      const response = await fetch('http://localhost:5000/api/blood/register-donate', {
+      const response = await fetch(apiUrl('/api/blood/register-donate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

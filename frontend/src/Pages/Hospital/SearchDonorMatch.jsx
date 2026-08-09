@@ -150,6 +150,7 @@ const SearchDonorMatch = () => {
               <label className="block text-sm font-medium mb-1">Địa chỉ</label>
               <input
                 type="text"
+                maxLength={255}
                 placeholder="Nhập địa chỉ..."
                 value={filters.location}
                 onChange={(e) => setFilters({ ...filters, location: e.target.value })}

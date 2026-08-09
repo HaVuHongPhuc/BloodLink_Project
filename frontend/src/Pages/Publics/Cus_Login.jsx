@@ -2,6 +2,7 @@ import { useState } from "react";
 import Layout from "../Layout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignInAlt } from "@fortawesome/free-solid-svg-icons";
+import { apiUrl } from "../../utils/apiBaseUrl";
 
 const Cus_Login = () => {
   const [formData, setFormData] = useState({ identifier: "", password: "" });
@@ -35,7 +36,7 @@ const Cus_Login = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/dang-nhap-khach-hang", {
+      const response = await fetch(apiUrl("/api/auth/dang-nhap-khach-hang"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,6 +117,7 @@ const Cus_Login = () => {
                 <input
                   type="text"
                   name="identifier"
+                  maxLength={255}
                   value={formData.identifier}
                   onChange={handleChange}
                   placeholder="Email hoặc mã tài khoản"
@@ -138,6 +140,7 @@ const Cus_Login = () => {
                 <input
                   type="password"
                   name="password"
+                  maxLength={255}
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"

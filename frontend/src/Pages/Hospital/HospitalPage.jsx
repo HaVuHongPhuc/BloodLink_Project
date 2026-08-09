@@ -127,17 +127,17 @@ const HospitalPage = () => {
     e.preventDefault();
     setSystemMessage({ type: "", text: "" });
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.tenBV.trim() || formData.tenBV.length > 50 ||
+    if (!formData.tenBV.trim() || formData.tenBV.length > 255 ||
       !formData.mucDich.trim() || formData.mucDich.length > 200 ||
       Number(formData.soLuong) <= 0) {
-      setSystemMessage({ type: "error", text: "Vui lòng nhập đúng trường dữ liệu (Tên bệnh viện ≤ 50 ký tự, Mục đích ≤ 200 ký tự)" });
+      setSystemMessage({ type: "error", text: "Vui lòng nhập đúng trường dữ liệu (Tên bệnh viện ≤ 255 ký tự, Mục đích ≤ 200 ký tự)" });
       return;
     }
-    if (formData.sdt.length < 10 || formData.sdt.length > 11) {
-      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải có độ dài từ 10 đến 11 chữ số" });
+    if (formData.sdt.length < 10 || formData.sdt.length > 15) {
+      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải có độ dài từ 10 đến 15 chữ số" });
       return;
     }
-    if (!emailRegex.test(formData.email.trim())) {
+    if (formData.email.length > 255 || !emailRegex.test(formData.email.trim())) {
       setSystemMessage({ type: "error", text: "Địa chỉ Email không hợp lệ" });
       return;
     }
@@ -210,17 +210,17 @@ const HospitalPage = () => {
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.tenBV.trim() || formData.tenBV.length > 50 ||
+    if (!formData.tenBV.trim() || formData.tenBV.length > 255 ||
       !formData.mucDich.trim() || formData.mucDich.length > 200 ||
       Number(formData.soLuong) <= 0) {
       setSystemMessage({ type: "error", text: "Vui lòng nhập đúng trường dữ liệu" });
       return;
     }
-    if (formData.sdt.length < 10 || formData.sdt.length > 11) {
-      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải có độ dài từ 10 đến 11 chữ số" });
+    if (formData.sdt.length < 10 || formData.sdt.length > 15) {
+      setSystemMessage({ type: "error", text: "Số điện thoại bệnh viện phải có độ dài từ 10 đến 15 chữ số" });
       return;
     }
-    if (!emailRegex.test(formData.email.trim())) {
+    if (formData.email.length > 255 || !emailRegex.test(formData.email.trim())) {
       setSystemMessage({ type: "error", text: "Địa chỉ Email không hợp lệ" });
       return;
     }
@@ -384,11 +384,11 @@ const HospitalPage = () => {
               <div className="grid grid-cols-2 gap-[16px]">
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Số điện thoại bệnh viện:</label>
-                  <input type="text" maxLength={11} value={formData.sdt} onChange={(e) => setFormData({...formData, sdt: e.target.value.replace(/[^0-9]/g, "")})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" placeholder="Từ 10 đến 11 chữ số..." />
+                  <input type="text" maxLength={15} value={formData.sdt} onChange={(e) => setFormData({...formData, sdt: e.target.value.replace(/[^0-9]/g, "")})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" placeholder="Từ 10 đến 15 chữ số..." />
                 </div>
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Email:</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" placeholder="Ví dụ: hospital@domain.com" />
+                  <input type="email" maxLength={255} value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900 bg-gray-50" placeholder="Ví dụ: hospital@domain.com" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-[16px]">
@@ -401,7 +401,7 @@ const HospitalPage = () => {
                 </div>
                 <div>
                   <label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Số lượng đơn vị cần:</label>
-                  <input type="number" value={formData.soLuong} onChange={(e) => setFormData({...formData, soLuong: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" placeholder="Ví dụ: 3" />
+                  <input type="text" inputMode="numeric" maxLength={5} value={formData.soLuong} onChange={(e) => setFormData({...formData, soLuong: e.target.value.replace(/[^0-9]/g, "")})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" placeholder="Ví dụ: 3" />
                 </div>
               </div>
               <div>
@@ -452,7 +452,7 @@ const HospitalPage = () => {
                   </select>
                 </div>
                 <div><label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Số lượng:</label>
-                  <input type="number" value={formData.soLuong} onChange={(e) => setFormData({...formData, soLuong: e.target.value})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" />
+                  <input type="text" inputMode="numeric" maxLength={5} value={formData.soLuong} onChange={(e) => setFormData({...formData, soLuong: e.target.value.replace(/[^0-9]/g, "")})} className="w-full border border-gray-300 rounded-[8px] p-[10px] text-[14px] text-gray-900" />
                 </div>
               </div>
               <div><label className="block text-[14px] font-bold text-gray-700 mb-[6px]">Mục đích:</label>

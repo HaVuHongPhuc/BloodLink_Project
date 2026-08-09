@@ -119,6 +119,7 @@ const Cus_Register = () => {
                 <input
                   type="email"
                   name="email"
+                  maxLength={255}
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="example@email.com"
@@ -141,6 +142,7 @@ const Cus_Register = () => {
                 <input
                   type="password"
                   name="password"
+                  maxLength={255}
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
@@ -164,6 +166,7 @@ const Cus_Register = () => {
                 <input
                   type="password"
                   name="confirmPassword"
+                  maxLength={255}
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"

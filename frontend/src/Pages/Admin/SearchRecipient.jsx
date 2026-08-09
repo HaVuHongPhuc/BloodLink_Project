@@ -96,6 +96,7 @@ const SearchRecipient = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
         <input
           type="text"
+          maxLength={255}
           placeholder="Tìm theo tên, email, SĐT..."
           className="md:col-span-2 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
           value={keyword}
@@ -104,6 +105,7 @@ const SearchRecipient = () => {
         />
         <input
           type="text"
+          maxLength={20}
           placeholder="Từ ngày (dd/mm/yyyy)"
           className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
           value={startDate}
@@ -111,6 +113,7 @@ const SearchRecipient = () => {
         />
         <input
           type="text"
+          maxLength={20}
           placeholder="Đến ngày (dd/mm/yyyy)"
           className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
           value={endDate}

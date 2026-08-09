@@ -11,6 +11,7 @@ import {
   faNotesMedical,
   faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
+import { apiUrl } from "../../utils/apiBaseUrl";
 
 const Hospital_Register = () => {
   const [formData, setFormData] = useState({
@@ -36,7 +37,7 @@ const Hospital_Register = () => {
   };
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone) => /^0[0-9]{9,10}$/.test(phone);
+  const validatePhone = (phone) => /^0[0-9]{9,14}$/.test(phone);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,7 +60,7 @@ const Hospital_Register = () => {
     if (!SoDienThoaiBenhVien) {
       newErrors.SoDienThoaiBenhVien = "Vui lòng nhập số điện thoại";
     } else if (!validatePhone(SoDienThoaiBenhVien)) {
-      newErrors.SoDienThoaiBenhVien = "Số điện thoại không hợp lệ (10-11 số, bắt đầu 0)";
+      newErrors.SoDienThoaiBenhVien = "Số điện thoại không hợp lệ (10-15 số, bắt đầu 0)";
     }
     if (!Email) {
       newErrors.Email = "Vui lòng nhập email";
@@ -74,7 +75,7 @@ const Hospital_Register = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/dang-ky-doi-tac", {
+      const response = await fetch(apiUrl("/api/auth/dang-ky-doi-tac"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -149,6 +150,7 @@ const Hospital_Register = () => {
                 <input
                   type="text"
                   name="TenBenhVien"
+                  maxLength={255}
                   value={formData.TenBenhVien}
                   onChange={handleChange}
                   placeholder="Bệnh viện Đa khoa Trung ương"
@@ -171,6 +173,7 @@ const Hospital_Register = () => {
                 <input
                   type="text"
                   name="NguoiDaiDien"
+                  maxLength={255}
                   value={formData.NguoiDaiDien}
                   onChange={handleChange}
                   placeholder="PGS.TS Nguyễn Văn A"
@@ -193,6 +196,7 @@ const Hospital_Register = () => {
                 <input
                   type="text"
                   name="DiaChiBenhVien"
+                  maxLength={255}
                   value={formData.DiaChiBenhVien}
                   onChange={handleChange}
                   placeholder="1 Đường Trung Ương, Hà Nội"
@@ -215,6 +219,7 @@ const Hospital_Register = () => {
                 <input
                   type="text"
                   name="MaSoThue"
+                  maxLength={255}
                   value={formData.MaSoThue}
                   onChange={handleChange}
                   placeholder="0101234567"
@@ -237,6 +242,7 @@ const Hospital_Register = () => {
                 <input
                   type="text"
                   name="SoDienThoaiBenhVien"
+                  maxLength={15}
                   value={formData.SoDienThoaiBenhVien}
                   onChange={handleChange}
                   placeholder="02412345678"
@@ -259,6 +265,7 @@ const Hospital_Register = () => {
                 <input
                   type="email"
                   name="Email"
+                  maxLength={255}
                   value={formData.Email}
                   onChange={handleChange}
                   placeholder="benhvien@example.com"
@@ -281,6 +288,7 @@ const Hospital_Register = () => {
                 <input
                   type="text"
                   name="GhiChu"
+                  maxLength={300}
                   value={formData.GhiChu}
                   onChange={handleChange}
                   placeholder="Thông tin thêm..."

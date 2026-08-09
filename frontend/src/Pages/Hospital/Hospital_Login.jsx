@@ -3,6 +3,7 @@ import { useState } from "react";
 import Layout from "../Layout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignInAlt } from "@fortawesome/free-solid-svg-icons";
+import { apiUrl } from "../../utils/apiBaseUrl";
 
 const Hospital_Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -38,7 +39,7 @@ const Hospital_Login = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/dang-nhap-doi-tac", {
+      const response = await fetch(apiUrl("/api/auth/dang-nhap-doi-tac"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ Email: email.trim(), MatKhau: password }),
@@ -104,6 +105,7 @@ const Hospital_Login = () => {
                 <input
                   type="email"
                   name="email"
+                  maxLength={255}
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="hospital@example.com"
@@ -126,6 +128,7 @@ const Hospital_Login = () => {
                 <input
                   type="password"
                   name="password"
+                  maxLength={255}
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"

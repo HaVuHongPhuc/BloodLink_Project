@@ -96,6 +96,7 @@ const SearchDonor = () => {
       <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4 sm:mb-4">
         <input
           type="text"
+          maxLength={255}
           placeholder="Tìm theo tên, email, SĐT..."
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:px-4 sm:py-2.5"
           value={keyword}
@@ -104,6 +105,7 @@ const SearchDonor = () => {
         />
         <input
           type="text"
+          maxLength={20}
           placeholder="Từ ngày (dd/mm/yyyy)"
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:px-4 sm:py-2.5"
           value={startDate}
@@ -111,6 +113,7 @@ const SearchDonor = () => {
         />
         <input
           type="text"
+          maxLength={20}
           placeholder="Đến ngày (dd/mm/yyyy)"
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 sm:px-4 sm:py-2.5"
           value={endDate}

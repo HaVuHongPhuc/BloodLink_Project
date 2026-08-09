@@ -69,6 +69,7 @@ const HospitalList = () => {
             </div>
             <input
               type="text"
+              maxLength={255}
               placeholder="Tìm theo tên, địa chỉ, email..."
               value={searchTerm}
               onChange={handleSearch}

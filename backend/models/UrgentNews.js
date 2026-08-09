@@ -19,20 +19,20 @@ const UrgentNewsSchema = new mongoose.Schema(
     TenBenhVien: { 
       type: String,
       required: true, 
-      maxlength: 50
+      maxlength: 255
     },
 
     SoDienThoaiBenhVien: { 
       type: String,
       required: true,
-      maxlength: 11
+      maxlength: 15
     },
 
     Email: { 
       type: String,
       required: true,
       match: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ'],
-      maxlength: 50
+      maxlength: 255
     },
 
     NhomMau: { 

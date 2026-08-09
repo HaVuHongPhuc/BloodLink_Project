@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Layout from "../Layout";
+import HospitalLayout from "./HospitalLayout";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faPaperPlane, faTimes } from "@fortawesome/free-solid-svg-icons";
 
@@ -9,7 +9,7 @@ const SearchDonorMatch = () => {
     location: "",
   });
   const [results, setResults] = useState([]);
-  const [allData, setAllData] = useState([]); // Lưu toàn bộ dữ liệu gốc
+  const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searched, setSearched] = useState(false);
@@ -19,7 +19,6 @@ const SearchDonorMatch = () => {
 
   const token = localStorage.getItem("userToken");
 
-  // Hàm lấy toàn bộ danh sách người hiến phù hợp
   const fetchAllDonors = async () => {
     try {
       setLoading(true);
@@ -47,12 +46,10 @@ const SearchDonorMatch = () => {
     }
   };
 
-  // Tự động tải toàn bộ dữ liệu khi vào trang
   useEffect(() => {
     fetchAllDonors();
   }, []);
 
-  // Hàm lọc dữ liệu trên client (không gọi API)
   const handleSearch = () => {
     let filtered = allData;
     if (filters.bloodType) {
@@ -72,7 +69,6 @@ const SearchDonorMatch = () => {
     }
   };
 
-  // Khi thay đổi bộ lọc, tự động lọc (không cần bấm nút)
   useEffect(() => {
     if (allData.length > 0) {
       handleSearch();
@@ -125,7 +121,7 @@ const SearchDonorMatch = () => {
   };
 
   return (
-    <Layout>
+    <HospitalLayout>
       <div className="max-w-5xl mx-auto py-8 px-4">
         <h1 className="text-2xl font-bold mb-6">Tìm kiếm người hiến máu phù hợp</h1>
         <p className="text-sm text-gray-500 mb-4">BM04: Danh sách người hiến máu</p>
@@ -266,7 +262,7 @@ const SearchDonorMatch = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </HospitalLayout>
   );
 };
 

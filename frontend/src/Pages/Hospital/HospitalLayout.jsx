@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
-import '../../index.css'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDroplet, faBullhorn, faUser } from '@fortawesome/free-solid-svg-icons';
-import footerImgNew from '../HinhAnh,icons/footer.png';
+import { 
+  faDroplet, 
+  faBullhorn, 
+  faSearch, 
+  faBell, 
+  faUser, 
+  faSignOutAlt,
+  faTint,
+  faClipboardList
+} from '@fortawesome/free-solid-svg-icons';
+import footerImgNew from '../HinhAnh,icons/footer.png'; // điều chỉnh đường dẫn nếu cần
 
-const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreateModal }) => {
+const HospitalLayout = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
@@ -14,88 +22,118 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
   }, []);
 
   const isLoggedIn = !!localStorage.getItem('userToken');
+  const hospitalName = localStorage.getItem('hospitalName') || 'Bệnh viện';
 
-  // Hàm điều hướng trực tiếp bằng URL thuần
   const handleNavigate = (path, e) => {
     if (e) e.preventDefault();
     window.location.href = path;
   };
 
-  // Lấy tên bệnh viện từ localStorage nếu có
-  const hospitalName = localStorage.getItem('hospitalName') || 'Bệnh viện';
+  const handleLogout = () => {
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('maBenhVien');
+    localStorage.removeItem('hospitalName');
+    window.location.href = '/partner-login';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* HEADER / NAVBAR CHO BỆNH VIỆN */}
+      {/* HEADER - giống Layout.jsx */}
       <header className="sticky top-0 z-50 bg-black text-white shadow-md">
-        <nav className="w-full px-[16px] sm:px-[24px] lg:px-[32px]">
-          <div className="relative flex h-[64px] items-center justify-between">
+        <nav className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="relative flex h-16 items-center justify-between">
             
-            {/* Nút Hamburger (Mobile) */}
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-[8px] text-gray-400 hover:text-white"
+            {/* Hamburger */}
+            <button 
+              type="button" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+              className="lg:hidden p-2 text-gray-400 hover:text-white"
             >
-              <svg className="w-[24px] h-[24px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
               </svg>
             </button>
 
-            {/* KHỐI TRÁI: Logo & Navigation */}
-            <div className="flex items-center space-x-[8px] flex-shrink-0">
-              <button 
-                type="button" 
-                onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
-                className="flex items-center gap-[8px] font-bold text-[20px] text-red-600 mr-[16px]"
-              >
-                <FontAwesomeIcon icon={faDroplet} className="text-red-600" />
-                <span>BloodLink</span>
-              </button>
+            {/* Logo */}
+            <button 
+              onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
+              className="flex items-center gap-2 font-bold text-xl text-red-600 mr-4"
+            >
+              <FontAwesomeIcon icon={faDroplet} className="text-red-600" />
+              <span>BloodLink</span>
+            </button>
 
-              <div className="hidden lg:flex space-x-[4px] text-[14px] font-medium">
-                <button 
-                  type="button"
-                  onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
-                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl === '/hospital-dashboard' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
-                >
-                  Trang chủ
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => handleNavigate('/hospital/emergency', e)} 
-                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl.includes('/hospital/emergency') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
-                >
-                  Tin khẩn cấp
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => handleNavigate('/hospital/search-donor', e)} 
-                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl.includes('/hospital/search-donor') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
-                >
-                  Tìm người hiến
-                </button>
-                <button 
-                  type="button"
-                  onClick={(e) => handleNavigate('/hospital/notifications', e)} 
-                  className={`px-[12px] py-[8px] rounded-[6px] transition-colors ${currentUrl.includes('/hospital/notifications') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
-                >
-                  Thông báo
-                </button>
-              </div>
+            {/* Navigation - menu bệnh viện */}
+            <div className="hidden lg:flex space-x-1 text-sm font-medium">
+              <button 
+                onClick={(e) => handleNavigate('/hospital-dashboard', e)} 
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentUrl === '/hospital-dashboard' 
+                    ? 'bg-gray-900 text-white' 
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                Trang chủ
+              </button>
+              <button 
+                onClick={(e) => handleNavigate('/hospital/emergency', e)} 
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentUrl.includes('/hospital/emergency') 
+                    ? 'bg-gray-900 text-white' 
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                Tin khẩn cấp
+              </button>
+              <button 
+                onClick={(e) => handleNavigate('/hospital/search-donor', e)} 
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentUrl.includes('/hospital/search-donor') 
+                    ? 'bg-gray-900 text-white' 
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                Tìm người hiến
+              </button>
+              <button 
+                onClick={(e) => handleNavigate('/hospital/notifications', e)} 
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentUrl.includes('/hospital/notifications') 
+                    ? 'bg-gray-900 text-white' 
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                Thông báo
+              </button>
+              <button 
+                onClick={(e) => handleNavigate('/hospital/inventory', e)} 
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentUrl.includes('/hospital/inventory') 
+                    ? 'bg-gray-900 text-white' 
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                Kho máu
+              </button>
+              <button 
+                onClick={(e) => handleNavigate('/hospital/orders', e)} 
+                className={`px-3 py-2 rounded-md transition-colors ${
+                  currentUrl.includes('/hospital/orders') 
+                    ? 'bg-gray-900 text-white' 
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                Đơn đăng ký
+              </button>
             </div>
 
-            {/* KHỐI PHẢI: NÚT ĐĂNG TIN KHẨN CẤP & ĐĂNG NHẬP */}
-            <div className="flex items-center space-x-[12px] flex-shrink-0">
+            {/* Right side */}
+            <div className="flex items-center space-x-3">
               <button 
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (typeof onOpenCreateModal === 'function') {
-                    onOpenCreateModal();
-                  }
-                }}
-                className="hidden sm:flex items-center gap-[6px] bg-red-600 hover:bg-red-700 text-white font-bold py-[8px] px-[14px] rounded-[6px] text-[13px] transition shadow-sm uppercase whitespace-nowrap cursor-pointer"
+                onClick={(e) => handleNavigate('/hospital/emergency/create', e)} 
+                className="hidden sm:flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-md text-xs uppercase"
               >
                 <FontAwesomeIcon icon={faBullhorn} />
                 Đăng tin khẩn cấp
@@ -104,27 +142,18 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
               {isLoggedIn ? (
                 <div className="relative">
                   <button 
-                    type="button" 
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
-                    className="flex items-center gap-2 rounded-full bg-red-600 text-white px-3 py-1 text-sm font-medium hover:bg-red-700 transition"
+                    className="flex items-center gap-2 rounded-full bg-red-600 text-white px-3 py-1 text-sm font-medium hover:bg-red-700"
                   >
                     <FontAwesomeIcon icon={faUser} />
                     <span className="hidden sm:inline">{hospitalName}</span>
                   </button>
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                      <button type="button" onClick={(e) => handleNavigate('/hospital-profile', e)} className="block w-full text-left px-[16px] py-[8px] hover:bg-gray-100">Thông tin tài khoản</button>
-                      <button
-                        type="button"
-                        onClick={() => { 
-                          localStorage.removeItem('userToken');
-                          localStorage.removeItem('userRole');
-                          localStorage.removeItem('userEmail');
-                          localStorage.removeItem('maBenhVien');
-                          localStorage.removeItem('hospitalName');
-                          window.location.href = '/partner-login';
-                        }}
-                        className="block w-full text-left px-[16px] py-[8px] text-red-600 hover:bg-gray-100"
+                    <div className="absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-md shadow-lg py-1 z-10 text-sm">
+                      {/* Chỉ giữ nút đăng xuất */}
+                      <button 
+                        onClick={handleLogout} 
+                        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
                       >
                         Đăng xuất
                       </button>
@@ -133,63 +162,69 @@ const HospitalLayout = ({ children, searchTerm = '', setSearchTerm, onOpenCreate
                 </div>
               ) : (
                 <>
-                  <button type="button" onClick={(e) => handleNavigate('/login', e)} className="px-[12px] py-[6px] text-[13px] font-medium text-white bg-gray-900 rounded-[6px] hover:bg-gray-800 transition border border-gray-700">
+                  <button 
+                    onClick={(e) => handleNavigate('/login', e)} 
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 border border-gray-700"
+                  >
                     Đăng nhập
                   </button>
-                  <button type="button" onClick={(e) => handleNavigate('/partner-login', e)} className="px-[12px] py-[6px] text-[13px] font-medium text-white bg-red-600 rounded-[6px] hover:bg-red-700 transition shadow-sm">
-                    Đăng nhập bệnh viện
+                  <button 
+                    onClick={(e) => handleNavigate('/register', e)} 
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 shadow-sm"
+                  >
+                    Đăng ký
                   </button>
                 </>
               )}
             </div>
-
           </div>
         </nav>
       </header>
 
-      {/* MENU MOBILE */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-gray-900 px-[16px] py-[12px] space-y-[8px] text-[14px] text-gray-300">
-          <button type="button" onClick={(e) => { handleNavigate('/hospital-dashboard', e); setIsMobileMenuOpen(false); }} className="block w-full text-left text-white font-medium">Trang chủ</button>
-          <button type="button" onClick={(e) => { handleNavigate('/hospital/emergency', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Tin khẩn cấp</button>
-          <button type="button" onClick={(e) => { handleNavigate('/hospital/search-donor', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Tìm người hiến</button>
-          <button type="button" onClick={(e) => { handleNavigate('/hospital/notifications', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Thông báo</button>
+        <div className="lg:hidden bg-gray-900 px-4 py-3 space-y-2 text-sm text-gray-300">
+          <button onClick={(e) => { handleNavigate('/hospital-dashboard', e); setIsMobileMenuOpen(false); }} className="block w-full text-left text-white font-medium">Trang chủ</button>
+          <button onClick={(e) => { handleNavigate('/hospital/emergency', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Tin khẩn cấp</button>
+          <button onClick={(e) => { handleNavigate('/hospital/search-donor', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Tìm người hiến</button>
+          <button onClick={(e) => { handleNavigate('/hospital/notifications', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Thông báo</button>
+          <button onClick={(e) => { handleNavigate('/hospital/inventory', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Kho máu</button>
+          <button onClick={(e) => { handleNavigate('/hospital/orders', e); setIsMobileMenuOpen(false); }} className="block w-full text-left hover:text-white">Đơn đăng ký</button>
           <button 
-            type="button"
-            onClick={() => {
+            onClick={() => { 
               setIsMobileMenuOpen(false);
-              if (typeof onOpenCreateModal === 'function') onOpenCreateModal();
-            }}
-            className="w-full text-left text-red-500 font-bold pt-[4px]"
+              handleNavigate('/hospital/emergency/create');
+            }} 
+            className="block w-full text-left text-red-500 font-bold pt-2 border-t border-gray-700"
           >
             Đăng tin khẩn cấp
           </button>
         </div>
       )}
 
-      {/* NỘI DUNG CHÍNH */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto p-[16px] sm:p-[24px] lg:p-[32px]">
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {children}
       </main>
 
-      {/* FOOTER */}
+      {/* Footer - giống Layout.jsx */}
       <footer className="w-full bg-black text-white font-sans mt-auto">
-        <div className="w-full max-w-[1600px] h-[350px] mx-auto px-[40px] flex items-center justify-between gap-[20px]">
+        <div className="w-full max-w-7xl h-[350px] mx-auto px-[40px] flex items-center justify-between gap-[20px]">
           <div className="w-[175px] h-[140px] flex flex-col justify-between flex-shrink-0">
             <h3 className="text-[20px] font-bold text-white uppercase tracking-wider">REGISTER</h3>
             <ul className="space-y-[10px] text-[14px] text-gray-300">
-              <li><button type="button" onClick={(e) => handleNavigate('/register-donate', e)} className="hover:text-red-500 transition-colors text-left">Donor Signup</button></li>
-              <li><button type="button" onClick={(e) => handleNavigate('/partner-login', e)} className="hover:text-red-500 transition-colors text-left">Hospital Signup</button></li>
-              <li><button type="button" onClick={(e) => handleNavigate('/register-receive', e)} className="hover:text-red-500 transition-colors text-left">Blood Recipient Signup</button></li>
+              <li><button onClick={(e) => handleNavigate('/register-donate', e)} className="hover:text-red-500 transition-colors text-left">Donor Signup</button></li>
+              <li><button onClick={(e) => handleNavigate('/partner-login', e)} className="hover:text-red-500 transition-colors text-left">Hospital Signup</button></li>
+              <li><button onClick={(e) => handleNavigate('/register-receive', e)} className="hover:text-red-500 transition-colors text-left">Blood Recipient Signup</button></li>
             </ul>
           </div>
 
           <div className="w-[128px] h-[140px] flex flex-col justify-between flex-shrink-0">
             <h3 className="text-[20px] font-bold text-white uppercase tracking-wider">COMPANY</h3>
             <ul className="space-y-[10px] text-[14px] text-gray-300">
-              <li><button type="button" onClick={(e) => handleNavigate('/about', e)} className="hover:text-red-500 transition-colors text-left">About Us</button></li>
-              <li><button type="button" onClick={(e) => handleNavigate('/contact', e)} className="hover:text-red-500 transition-colors text-left">Contact Us</button></li>
-              <li><button type="button" onClick={(e) => handleNavigate('/terms', e)} className="hover:text-red-500 transition-colors text-left">Term of Services</button></li>
+              <li><button onClick={(e) => handleNavigate('/about', e)} className="hover:text-red-500 transition-colors text-left">About Us</button></li>
+              <li><button onClick={(e) => handleNavigate('/contact', e)} className="hover:text-red-500 transition-colors text-left">Contact Us</button></li>
+              <li><button onClick={(e) => handleNavigate('/terms', e)} className="hover:text-red-500 transition-colors text-left">Term of Services</button></li>
             </ul>
           </div>
 

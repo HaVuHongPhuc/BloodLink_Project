@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDroplet } from "@fortawesome/free-solid-svg-icons";
 
@@ -9,11 +9,6 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
 
   const isLoggedIn = !!localStorage.getItem("userToken");
   const userRole = localStorage.getItem("userRole");
-
-  // HÀM ĐIỀU HƯỚNG AN TOÀN
-  const handleNavigate = (path) => {
-    window.location.href = path;
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -41,21 +36,23 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
               <a href="/listtinkhancap" className="px-[12px] py-[8px] text-gray-300 hover:bg-gray-800 hover:text-white rounded-[6px]">Tin khẩn cấp</a>
               <a href="/hospitals" className="px-[12px] py-[8px] text-gray-300 hover:bg-gray-800 hover:text-white rounded-[6px]">Danh sách bệnh viện</a>
               
-              {/* Dropdown Đăng ký dịch vụ */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}
-                  className="px-[12px] py-[8px] text-gray-300 hover:bg-gray-800 hover:text-white rounded-[6px]"
-                >
-                  Đăng ký dịch vụ ▾
-                </button>
-                {isCategoryMenuOpen && (
-                  <div className="absolute left-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
-                    <a href="/register-donate" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký hiến máu</a>
-                    <a href="/register-receive" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký nhận máu</a>
-                  </div>
-                )}
-              </div>
+              {/* Dropdown Đăng ký dịch vụ (ẩn với admin) */}
+              {userRole !== "quan tri he thong" && (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}
+                    className="px-[12px] py-[8px] text-gray-300 hover:bg-gray-800 hover:text-white rounded-[6px]"
+                  >
+                    Đăng ký dịch vụ ▾
+                  </button>
+                  {isCategoryMenuOpen && (
+                    <div className="absolute left-0 mt-[8px] w-[192px] bg-white text-gray-700 rounded-[6px] shadow-lg py-[4px] z-10 text-[14px]">
+                      <a href="/register-donate" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký hiến máu</a>
+                      <a href="/register-receive" className="block px-[16px] py-[8px] hover:bg-gray-100">Đăng ký nhận máu</a>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Nếu là bệnh viện, hiển thị thêm menu bệnh viện */}
               {isLoggedIn && userRole === "hospital" && (
@@ -125,8 +122,12 @@ const Layout = ({ children, searchTerm = "", setSearchTerm }) => {
           <a href="/homepage" className="block text-white font-medium">Trang chủ</a>
           <a href="/listtinkhancap" className="block hover:text-white">Tin khẩn cấp</a>
           <a href="/hospitals" className="block hover:text-white">Danh sách bệnh viện</a>
-          <a href="/register-donate" className="block hover:text-white">Đăng ký hiến máu</a>
-          <a href="/register-receive" className="block hover:text-white">Đăng ký nhận máu</a>
+          {userRole !== "quan tri he thong" && (
+            <>
+              <a href="/register-donate" className="block hover:text-white">Đăng ký hiến máu</a>
+              <a href="/register-receive" className="block hover:text-white">Đăng ký nhận máu</a>
+            </>
+          )}
           {isLoggedIn && userRole === "hospital" && (
             <>
               <a href="/hospital-dashboard" className="block hover:text-white">Dashboard</a>

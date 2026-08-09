@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Layout from '../Layout';
+import HospitalLayout from './HospitalLayout';
 
 const HospitalInventory = () => {
   const [inventory, setInventory] = useState([]);
@@ -38,7 +38,7 @@ useEffect(() => {
   };
 
   return (
-    <Layout>
+    <HospitalLayout>
       <div className="max-w-6xl mx-auto py-8 px-4 font-sans">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-slate-800">1.3.21 BM21: Danh sách máu trong kho</h1>
@@ -93,7 +93,7 @@ useEffect(() => {
           </div>
         )}
       </div>
-    </Layout>
+    </HospitalLayout>
   );
 };
 

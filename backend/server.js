@@ -18,6 +18,7 @@ const hospitalListRoutes = require("./routes/hospitalListRoutes");
 const thongBaoRoutes = require('./routes/thongBaoRoutes');
 const hospitalRoutes = require('./routes/hospitalRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const historyRoutes = require('./routes/historyRoutes');
 const app = express();
 
 // Middleware
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use(cors());
 app.use('/api/hospital', hospitalRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/history', historyRoutes);
 // 3. Kết nối MongoDB
 connectDB();
 

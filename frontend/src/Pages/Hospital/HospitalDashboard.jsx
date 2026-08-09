@@ -13,7 +13,8 @@ import {
   faBullhorn,
   faChartLine,
   faTint,
-  faClipboardList, // Icon cho Danh sách đơn đăng ký
+  faClipboardList,
+  faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 
 const HospitalDashboard = () => {
@@ -195,6 +196,20 @@ const HospitalDashboard = () => {
             </div>
           </a>
 
+          {/* 5. LỊCH SỬ NHẬP XUẤT MÁU (BM22 - UC31) */}
+          <a
+            href="/hospital-history"
+            className="bg-white shadow rounded-lg p-6 border border-gray-200 hover:shadow-lg transition flex flex-col items-center text-center justify-between"
+          >
+            <div className="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center mb-3">
+              <FontAwesomeIcon icon={faHistory} className="text-teal-600 text-xl" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">Lịch sử nhập xuất máu</h3>
+              <p className="text-xs text-gray-500 mt-1">Tra cứu chi tiết lịch sử</p>
+            </div>
+          </a>
+
           {/* 5. Thông báo */}
           <a
             href="/hospital/notifications"
@@ -206,20 +221,6 @@ const HospitalDashboard = () => {
             <div>
               <h3 className="font-semibold text-gray-800">Thông báo</h3>
               <p className="text-xs text-gray-500 mt-1">Gửi và xem thông báo</p>
-            </div>
-          </a>
-
-          {/* 6. Thống kê */}
-          <a
-            href="/hospital/statistics"
-            className="bg-white shadow rounded-lg p-6 border border-gray-200 hover:shadow-lg transition flex flex-col items-center text-center justify-between"
-          >
-            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-3">
-              <FontAwesomeIcon icon={faChartLine} className="text-green-600 text-xl" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-800">Thống kê</h3>
-              <p className="text-xs text-gray-500 mt-1">Xem báo cáo</p>
             </div>
           </a>
         </div>

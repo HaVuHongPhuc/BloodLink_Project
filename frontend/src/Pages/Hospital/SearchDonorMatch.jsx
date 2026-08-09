@@ -1,42 +1,127 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "../Layout";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch, faPaperPlane, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 const SearchDonorMatch = () => {
   const [filters, setFilters] = useState({
     bloodType: "",
     location: "",
-    minDonateCount: 0,
   });
   const [results, setResults] = useState([]);
-  const [searched, setSearched] = useState(false);
+  const [allData, setAllData] = useState([]); // Lưu toàn bộ dữ liệu gốc
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [searched, setSearched] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [sendData, setSendData] = useState({ maTaiKhoan: "", noiDung: "" });
+  const [sendMessage, setSendMessage] = useState("");
 
+  const token = localStorage.getItem("userToken");
+
+  // Hàm lấy toàn bộ danh sách người hiến phù hợp
+  const fetchAllDonors = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+      const response = await fetch("http://localhost:5000/api/users/tim-nguoi-hien-phu-hop", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setAllData(data);
+        setResults(data);
+        if (data.length === 0) {
+          setMessage("MS10: Không tìm thấy kết quả phù hợp");
+        }
+      } else {
+        setAllData([]);
+        setResults([]);
+        setMessage(data.message || "MS09: Không đủ dữ liệu để tìm kiếm");
+      }
+    } catch (error) {
+      setMessage("Lỗi kết nối server");
+    } finally {
+      setLoading(false);
+      setSearched(true);
+    }
+  };
+
+  // Tự động tải toàn bộ dữ liệu khi vào trang
+  useEffect(() => {
+    fetchAllDonors();
+  }, []);
+
+  // Hàm lọc dữ liệu trên client (không gọi API)
   const handleSearch = () => {
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    let donors = users.filter(
-      (u) =>
-        u.role === "customer" &&
-        u.donateRegisterDate &&
-        (u.donateCount || 0) < 3
-    );
-
+    let filtered = allData;
     if (filters.bloodType) {
-      donors = donors.filter((d) => d.bloodType === filters.bloodType);
+      filtered = filtered.filter(d => d.NhomMau === filters.bloodType);
     }
     if (filters.location) {
-      donors = donors.filter((d) =>
-        (d.address || "").toLowerCase().includes(filters.location.toLowerCase())
+      filtered = filtered.filter(d => 
+        (d.DiaChi || "").toLowerCase().includes(filters.location.toLowerCase())
       );
     }
-
-    if (donors.length === 0) {
+    setResults(filtered);
+    setSearched(true);
+    if (filtered.length === 0) {
       setMessage("MS10: Không tìm thấy kết quả phù hợp");
-      setResults([]);
     } else {
       setMessage("");
-      setResults(donors);
     }
-    setSearched(true);
+  };
+
+  // Khi thay đổi bộ lọc, tự động lọc (không cần bấm nút)
+  useEffect(() => {
+    if (allData.length > 0) {
+      handleSearch();
+    }
+  }, [filters]);
+
+  const handleSendNotification = async (e) => {
+    e.preventDefault();
+    setSendMessage("");
+    if (!sendData.noiDung.trim()) {
+      setSendMessage("MS40: Vui lòng điền nội dung thông báo");
+      return;
+    }
+    const maBenhVien = localStorage.getItem("maBenhVien") || "";
+    const tenBenhVien = localStorage.getItem("hospitalName") || "Bệnh viện";
+    try {
+      const response = await fetch("http://localhost:5000/api/thong-bao/gui", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          maTaiKhoan: sendData.maTaiKhoan,
+          noiDung: sendData.noiDung.trim(),
+          maBenhVien,
+          tenBenhVien,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSendMessage("✅ Gửi thông báo thành công!");
+        setTimeout(() => {
+          setShowSendModal(false);
+          setSendData({ maTaiKhoan: "", noiDung: "" });
+          setSendMessage("");
+        }, 1500);
+      } else {
+        setSendMessage(data.message || "Gửi thông báo thất bại");
+      }
+    } catch (error) {
+      setSendMessage("Lỗi kết nối máy chủ");
+    }
+  };
+
+  const openSendModal = (maTaiKhoan) => {
+    setSendData({ maTaiKhoan, noiDung: "" });
+    setSendMessage("");
+    setShowSendModal(true);
   };
 
   return (
@@ -78,9 +163,10 @@ const SearchDonorMatch = () => {
             <div className="flex items-end">
               <button
                 onClick={handleSearch}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded"
+                disabled={loading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded disabled:opacity-50"
               >
-                Tìm kiếm
+                {loading ? "Đang tải..." : "Lọc"}
               </button>
             </div>
           </div>
@@ -98,43 +184,88 @@ const SearchDonorMatch = () => {
               <thead>
                 <tr className="bg-gray-100">
                   <th className="p-3 text-left">STT</th>
+                  <th className="p-3 text-left">Mã TK</th>
                   <th className="p-3 text-left">Họ tên</th>
                   <th className="p-3 text-left">Nhóm máu</th>
-                  <th className="p-3 text-left">Giới tính</th>
                   <th className="p-3 text-left">SĐT</th>
                   <th className="p-3 text-left">Địa chỉ</th>
-                  <th className="p-3 text-left">Ngày hiến gần nhất</th>
-                  <th className="p-3 text-left">Lượt hiến</th>
                   <th className="p-3 text-left">Trạng thái</th>
+                  <th className="p-3 text-left">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {results.map((d, index) => (
-                  <tr key={d.email} className="border-b hover:bg-gray-50">
+                  <tr key={d.MaTaiKhoan} className="border-b hover:bg-gray-50">
                     <td className="p-3">{index + 1}</td>
-                    <td className="p-3">{d.fullName || "---"}</td>
+                    <td className="p-3 font-mono text-xs">{d.MaTaiKhoan}</td>
+                    <td className="p-3 font-medium">{d.HoTen}</td>
                     <td className="p-3">
-                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded">
-                        {d.bloodType || "---"}
+                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-sm font-bold">
+                        {d.NhomMau}
                       </span>
                     </td>
-                    <td className="p-3">{d.gender || "---"}</td>
-                    <td className="p-3">{d.phone || "---"}</td>
-                    <td className="p-3">{d.address || "---"}</td>
-                    <td className="p-3">{d.lastDonateDate || "---"}</td>
-                    <td className="p-3 text-center">{d.donateCount || 0}</td>
+                    <td className="p-3">{d.SoDienThoai}</td>
+                    <td className="p-3">{d.DiaChi}</td>
                     <td className="p-3">
                       <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">
                         Sẵn sàng
                       </span>
                     </td>
+                    <td className="p-3">
+                      <button
+                        onClick={() => openSendModal(d.MaTaiKhoan)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1"
+                      >
+                        <FontAwesomeIcon icon={faPaperPlane} /> Gửi TB
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <p className="text-gray-400 text-xs p-2">Hiển thị {results.length} kết quả</p>
           </div>
         )}
       </div>
+
+      {/* MODAL GỬI THÔNG BÁO */}
+      {showSendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-lg p-6 shadow-2xl">
+            <div className="flex justify-between items-center border-b pb-3 mb-4">
+              <h3 className="text-xl font-bold">BM13: Gửi thông báo</h3>
+              <button onClick={() => setShowSendModal(false)} className="text-gray-400 hover:text-gray-600">
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <form onSubmit={handleSendNotification}>
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mã tài khoản</label>
+                <input type="text" value={sendData.maTaiKhoan} disabled className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100" />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nội dung</label>
+                <textarea
+                  rows="4"
+                  value={sendData.noiDung}
+                  onChange={(e) => setSendData({ ...sendData, noiDung: e.target.value })}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-red-500"
+                  placeholder="Nhập nội dung thông báo..."
+                />
+              </div>
+              {sendMessage && (
+                <div className={`p-2 rounded mb-3 ${sendMessage.includes("✅") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  {sendMessage}
+                </div>
+              )}
+              <div className="flex justify-end gap-3 pt-3 border-t">
+                <button type="button" onClick={() => setShowSendModal(false)} className="px-4 py-2 border rounded hover:bg-gray-50">Hủy</button>
+                <button type="submit" className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold">Gửi</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

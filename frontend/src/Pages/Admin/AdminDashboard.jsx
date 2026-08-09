@@ -1,3 +1,4 @@
+// frontend/src/pages/Admin/AdminDashboard.jsx
 import { useState, useEffect } from "react";
 import Layout from "../Layout";
 import VerifyPartner from "./VerifyPartner";
@@ -13,11 +14,25 @@ const AdminDashboard = () => {
     const token = localStorage.getItem("userToken");
     const role = localStorage.getItem("userRole");
 
-    // Nếu không có token hoặc role không phải quản trị hệ thống → chuyển về login
-    if (!token || role !== "quan tri he thong") {
+    console.log("🔍 AdminDashboard - Token:", token);
+    console.log("🔍 AdminDashboard - Role:", role);
+
+    // Nếu không có token → chuyển về login
+    if (!token) {
+      console.log("⛔ Không có token, chuyển về login");
       window.location.href = "/login";
       return;
     }
+
+    // Nếu role không phải admin → chuyển về login
+    if (role !== "quan tri he thong") {
+      console.log("⛔ Không phải admin, chuyển về login");
+      window.location.href = "/login";
+      return;
+    }
+
+    // Nếu đã đăng nhập và là admin → load trang
+    console.log("✅ Admin hợp lệ, load dashboard");
     setLoading(false);
   }, []);
 
@@ -48,7 +63,6 @@ const AdminDashboard = () => {
               >
                 Xác thực đối tác (BM02)
               </button>
-
               <button
                 className={`py-3 px-6 font-medium text-sm ${
                   activeTab === "manageHospitals"
@@ -59,7 +73,6 @@ const AdminDashboard = () => {
               >
                 Quản lý tài khoản BV (UC13)
               </button>
-
               <button
                 className={`py-3 px-6 font-medium text-sm ${
                   activeTab === "searchDonor"
@@ -81,8 +94,6 @@ const AdminDashboard = () => {
                 Tra cứu người nhận (BM12)
               </button>
             </div>
-
-            {/* Render các view tương ứng với Tab */}
             {activeTab === "verify" && <VerifyPartner />}
             {activeTab === "manageHospitals" && <ManageHospitals />}
             {activeTab === "searchDonor" && <SearchDonor />}

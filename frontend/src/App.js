@@ -8,6 +8,7 @@ import Cus_Profile from './Pages/Customer/Cus_Profile';
 import RegisterDonate from './Pages/Customer/RegisterDonate';
 import RegisterReceive from './Pages/Customer/RegisterReceive';
 //bệnh viện
+import HospitalNotifications from './Pages/Hospital/HospitalNotifications';
 import HospitalDashboard from './Pages/Hospital/HospitalDashboard';
 import Hospital_Login from './Pages/Hospital/Hospital_Login';
 import Hospital_Register from './Pages/Hospital/Hospital_Register';
@@ -82,11 +83,12 @@ function App() {
   else if (currentPath === '/hospital/orders' || currentPath === '/hospital_orders') {
     PageComponent = HospitalOrders;
   }
+   else if (currentPath === '/hospital/notifications' || currentPath === '/hospital_notifications') {
+  PageComponent = HospitalNotifications;
+}
   else {
     PageComponent = Homepage; // Mặc định là trang chủ
   }
-  
-
   return <PageComponent/>;
 }
 

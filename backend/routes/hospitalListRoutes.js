@@ -1,17 +1,13 @@
-const express=require("express");
+const express = require("express");
+const router = express.Router();
+const controller = require("../controllers/hospitalListController");
 
-const router=express.Router();
+router.get("/list", controller.getAll);  
 
-const controller=require("../controllers/hospitalListController");
+router.get("/", controller.getAll);
+router.get("/:id", controller.getOne);
+router.post("/", controller.create);
+router.put("/:id", controller.update);
+router.delete("/:id", controller.remove);
 
-router.get("/",controller.getAll);
-
-router.get("/:id",controller.getOne);
-
-router.post("/",controller.create);
-
-router.put("/:id",controller.update);
-
-router.delete("/:id",controller.remove);
-
-module.exports=router;
+module.exports = router;
